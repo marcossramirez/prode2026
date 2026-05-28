@@ -1146,21 +1146,25 @@ function stopSync(){
    INTRO / LOADER
 ═══════════════════════════════════════════ */
 window.addEventListener("DOMContentLoaded",()=>{
-  const session=localStorage.getItem("p26_session");
-  if(session){
-    // Auto-login: recuperar sesión sin mostrar intro
-    const player=REGISTRY.find(p=>p.mail.toLowerCase()===session.toLowerCase());
-    if(player){
-      const savedAlias=localStorage.getItem("p26_alias_"+session);
-      if(savedAlias)player.alias=savedAlias;
-      if(player.alias){
-        currentPlayer=player;
-        enterApp(player);
-        return;
+  try{
+    const session=localStorage.getItem("p26_session");
+    if(session){
+      const player=REGISTRY.find(p=>p.mail.toLowerCase()===session.toLowerCase());
+      if(player){
+        const savedAlias=localStorage.getItem("p26_alias_"+session);
+        if(savedAlias)player.alias=savedAlias;
+        if(player.alias){
+          currentPlayer=player;
+          enterApp(player);
+          return;
+        }
       }
     }
+  }catch(e){
+    console.warn("Auto-login falló, mostrando login normal:",e);
+    localStorage.removeItem("p26_session");
   }
-  // Sin sesión: mostrar intro y login
+  // Sin sesión o error: mostrar intro y login normal
   const vid=document.getElementById("introVideo"),ov=document.getElementById("introOverlay");
   ov.classList.add("playing");
   const end=()=>{ov.style.transition="opacity .5s";ov.style.opacity="0";setTimeout(()=>{ov.style.display="none";showLogin();},500);};
@@ -1258,6 +1262,7 @@ async function confirmAlias(){
 }
 
 async function enterApp(player){
+  try{
   uname=player.alias;isAdmin=!!player.isAdmin;
   // Guardar sesión
   localStorage.setItem("p26_session",player.mail);
@@ -1301,6 +1306,14 @@ async function enterApp(player){
   // Sincronización continua
   startSync();
   startAliasSync();
+  }catch(e){
+    console.error("Error en enterApp:",e);
+    // Si algo falla, mostrar login normal
+    localStorage.removeItem("p26_session");
+    document.getElementById("appScreen").classList.remove("active");
+    showLogin();
+    showToast("❌ Error al entrar, intentá de nuevo");
+  }
 }
 
 function logout(){
