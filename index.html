@@ -192,12 +192,11 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
   position:sticky;top:0;z-index:100;
   background:var(--black);
   border-bottom:3px solid var(--green);
-  padding:0 24px;
+  padding:6px 14px 0;
 }
-.nav-inner{
-  max-width:960px;margin:0 auto;
-  display:flex;align-items:center;justify-content:space-between;height:58px;
-}
+.nav-inner{max-width:960px;margin:0 auto;display:flex;flex-direction:column;}
+.nav-row1{display:flex;align-items:center;justify-content:space-between;padding-bottom:2px;}
+.nav-row2{display:flex;align-items:center;gap:4px;padding-bottom:6px;}
 .nav-brand{
   font-family:"Barlow Condensed",sans-serif;font-weight:900;font-style:italic;
   font-size:22px;letter-spacing:2px;color:var(--white);text-transform:uppercase;
@@ -245,14 +244,15 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
 /* ══════════════════════════════
    RANKING
 ══════════════════════════════ */
-.rank-top{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;}
+.rank-top{display:block;margin-bottom:20px;}
 
 /* Profile card — brand color accent */
 .profile-card{
   background:var(--blue);
-  border-radius:20px;padding:22px;
+  border-radius:20px;padding:18px;
   display:flex;align-items:center;gap:16px;
   position:relative;overflow:hidden;
+  width:100%;box-sizing:border-box;
 }
 .profile-card::after{
   content:"26";
@@ -287,25 +287,25 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
 /* Ranking table */
 .rank-table{background:var(--surface);border-radius:20px;overflow:hidden;border:1px solid var(--border);}
 .rank-head{
-  display:grid;grid-template-columns:50px 1fr 80px 80px;
-  padding:12px 0;
+  display:grid;grid-template-columns:30px 1fr 48px 32px;
+  padding:8px 0;
   background:rgba(255,255,255,.04);
-  font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:2.5px;font-weight:600;
+  font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;font-weight:600;
   border-bottom:1px solid var(--border);
 }
-.rank-head > div:first-child{padding-left:22px;}
-.rank-head > div:last-child{padding-right:22px;}
+.rank-head > div:first-child{padding-left:6px;}
+.rank-head > div:last-child{padding-right:4px;text-align:center;}
 .rank-row{
-  display:grid;grid-template-columns:50px 1fr 80px 80px;
+  display:grid;grid-template-columns:30px 1fr 48px 32px;
   padding:0;border-bottom:1px solid var(--border);
-  align-items:stretch;transition:background .15s;min-height:56px;
+  align-items:stretch;transition:background .15s;min-height:60px;
 }
 .rank-row:last-child{border-bottom:none;}
 .rank-row:hover{background:rgba(255,255,255,.03);}
 .rank-row.me{background:rgba(61,63,232,.15);border-left:3px solid var(--blue);}
-.rank-pos{font-family:"Barlow Condensed",sans-serif;font-weight:900;font-size:24px;color:rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;padding-left:10px;}
+.rank-pos{font-family:"Barlow Condensed",sans-serif;font-weight:900;font-size:16px;color:rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;padding-left:4px;}
 .rank-pos.p1{color:var(--yellow);} .rank-pos.p2{color:#C0C0C0;} .rank-pos.p3{color:#CD7F32;}
-.rank-player{display:flex;align-items:center;gap:12px;padding:8px 12px;overflow:hidden;}
+.rank-player{display:flex;align-items:stretch;overflow:hidden;padding:0;position:relative;}
 .rank-av-sm{
   width:40px;height:40px;border-radius:50%;flex-shrink:0;
   background:var(--surface2);
@@ -316,13 +316,13 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
 }
 .rank-name{font-size:18px;font-weight:900;font-family:"Barlow Condensed",sans-serif;letter-spacing:1px;text-transform:uppercase;}
 .rank-name-wrap{position:relative;flex:1;min-width:0;display:flex;align-items:center;overflow:hidden;}
-.rank-banner{position:absolute;inset:0;background-size:cover;background-position:center;
-  -webkit-mask-image:linear-gradient(to right, transparent 0%, rgba(0,0,0,0.9) 12%, rgba(0,0,0,0.9) 88%, transparent 100%);
-  mask-image:linear-gradient(to right, transparent 0%, rgba(0,0,0,0.9) 12%, rgba(0,0,0,0.9) 88%, transparent 100%);
+.rank-banner{position:absolute;inset:0;background-size:cover;background-position:center left;
+  -webkit-mask-image:linear-gradient(to right, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 70%, transparent 100%);
+  mask-image:linear-gradient(to right, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 70%, transparent 100%);
   pointer-events:none;}
-.rank-name-wrap .rank-name{position:relative;z-index:1;padding:6px 12px;}
-.rank-pts{font-family:"Barlow Condensed",sans-serif;font-weight:900;font-size:24px;color:var(--green);text-align:center;display:flex;align-items:center;justify-content:center;}
-.rank-trend{display:flex;align-items:center;justify-content:center;gap:4px;font-size:13px;font-weight:700;padding-right:10px;}
+.rank-name-wrap .rank-name{position:relative;z-index:1;padding:0 10px;font-size:15px;font-weight:900;font-family:"Barlow Condensed",sans-serif;letter-spacing:1px;text-transform:uppercase;text-shadow:0 1px 6px rgba(0,0,0,1),0 0 20px rgba(0,0,0,.9);}
+.rank-pts{font-family:"Barlow Condensed",sans-serif;font-weight:900;font-size:20px;color:var(--green);text-align:center;display:flex;align-items:center;justify-content:center;}
+.rank-trend{display:flex;align-items:center;justify-content:center;gap:2px;font-size:10px;font-weight:700;padding-right:4px;}
 
 /* Points legend */
 .pts-legend{
@@ -677,16 +677,15 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
 <div id="appScreen" class="screen">
   <nav class="nav">
     <div class="nav-inner">
-      <div class="nav-brand">MUNDIAL <span class="accent">26</span></div>
-      <div class="nav-tabs">
+      <div class="nav-row1">
+        <div class="nav-brand">MUNDIAL <span class="accent">26</span></div>
+        <div class="nav-av" id="navAv" title="Cerrar sesión" onclick="logout()">M</div>
+      </div>
+      <div class="nav-row2">
         <button class="nav-tab active" onclick="showTab('ranking',this)">Ranking</button>
         <button class="nav-tab" onclick="showTab('pronosticos',this)">Pronósticos</button>
         <button class="nav-tab" onclick="showTab('resultados',this)">Resultados</button>
         <button class="nav-tab" id="adminTab" style="display:none;color:var(--red)" onclick="showTab('admin',this)">Admin ⚙</button>
-      </div>
-      <div class="nav-user">
-        <span class="nav-name" id="navName" style="display:none"></span>
-        <div class="nav-av" id="navAv" title="Cerrar sesión" onclick="logout()">M</div>
       </div>
     </div>
   </nav>
@@ -703,18 +702,7 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
             <div id="profStats"></div>
           </div>
         </div>
-        <div class="counters-card">
-          <div class="counter-box played">
-            <div class="counter-icon">⚽</div>
-            <div class="counter-label">Jugados</div>
-            <div class="counter-val">3</div>
-          </div>
-          <div class="counter-box remaining">
-            <div class="counter-icon">⏳</div>
-            <div class="counter-label">Restantes</div>
-            <div class="counter-val">101</div>
-          </div>
-        </div>
+
       </div>
       <div class="sec-title">Tabla de Posiciones</div>
       <div class="rank-table">
@@ -1146,30 +1134,21 @@ function stopSync(){
    INTRO / LOADER
 ═══════════════════════════════════════════ */
 window.addEventListener("DOMContentLoaded",()=>{
-  try{
-    const session=localStorage.getItem("p26_session");
-    if(session){
-      const player=REGISTRY.find(p=>p.mail.toLowerCase()===session.toLowerCase());
-      if(player){
-        const savedAlias=localStorage.getItem("p26_alias_"+session);
-        if(savedAlias)player.alias=savedAlias;
-        if(player.alias){
-          currentPlayer=player;
-          // Ocultar intro overlay completamente antes de entrar
-          const ov=document.getElementById("introOverlay");
-          if(ov){ov.style.display="none";ov.style.opacity="0";}
-          const loader=document.getElementById("pageLoader");
-          if(loader){loader.classList.remove("show");}
-          enterApp(player);
-          return;
-        }
+  const session=localStorage.getItem("p26_session");
+  if(session){
+    // Auto-login: recuperar sesión sin mostrar intro
+    const player=REGISTRY.find(p=>p.mail.toLowerCase()===session.toLowerCase());
+    if(player){
+      const savedAlias=localStorage.getItem("p26_alias_"+session);
+      if(savedAlias)player.alias=savedAlias;
+      if(player.alias){
+        currentPlayer=player;
+        enterApp(player);
+        return;
       }
     }
-  }catch(e){
-    console.warn("Auto-login falló, mostrando login normal:",e);
-    localStorage.removeItem("p26_session");
   }
-  // Sin sesión o error: mostrar intro y login normal
+  // Sin sesión: mostrar intro y login
   const vid=document.getElementById("introVideo"),ov=document.getElementById("introOverlay");
   ov.classList.add("playing");
   const end=()=>{ov.style.transition="opacity .5s";ov.style.opacity="0";setTimeout(()=>{ov.style.display="none";showLogin();},500);};
@@ -1193,7 +1172,7 @@ function showLoader(ms=440){
 ═══════════════════════════════════════════ */
 function launchConfetti(){
   const cv=document.getElementById("confettiCanvas"),ctx=cv.getContext("2d");
-  cv.width=window.innerWidth;cv.height=window.innerHeight;cv.style.display="block";cv.style.pointerEvents="none";
+  cv.width=window.innerWidth;cv.height=window.innerHeight;cv.style.display="block";
   const cols=["#FFFFFF","#75AADB","#3D3FE8","#00FF47","#F5E642","#4DFFD2","#ffffff","#aad4f5"];
   const ps=Array.from({length:520},()=>({
     x:Math.random()*cv.width,y:-50-Math.random()*400,
@@ -1267,7 +1246,6 @@ async function confirmAlias(){
 }
 
 async function enterApp(player){
-  try{
   uname=player.alias;isAdmin=!!player.isAdmin;
   // Guardar sesión
   localStorage.setItem("p26_session",player.mail);
@@ -1311,14 +1289,6 @@ async function enterApp(player){
   // Sincronización continua
   startSync();
   startAliasSync();
-  }catch(e){
-    console.error("Error en enterApp:",e);
-    // Si algo falla, mostrar login normal
-    localStorage.removeItem("p26_session");
-    document.getElementById("appScreen").classList.remove("active");
-    showLogin();
-    showToast("❌ Error al entrar, intentá de nuevo");
-  }
 }
 
 function logout(){
@@ -1398,7 +1368,6 @@ function renderRanking(player){
     return `<div class="rank-row${isMe?" me":""}">
       <div class="rank-pos ${pc}">${i+1}</div>
       <div class="rank-player">
-        <div class="rank-av-sm" style="${avStyle}">${avInner}</div>
         <div class="rank-name-wrap">
           ${bannerDiv}
           <span class="rank-name">${displayName}</span>
