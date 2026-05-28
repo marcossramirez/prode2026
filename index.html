@@ -1029,9 +1029,16 @@ async function loadAllAliases(){
     data.forEach(a=>{
       aliasesDB[a.mail]=a.alias;
       const player=REGISTRY.find(p=>p.mail===a.mail);
-      if(player&&!player.alias)player.alias=a.alias;
+      if(player)player.alias=a.alias;
     });
+    // Re-render ranking con aliases actualizados
+    if(currentPlayer)renderRanking(currentPlayer);
   }catch(e){console.warn("Error cargando aliases:",e);}
+}
+
+/* Polling de aliases cada 30 segundos para ver nuevos jugadores */
+function startAliasSync(){
+  setInterval(loadAllAliases, 30000);
 }
 
 async function saveAlias(mail,alias){
@@ -1227,8 +1234,9 @@ async function enterApp(player){
   renderGrupoMatches("A");renderElimMatches("dieciseis");
   initEsp();renderAdmin();
   renderRanking(player);
-  // Arrancar sincronización de resultados
+  // Arrancar sincronización de resultados y aliases
   startSync();
+  startAliasSync();
 }
 
 function logout(){
@@ -1257,6 +1265,7 @@ function showTab(tab,btn){
    RANKING
 ═══════════════════════════════════════════ */
 function renderRanking(player){
+  // ── Tarjeta de perfil privada ──
   const pfUrl=driveImg(player.foto_perfil);
   const profAvEl=document.getElementById("profAv");
   if(pfUrl){
@@ -1272,27 +1281,44 @@ function renderRanking(player){
     <div class="profile-stat"><span>% aciertos</span><span class="psv" style="color:#00FF47">${player.pct}%</span></div>
     <div class="profile-stat"><span>Goles acertados</span><span class="psv" style="color:#00FF47">⚽ ${player.gAci}</span></div>
     <div class="profile-stat"><span>Goles errados</span><span class="psv" style="color:#E8292A">✗ ${player.gErr}</span></div>`;
-  const withAlias=PLAYERS.filter(p=>p.alias);
-  const sorted=[...withAlias].sort((a,b)=>b.pts-a.pts);
+
+  // ── Tabla de posiciones — TODOS los jugadores registrados ──
+  // Aplicar aliases del sheet a cada jugador
+  PLAYERS.forEach(p=>{
+    if(aliasesDB[p.mail])p.alias=aliasesDB[p.mail];
+  });
+
+  // Ordenar: primero por puntos desc, luego alfabético para los que tienen 0
+  const sorted=[...PLAYERS].sort((a,b)=>{
+    if(b.pts!==a.pts)return b.pts-a.pts;
+    const na=a.alias||a.mail;
+    const nb=b.alias||b.mail;
+    return na.localeCompare(nb);
+  });
+
   document.getElementById("rankRows").innerHTML=sorted.map((p,i)=>{
     const pc=i===0?"p1":i===1?"p2":i===2?"p3":"";
     const isMe=p.mail===player.mail;
     const pf=driveImg(p.foto_perfil);
     const bn=driveImg(p.banner);
+    const displayName=p.alias||`<span style="color:var(--dim);font-size:13px;font-style:italic">Sin registrar</span>`;
+
     let tEl;
     if(p.trend>0)tEl=`<span style="color:#00FF47;font-size:15px">▲</span><span style="color:#00FF47;font-weight:700">${p.trend}</span>`;
     else if(p.trend<0)tEl=`<span style="color:#E8292A;font-size:15px">▼</span><span style="color:#E8292A;font-weight:700">${Math.abs(p.trend)}</span>`;
     else tEl=`<span style="color:rgba(255,255,255,.3);font-size:18px">—</span>`;
+
     const avStyle=pf?`background-image:url('${pf}');background-size:cover;background-position:center;`:``;
     const avInner=pf?"":(p.alias||"?")[0].toUpperCase();
     const bannerDiv=bn?`<div class="rank-banner" style="background-image:url('${bn}')"></div>`:"";
+
     return `<div class="rank-row${isMe?" me":""}">
       <div class="rank-pos ${pc}">${i+1}</div>
       <div class="rank-player">
         <div class="rank-av-sm" style="${avStyle}">${avInner}</div>
         <div class="rank-name-wrap">
           ${bannerDiv}
-          <span class="rank-name">${p.alias}</span>
+          <span class="rank-name">${displayName}</span>
         </div>
       </div>
       <div class="rank-pts">${p.pts}</div>
