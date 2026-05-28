@@ -1155,6 +1155,11 @@ window.addEventListener("DOMContentLoaded",()=>{
         if(savedAlias)player.alias=savedAlias;
         if(player.alias){
           currentPlayer=player;
+          // Ocultar intro overlay completamente antes de entrar
+          const ov=document.getElementById("introOverlay");
+          if(ov){ov.style.display="none";ov.style.opacity="0";}
+          const loader=document.getElementById("pageLoader");
+          if(loader){loader.classList.remove("show");}
           enterApp(player);
           return;
         }
@@ -1188,7 +1193,7 @@ function showLoader(ms=440){
 ═══════════════════════════════════════════ */
 function launchConfetti(){
   const cv=document.getElementById("confettiCanvas"),ctx=cv.getContext("2d");
-  cv.width=window.innerWidth;cv.height=window.innerHeight;cv.style.display="block";
+  cv.width=window.innerWidth;cv.height=window.innerHeight;cv.style.display="block";cv.style.pointerEvents="none";
   const cols=["#FFFFFF","#75AADB","#3D3FE8","#00FF47","#F5E642","#4DFFD2","#ffffff","#aad4f5"];
   const ps=Array.from({length:520},()=>({
     x:Math.random()*cv.width,y:-50-Math.random()*400,
