@@ -215,12 +215,13 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
 .nav-user{display:flex;align-items:center;gap:10px;}
 .nav-name{font-size:16px;color:var(--white);font-family:"Barlow Condensed",sans-serif;font-weight:900;letter-spacing:1px;text-transform:uppercase;}
 .nav-av{
-  width:32px;height:32px;border-radius:50%;
+  width:36px;height:36px;border-radius:50%;
   background:var(--surface2);
   display:flex;align-items:center;justify-content:center;
   font-family:"Barlow Condensed",sans-serif;font-weight:900;font-size:14px;color:var(--white);
-  cursor:pointer;border:2px solid rgba(255,255,255,.2);transition:all .2s;
+  cursor:pointer;border:none;transition:all .2s;
   overflow:hidden;background-size:cover;background-position:center;background-repeat:no-repeat;
+  flex-shrink:0;
 }
 .nav-av:hover{border-color:var(--white);}
 
@@ -260,11 +261,11 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
   font-size:100px;color:rgba(255,255,255,.1);line-height:1;pointer-events:none;
 }
 .profile-av{
-  width:72px;height:72px;border-radius:50%;flex-shrink:0;
+  width:80px;height:80px;border-radius:50%;flex-shrink:0;
   background:var(--surface2);
   display:flex;align-items:center;justify-content:center;
-  font-family:"Barlow Condensed",sans-serif;font-weight:900;font-size:26px;color:var(--white);
-  overflow:hidden;
+  font-family:"Barlow Condensed",sans-serif;font-weight:900;font-size:28px;color:var(--white);
+  overflow:hidden;border:none;
   background-size:cover;background-position:center;background-repeat:no-repeat;
 }
 .profile-name{font-family:"Barlow Condensed",sans-serif;font-weight:900;font-size:28px;letter-spacing:2px;margin-bottom:10px;text-transform:uppercase;}
@@ -306,11 +307,11 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
 .rank-pos.p1{color:var(--yellow);} .rank-pos.p2{color:#C0C0C0;} .rank-pos.p3{color:#CD7F32;}
 .rank-player{display:flex;align-items:center;gap:12px;padding:8px 12px;overflow:hidden;}
 .rank-av-sm{
-  width:36px;height:36px;border-radius:50%;flex-shrink:0;
+  width:40px;height:40px;border-radius:50%;flex-shrink:0;
   background:var(--surface2);
-  border:2px solid var(--border2);
+  border:none;
   display:flex;align-items:center;justify-content:center;
-  font-family:"Barlow Condensed",sans-serif;font-weight:900;font-size:13px;color:var(--dim);
+  font-family:"Barlow Condensed",sans-serif;font-weight:900;font-size:14px;color:var(--dim);
   overflow:hidden;background-size:cover;background-position:center;background-repeat:no-repeat;
 }
 .rank-name{font-size:18px;font-weight:900;font-family:"Barlow Condensed",sans-serif;letter-spacing:1px;text-transform:uppercase;}
@@ -665,7 +666,7 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
         <button class="nav-tab" id="adminTab" style="display:none;color:var(--red)" onclick="showTab('admin',this)">Admin ⚙</button>
       </div>
       <div class="nav-user">
-        <span class="nav-name" id="navName"></span>
+        <span class="nav-name" id="navName" style="display:none"></span>
         <div class="nav-av" id="navAv" title="Cerrar sesión" onclick="logout()">M</div>
       </div>
     </div>
@@ -1043,12 +1044,25 @@ function startAliasSync(){
 
 async function saveAlias(mail,alias){
   try{
+    // Usar no-cors para evitar bloqueo CORS en POST
     await fetch(SHEET_URL,{
       method:"POST",
-      headers:{"Content-Type":"application/json"},
+      mode:"no-cors",
+      headers:{"Content-Type":"text/plain"},
       body:JSON.stringify({type:"alias",mail,alias})
     });
   }catch(e){console.warn("Error guardando alias:",e);}
+}
+
+async function savePronosticoSheet(mail,alias,match_id,home_score,away_score,bonus){
+  try{
+    await fetch(SHEET_URL,{
+      method:"POST",
+      mode:"no-cors",
+      headers:{"Content-Type":"text/plain"},
+      body:JSON.stringify({type:"pronostico",mail,alias,match_id,home_score,away_score,bonus})
+    });
+  }catch(e){console.warn("Error guardando pronóstico:",e);}
 }
 
 /* ═══════════════════════════════════════════
@@ -1113,6 +1127,21 @@ function stopSync(){
    INTRO / LOADER
 ═══════════════════════════════════════════ */
 window.addEventListener("DOMContentLoaded",()=>{
+  const session=localStorage.getItem("p26_session");
+  if(session){
+    // Auto-login: recuperar sesión sin mostrar intro
+    const player=REGISTRY.find(p=>p.mail.toLowerCase()===session.toLowerCase());
+    if(player){
+      const savedAlias=localStorage.getItem("p26_alias_"+session);
+      if(savedAlias)player.alias=savedAlias;
+      if(player.alias){
+        currentPlayer=player;
+        enterApp(player);
+        return;
+      }
+    }
+  }
+  // Sin sesión: mostrar intro y login
   const vid=document.getElementById("introVideo"),ov=document.getElementById("introOverlay");
   ov.classList.add("playing");
   const end=()=>{ov.style.transition="opacity .5s";ov.style.opacity="0";setTimeout(()=>{ov.style.display="none";showLogin();},500);};
@@ -1211,11 +1240,14 @@ async function confirmAlias(){
 
 async function enterApp(player){
   uname=player.alias;isAdmin=!!player.isAdmin;
-  // Cargar aliases de todos desde Sheet
-  await loadAllAliases();
+  // Guardar sesión
+  localStorage.setItem("p26_session",player.mail);
+
+  // Mostrar app inmediatamente sin esperar al Sheet
   document.getElementById("loginScreen").classList.remove("active");
   document.getElementById("appScreen").classList.add("active");
-  document.getElementById("navName").textContent=player.alias;
+
+  // Nav avatar — sin nombre, solo imagen
   const navAv=document.getElementById("navAv");
   const pfUrl=driveImg(player.foto_perfil);
   if(pfUrl){
@@ -1226,21 +1258,35 @@ async function enterApp(player){
   } else {
     navAv.textContent=player.alias[0].toUpperCase();
   }
+  // Ocultar nombre del nav
+  const navNameEl=document.getElementById("navName");
+  if(navNameEl)navNameEl.style.display="none";
+
   if(isAdmin)document.getElementById("adminTab").style.display="inline-block";
   launchConfetti();
-  // Cargar pronósticos del jugador
-  await loadMisPronosticos();
+
+  // Render inmediato con datos locales
   buildGrupoDD();buildResGrupoDD();
   renderGrupoMatches("A");renderElimMatches("dieciseis");
   initEsp();renderAdmin();
   renderRanking(player);
-  // Arrancar sincronización de resultados y aliases
+
+  // Cargar datos del Sheet en paralelo (no bloquea la UI)
+  Promise.all([loadAllAliases(), loadMisPronosticos(), loadResultadosFromSheet()])
+    .then(()=>{
+      renderRanking(player);
+      renderGrupoMatches(curGrupo);
+      renderResultados();
+    });
+
+  // Sincronización continua
   startSync();
   startAliasSync();
 }
 
 function logout(){
   stopSync();
+  localStorage.removeItem("p26_session");
   document.getElementById("appScreen").classList.remove("active");
   document.getElementById("aliasScreen").classList.remove("active");
   currentPlayer=null;uname=null;isAdmin=false;
