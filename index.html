@@ -988,17 +988,23 @@ async function loadResultadosFromSheet(){
 async function savePronostico(matchId,side,val){
   if(!currentPlayer)return;
   if(!userPron[matchId])userPron[matchId]={};
-  userPron[matchId][side]=parseInt(val)||0;
-  // Guardar en Sheet via postToSheet (sin CORS)
+  const parsed=parseInt(val);
+  if(isNaN(parsed)||val==="")return; // no guardar si está vacío
+  userPron[matchId][side]=parsed;
+  // Solo guardar cuando ambos valores están cargados
+  const h=userPron[matchId].home;
+  const a=userPron[matchId].away;
+  if(h===undefined||a===undefined)return;
   await postToSheet({
     type:"pronostico",
     mail:currentPlayer.mail,
     alias:currentPlayer.alias,
     match_id:matchId,
-    home_score:userPron[matchId].home??null,
-    away_score:userPron[matchId].away??null,
+    home_score:h,
+    away_score:a,
     bonus:userBonus[matchId]||false
   });
+  showToast("✓ Pronóstico guardado");
 }
 
 async function loadMisPronosticos(){
