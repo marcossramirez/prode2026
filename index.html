@@ -40,7 +40,7 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
 .bc8{font-family:"Barlow Condensed",sans-serif;font-weight:800;text-transform:uppercase;}
 
 /* ── INTRO VIDEO ── */
-#introOverlay{position:fixed;inset:0;z-index:9000;background:#000;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+#introOverlay{position:fixed;inset:0;z-index:9000;background:#000;display:none;align-items:center;justify-content:center;overflow:hidden;}
 #introVideo{width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .4s;}
 #introOverlay.playing #introVideo{opacity:1;}
 
@@ -1134,25 +1134,38 @@ function stopSync(){
    INTRO / LOADER
 ═══════════════════════════════════════════ */
 window.addEventListener("DOMContentLoaded",()=>{
+  // Siempre ocultar loader al inicio
+  const loader=document.getElementById("pageLoader");
+  if(loader){loader.classList.remove("show");loader.style.display="none";}
+
   const session=localStorage.getItem("p26_session");
   if(session){
-    // Auto-login: recuperar sesión sin mostrar intro
-    const player=REGISTRY.find(p=>p.mail.toLowerCase()===session.toLowerCase());
-    if(player){
-      const savedAlias=localStorage.getItem("p26_alias_"+session);
-      if(savedAlias)player.alias=savedAlias;
-      if(player.alias){
-        currentPlayer=player;
-        enterApp(player);
-        return;
+    try{
+      const player=REGISTRY.find(p=>p.mail.toLowerCase()===session.toLowerCase());
+      if(player){
+        const savedAlias=localStorage.getItem("p26_alias_"+session);
+        if(savedAlias)player.alias=savedAlias;
+        if(player.alias){
+          currentPlayer=player;
+          // Asegurar que intro overlay esté oculto
+          const ov2=document.getElementById("introOverlay");
+          if(ov2){ov2.style.display="none";ov2.style.opacity="0";}
+          enterApp(player);
+          return;
+        }
       }
+    }catch(e){
+      console.warn("Auto-login falló:",e);
+      localStorage.removeItem("p26_session");
     }
   }
-  // Sin sesión: mostrar intro y login
+
+  // Sin sesión: mostrar intro video y login
   const vid=document.getElementById("introVideo"),ov=document.getElementById("introOverlay");
-  ov.classList.add("playing");
-  const end=()=>{ov.style.transition="opacity .5s";ov.style.opacity="0";setTimeout(()=>{ov.style.display="none";showLogin();},500);};
-  vid.addEventListener("ended",end);setTimeout(end,2200);
+  if(ov){ov.style.display="flex";ov.style.opacity="1";}
+  const end=()=>{ov.style.transition="opacity .5s";ov.style.opacity="0";setTimeout(()=>{ov.style.display="none";ov.style.transition="";showLogin();},500);};
+  if(vid)vid.addEventListener("ended",end);
+  setTimeout(end,2200);
   const se=localStorage.getItem("p26_email")||"";
   if(se)document.getElementById("emailInput").value=se;
 });
