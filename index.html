@@ -1054,7 +1054,10 @@ async function postToSheet(data){
   try{
     const encoded=encodeURIComponent(JSON.stringify(data));
     const url=`${SHEET_URL}?type=write&data=${encoded}`;
-    await fetch(url);
+    const res=await fetch(url,{redirect:"follow",mode:"cors"});
+    const json=await res.json();
+    console.log("Sheet response:",json);
+    return json;
   }catch(e){
     console.warn("postToSheet error:",e);
   }
