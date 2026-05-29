@@ -1049,16 +1049,12 @@ function startAliasSync(){
   setInterval(loadAllAliases, 30000);
 }
 
-/* ── Envío de datos via fetch no-cors ── */
+/* ── Envío de datos via GET (sin CORS) ── */
 async function postToSheet(data){
   try{
-    // Intentar con fetch no-cors (funciona desde GitHub Pages)
-    await fetch(SHEET_URL,{
-      method:"POST",
-      mode:"no-cors",
-      headers:{"Content-Type":"text/plain;charset=utf-8"},
-      body:JSON.stringify(data)
-    });
+    const encoded=encodeURIComponent(JSON.stringify(data));
+    const url=`${SHEET_URL}?type=write&data=${encoded}`;
+    await fetch(url);
   }catch(e){
     console.warn("postToSheet error:",e);
   }
