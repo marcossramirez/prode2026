@@ -1034,9 +1034,10 @@ async function loadAllAliases(){
     const res=await fetch(`${SHEET_URL}?type=aliases`);
     const data=await res.json();
     data.forEach(a=>{
-      aliasesDB[a.mail]=a.alias;
+      const alias=a.alias?a.alias.toUpperCase():a.alias;
+      aliasesDB[a.mail]=alias;
       const player=REGISTRY.find(p=>p.mail===a.mail);
-      if(player)player.alias=a.alias;
+      if(player)player.alias=alias;
     });
     // Re-render ranking con aliases actualizados
     if(currentPlayer)renderRanking(currentPlayer);
@@ -1154,7 +1155,7 @@ window.addEventListener("DOMContentLoaded",()=>{
       const player=REGISTRY.find(p=>p.mail.toLowerCase()===session.toLowerCase());
       if(player){
         const savedAlias=localStorage.getItem("p26_alias_"+session);
-        if(savedAlias)player.alias=savedAlias;
+        if(savedAlias)player.alias=savedAlias.toUpperCase();
         if(player.alias){
           currentPlayer=player;
           // Asegurar que intro overlay esté oculto
@@ -1245,7 +1246,7 @@ function handleLogin(){
   const player=REGISTRY.find(p=>p.mail.toLowerCase()===email);
   if(!player){showToast("❌ Mail no registrado en el prode");return;}
   const savedAlias=localStorage.getItem("p26_alias_"+email);
-  if(savedAlias)player.alias=savedAlias;
+  if(savedAlias)player.alias=savedAlias.toUpperCase();
   localStorage.setItem("p26_email",email);
   currentPlayer=player;
   if(!player.alias){
@@ -1259,8 +1260,9 @@ function handleLogin(){
 }
 
 async function confirmAlias(){
-  const alias=document.getElementById("aliasInput").value.trim();
-  if(!alias||alias.length<2){showToast("Ingresá un alias válido");return;}
+  const raw=document.getElementById("aliasInput").value.trim();
+  if(!raw||raw.length<2){showToast("Ingresá un alias válido");return;}
+  const alias=raw.toUpperCase(); // siempre mayúsculas
   currentPlayer.alias=alias;
   localStorage.setItem("p26_alias_"+currentPlayer.mail,alias);
   await saveAlias(currentPlayer.mail,alias);
