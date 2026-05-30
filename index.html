@@ -40,7 +40,7 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
 .bc8{font-family:"Barlow Condensed",sans-serif;font-weight:800;text-transform:uppercase;}
 
 /* ── INTRO VIDEO ── */
-#introOverlay{position:fixed;inset:0;z-index:9000;background:#000;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+#introOverlay{position:fixed;inset:0;z-index:9000;background:#000;display:none;align-items:center;justify-content:center;overflow:hidden;}
 #introVideo{width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .4s;}
 #introOverlay.playing #introVideo{opacity:1;}
 
@@ -192,12 +192,11 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
   position:sticky;top:0;z-index:100;
   background:var(--black);
   border-bottom:3px solid var(--green);
-  padding:0 24px;
+  padding:6px 14px 0;
 }
-.nav-inner{
-  max-width:960px;margin:0 auto;
-  display:flex;align-items:center;justify-content:space-between;height:58px;
-}
+.nav-inner{max-width:960px;margin:0 auto;display:flex;flex-direction:column;}
+.nav-row1{display:flex;align-items:center;justify-content:space-between;padding-bottom:2px;}
+.nav-row2{display:flex;align-items:center;gap:4px;padding-bottom:6px;}
 .nav-brand{
   font-family:"Barlow Condensed",sans-serif;font-weight:900;font-style:italic;
   font-size:22px;letter-spacing:2px;color:var(--white);text-transform:uppercase;
@@ -236,8 +235,8 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
 /* Section title — big bold FIFA style */
 .sec-title{
   font-family:"Barlow Condensed",sans-serif;font-weight:900;font-style:italic;
-  font-size:36px;letter-spacing:2px;color:var(--white);
-  text-transform:uppercase;margin-bottom:24px;
+  font-size:26px;letter-spacing:1px;color:var(--white);
+  text-transform:uppercase;margin-bottom:16px;
   display:flex;align-items:center;gap:16px;
   border-left:5px solid var(--green);padding-left:16px;
 }
@@ -245,14 +244,15 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
 /* ══════════════════════════════
    RANKING
 ══════════════════════════════ */
-.rank-top{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;}
+.rank-top{display:block;margin-bottom:20px;}
 
 /* Profile card — brand color accent */
 .profile-card{
   background:var(--blue);
-  border-radius:20px;padding:22px;
+  border-radius:20px;padding:18px;
   display:flex;align-items:center;gap:16px;
   position:relative;overflow:hidden;
+  width:100%;box-sizing:border-box;
 }
 .profile-card::after{
   content:"26";
@@ -287,25 +287,25 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
 /* Ranking table */
 .rank-table{background:var(--surface);border-radius:20px;overflow:hidden;border:1px solid var(--border);}
 .rank-head{
-  display:grid;grid-template-columns:50px 1fr 80px 80px;
-  padding:12px 0;
+  display:grid;grid-template-columns:30px 1fr 48px 32px;
+  padding:8px 0;
   background:rgba(255,255,255,.04);
-  font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:2.5px;font-weight:600;
+  font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;font-weight:600;
   border-bottom:1px solid var(--border);
 }
-.rank-head > div:first-child{padding-left:22px;}
-.rank-head > div:last-child{padding-right:22px;}
+.rank-head > div:first-child{padding-left:6px;}
+.rank-head > div:last-child{padding-right:4px;text-align:center;}
 .rank-row{
-  display:grid;grid-template-columns:50px 1fr 80px 80px;
+  display:grid;grid-template-columns:30px 1fr 48px 32px;
   padding:0;border-bottom:1px solid var(--border);
-  align-items:stretch;transition:background .15s;min-height:56px;
+  align-items:stretch;transition:background .15s;min-height:60px;
 }
 .rank-row:last-child{border-bottom:none;}
 .rank-row:hover{background:rgba(255,255,255,.03);}
 .rank-row.me{background:rgba(61,63,232,.15);border-left:3px solid var(--blue);}
-.rank-pos{font-family:"Barlow Condensed",sans-serif;font-weight:900;font-size:24px;color:rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;padding-left:10px;}
+.rank-pos{font-family:"Barlow Condensed",sans-serif;font-weight:900;font-size:16px;color:rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;padding-left:4px;}
 .rank-pos.p1{color:var(--yellow);} .rank-pos.p2{color:#C0C0C0;} .rank-pos.p3{color:#CD7F32;}
-.rank-player{display:flex;align-items:center;gap:12px;padding:8px 12px;overflow:hidden;}
+.rank-player{display:flex;align-items:stretch;overflow:hidden;padding:0;position:relative;}
 .rank-av-sm{
   width:40px;height:40px;border-radius:50%;flex-shrink:0;
   background:var(--surface2);
@@ -316,13 +316,13 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
 }
 .rank-name{font-size:18px;font-weight:900;font-family:"Barlow Condensed",sans-serif;letter-spacing:1px;text-transform:uppercase;}
 .rank-name-wrap{position:relative;flex:1;min-width:0;display:flex;align-items:center;overflow:hidden;}
-.rank-banner{position:absolute;inset:0;background-size:cover;background-position:center;
-  -webkit-mask-image:linear-gradient(to right, transparent 0%, rgba(0,0,0,0.9) 12%, rgba(0,0,0,0.9) 88%, transparent 100%);
-  mask-image:linear-gradient(to right, transparent 0%, rgba(0,0,0,0.9) 12%, rgba(0,0,0,0.9) 88%, transparent 100%);
+.rank-banner{position:absolute;inset:0;background-size:cover;background-position:center left;
+  -webkit-mask-image:linear-gradient(to right, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 70%, transparent 100%);
+  mask-image:linear-gradient(to right, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 70%, transparent 100%);
   pointer-events:none;}
-.rank-name-wrap .rank-name{position:relative;z-index:1;padding:6px 12px;}
-.rank-pts{font-family:"Barlow Condensed",sans-serif;font-weight:900;font-size:24px;color:var(--green);text-align:center;display:flex;align-items:center;justify-content:center;}
-.rank-trend{display:flex;align-items:center;justify-content:center;gap:4px;font-size:13px;font-weight:700;padding-right:10px;}
+.rank-name-wrap .rank-name{position:relative;z-index:1;padding:0 10px;font-size:15px;font-weight:900;font-family:"Barlow Condensed",sans-serif;letter-spacing:1px;text-transform:uppercase;text-shadow:0 1px 6px rgba(0,0,0,1),0 0 20px rgba(0,0,0,.9);}
+.rank-pts{font-family:"Barlow Condensed",sans-serif;font-weight:900;font-size:20px;color:var(--green);text-align:center;display:flex;align-items:center;justify-content:center;}
+.rank-trend{display:flex;align-items:center;justify-content:center;gap:2px;font-size:10px;font-weight:700;padding-right:4px;}
 
 /* Points legend */
 .pts-legend{
@@ -505,10 +505,10 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
 ══════════════════════════════ */
 .res-toggle{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;}
 .tog-btn{
-  padding:10px 22px;border-radius:40px;
+  padding:9px 18px;border-radius:40px;
   border:2px solid var(--border2);background:transparent;
-  color:rgba(255,255,255,.5);font-family:"Barlow Condensed",sans-serif;font-size:15px;font-weight:800;
-  letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:all .2s;
+  color:rgba(255,255,255,.5);font-family:"Barlow Condensed",sans-serif;font-size:14px;font-weight:900;
+  cursor:pointer;transition:all .2s;letter-spacing:1px;text-transform:uppercase;
 }
 .tog-btn:hover{border-color:var(--white);color:var(--white);}
 .tog-btn.active{background:var(--green);border-color:var(--green);color:var(--black);}
@@ -613,6 +613,7 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
 })();
 </script>
 
+
 <!-- INTRO VIDEO -->
 <div id="introOverlay">
   <video id="introVideo" playsinline muted autoplay>
@@ -687,16 +688,15 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
 <div id="appScreen" class="screen">
   <nav class="nav">
     <div class="nav-inner">
-      <div class="nav-brand">MUNDIAL <span class="accent">26</span></div>
-      <div class="nav-tabs">
+      <div class="nav-row1">
+        <div class="nav-brand">MUNDIAL <span class="accent">26</span></div>
+        <div class="nav-av" id="navAv" title="Cerrar sesión" onclick="logout()">M</div>
+      </div>
+      <div class="nav-row2">
         <button class="nav-tab active" onclick="showTab('ranking',this)">Ranking</button>
         <button class="nav-tab" onclick="showTab('pronosticos',this)">Pronósticos</button>
         <button class="nav-tab" onclick="showTab('resultados',this)">Resultados</button>
         <button class="nav-tab" id="adminTab" style="display:none;color:var(--red)" onclick="showTab('admin',this)">Admin ⚙</button>
-      </div>
-      <div class="nav-user">
-        <span class="nav-name" id="navName" style="display:none"></span>
-        <div class="nav-av" id="navAv" title="Cerrar sesión" onclick="logout()">M</div>
       </div>
     </div>
   </nav>
@@ -713,18 +713,7 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
             <div id="profStats"></div>
           </div>
         </div>
-        <div class="counters-card">
-          <div class="counter-box played">
-            <div class="counter-icon">⚽</div>
-            <div class="counter-label">Jugados</div>
-            <div class="counter-val">3</div>
-          </div>
-          <div class="counter-box remaining">
-            <div class="counter-icon">⏳</div>
-            <div class="counter-label">Restantes</div>
-            <div class="counter-val">101</div>
-          </div>
-        </div>
+
       </div>
       <div class="sec-title">Tabla de Posiciones</div>
       <div class="rank-table">
@@ -801,7 +790,7 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
           <div class="esp-row"><div class="esp-lbl">Primera Selección Eliminada<span class="esp-pts">3 PTS</span></div><input class="esp-inp" id="esp4" placeholder="Ej: Arabia Saudita"></div>
           <div class="esp-row"><div class="esp-lbl">Total de Goles en Grupos<span class="esp-pts">4 PTS</span></div><input class="esp-inp" id="esp5" type="number" placeholder="Ej: 98"></div>
           <div class="esp-row"><div class="esp-lbl">Partidos por Penales (elim.)<span class="esp-pts">4 PTS</span></div><input class="esp-inp" id="esp6" type="number" placeholder="Ej: 4"></div>
-          
+          <div id="espSaveBtn" style="margin-top:18px"><button class="btn-main" style="width:auto;padding:12px 32px" onclick="saveEsp()">GUARDAR</button></div>
         </div>
       </div>
     </div>
@@ -900,17 +889,17 @@ const ELIM_PHASES=[
 const REGISTRY=[
   {mail:"marcos.s.ramirez.89@gmail.com",alias:null,foto_perfil:"https://i.imgur.com/skq7XFv.jpeg",banner:"https://i.imgur.com/Jr0CWGe.jpeg",pts:0,trend:0,pct:0,gAci:0,gErr:0},
   {mail:"jalric89@gmail.com",alias:null,foto_perfil:"https://i.imgur.com/ZQAGJyC.jpeg",banner:"https://i.imgur.com/Rmg299o.jpeg",pts:0,trend:0,pct:0,gAci:0,gErr:0},
-  {mail:"santiagogigler@hotmail.com",alias:null,foto_perfil:"https://i.imgur.com/Tr79Zcl.jpeg",banner:"https://i.imgur.com/TYzqx6H.jpeg",pts:0,trend:0,pct:0,gAci:0,gErr:0},
+  {mail:"santiagogigler@hotmail.com",alias:null,foto_perfil:"https://i.imgur.com/Tr79Zcl.jpeg",banner:"https://i.imgur.com/TYzqx6H.png",pts:0,trend:0,pct:0,gAci:0,gErr:0},
   {mail:"mathiasazaro@gmail.com",alias:null,foto_perfil:"https://i.imgur.com/mXD49jN.jpeg",banner:"https://i.imgur.com/k2ElRUa.jpeg",pts:0,trend:0,pct:0,gAci:0,gErr:0},
   {mail:"pau.damore@gmail.com",alias:null,foto_perfil:"https://i.imgur.com/1zf57ei.jpeg",banner:"https://i.imgur.com/xErdH7K.jpeg",pts:0,trend:0,pct:0,gAci:0,gErr:0},
   {mail:"marce_scheider@hotmail.com",alias:null,foto_perfil:"https://i.imgur.com/uGJkspy.jpeg",banner:"https://i.imgur.com/Rheyjaf.jpeg",pts:0,trend:0,pct:0,gAci:0,gErr:0},
   {mail:"lilafernandez05@gmail.com",alias:null,foto_perfil:"https://i.imgur.com/3JgpjYT.jpeg",banner:"https://i.imgur.com/kYtsEaa.jpeg",pts:0,trend:0,pct:0,gAci:0,gErr:0},
-  {mail:"pazmariamilagros@gmail.com",alias:null,foto_perfil:null,banner:null,pts:0,trend:0,pct:0,gAci:0,gErr:0},
-  {mail:"mmercedespaz94@gmail.com",alias:null,foto_perfil:null,banner:null,pts:0,trend:0,pct:0,gAci:0,gErr:0},
+  {mail:"pazmariamilagros@gmail.com",alias:null,foto_perfil:"https://i.imgur.com/F7IiFV4.jpeg",banner:"https://i.imgur.com/u0Ei1ga.jpeg",pts:0,trend:0,pct:0,gAci:0,gErr:0},
+  {mail:"mmercedespaz94@gmail.com",alias:null,foto_perfil:"https://i.imgur.com/2QznC4Z.jpeg",banner:"https://i.imgur.com/NAYDSQf.jpeg",pts:0,trend:0,pct:0,gAci:0,gErr:0},
   {mail:"nicoperez.vilo@gmail.com",alias:null,foto_perfil:"https://i.imgur.com/H3dwmol.jpeg",banner:"https://i.imgur.com/gI7GW1v.jpeg",pts:0,trend:0,pct:0,gAci:0,gErr:0},
   {mail:"meri.terzaghi@gmail.com",alias:null,foto_perfil:"https://i.imgur.com/sAy73g7.jpeg",banner:"https://i.imgur.com/R0hNkJW.jpeg",pts:0,trend:0,pct:0,gAci:0,gErr:0},
   {mail:"mendy.martin@hotmail.com",alias:null,foto_perfil:"https://i.imgur.com/jifwYy2.jpeg",banner:"https://i.imgur.com/nZvmdkI.jpeg",pts:0,trend:0,pct:0,gAci:0,gErr:0},
-  {mail:"flormontemarani@gmail.com",alias:null,foto_perfil:null,banner:null,pts:0,trend:0,pct:0,gAci:0,gErr:0},
+  {mail:"flormontemarani@gmail.com",alias:null,foto_perfil:"https://i.imgur.com/OHKXSY5.jpeg",banner:"https://i.imgur.com/udL7aFn.jpeg",pts:0,trend:0,pct:0,gAci:0,gErr:0},
   {mail:"admin@prode.com",alias:"Admin",foto_perfil:null,banner:null,pts:0,trend:0,pct:0,gAci:0,gErr:0,isAdmin:true}
 ];
 const PLAYERS=REGISTRY.filter(p=>!p.isAdmin);
@@ -1006,48 +995,47 @@ async function loadResultadosFromSheet(){
 /* ═══════════════════════════════════════════
    GOOGLE SHEETS — pronósticos y aliases
 ═══════════════════════════════════════════ */
+const _pronTimers={};
 async function savePronostico(matchId,side,val){
   if(!currentPlayer)return;
   if(!userPron[matchId])userPron[matchId]={};
-  userPron[matchId][side]=parseInt(val)||0;
-  // Guardar en localStorage como backup
-  localStorage.setItem(`p26_pron_${currentPlayer.mail}`,JSON.stringify(userPron));
-  // Guardar en Sheet
-  try{
-    await fetch(SHEET_URL,{
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({
-        type:"pronostico",
-        mail:currentPlayer.mail,
-        alias:currentPlayer.alias,
-        match_id:matchId,
-        home_score:userPron[matchId].home??null,
-        away_score:userPron[matchId].away??null,
-        bonus:userBonus[matchId]||false
-      })
+  // Aceptar vacío como null para borrar
+  const parsed=val===""||val===null?null:parseInt(val);
+  if(parsed!==null&&isNaN(parsed))return;
+  userPron[matchId][side]=parsed;
+  // Cancelar timer anterior y esperar 1.5s antes de guardar
+  if(_pronTimers[matchId])clearTimeout(_pronTimers[matchId]);
+  _pronTimers[matchId]=setTimeout(async()=>{
+    const h=userPron[matchId].home??null;
+    const a=userPron[matchId].away??null;
+    await postToSheet({
+      type:"pronostico",
+      mail:currentPlayer.mail,
+      alias:currentPlayer.alias,
+      match_id:matchId,
+      home_score:h,
+      away_score:a,
+      bonus:userBonus[matchId]||false
     });
-  }catch(e){console.warn("Error guardando pronóstico:",e);}
+    showToast(h===null&&a===null?"✓ Pronóstico borrado":"✓ Pronóstico guardado");
+  },1500);
 }
 
 async function loadMisPronosticos(){
   if(!currentPlayer)return;
-  // Primero cargar desde localStorage
-  const local=localStorage.getItem(`p26_pron_${currentPlayer.mail}`);
-  if(local)userPron=JSON.parse(local);
-  // Luego sincronizar desde Sheet
+  // Solo cargar desde Sheet — sin localStorage
   try{
     const res=await fetch(`${SHEET_URL}?type=pronosticos`);
     const data=await res.json();
+    userPron={};userBonus={};
     const misPron=data.filter(p=>p.mail===currentPlayer.mail);
     misPron.forEach(p=>{
       if(!userPron[p.match_id])userPron[p.match_id]={};
-      if(p.home_score!==null&&p.home_score!=="")userPron[p.match_id].home=parseInt(p.home_score);
-      if(p.away_score!==null&&p.away_score!=="")userPron[p.match_id].away=parseInt(p.away_score);
+      userPron[p.match_id].home=p.home_score===""||p.home_score===null?null:parseInt(p.home_score);
+      userPron[p.match_id].away=p.away_score===""||p.away_score===null?null:parseInt(p.away_score);
       if(p.bonus==="TRUE"||p.bonus===true)userBonus[p.match_id]=true;
     });
     pronosticosDB=data;
-    localStorage.setItem(`p26_pron_${currentPlayer.mail}`,JSON.stringify(userPron));
     renderGrupoMatches(curGrupo);
   }catch(e){console.warn("Error cargando pronósticos:",e);}
 }
@@ -1057,9 +1045,10 @@ async function loadAllAliases(){
     const res=await fetch(`${SHEET_URL}?type=aliases`);
     const data=await res.json();
     data.forEach(a=>{
-      aliasesDB[a.mail]=a.alias;
+      const alias=a.alias?a.alias.toUpperCase():a.alias;
+      aliasesDB[a.mail]=alias;
       const player=REGISTRY.find(p=>p.mail===a.mail);
-      if(player)player.alias=a.alias;
+      if(player)player.alias=alias;
     });
     // Re-render ranking con aliases actualizados
     if(currentPlayer)renderRanking(currentPlayer);
@@ -1071,27 +1060,26 @@ function startAliasSync(){
   setInterval(loadAllAliases, 30000);
 }
 
-async function saveAlias(mail,alias){
+/* ── Envío de datos via GET (sin CORS) ── */
+async function postToSheet(data){
   try{
-    // Usar no-cors para evitar bloqueo CORS en POST
-    await fetch(SHEET_URL,{
-      method:"POST",
-      mode:"no-cors",
-      headers:{"Content-Type":"text/plain"},
-      body:JSON.stringify({type:"alias",mail,alias})
-    });
-  }catch(e){console.warn("Error guardando alias:",e);}
+    const encoded=encodeURIComponent(JSON.stringify(data));
+    const url=`${SHEET_URL}?type=write&data=${encoded}`;
+    const res=await fetch(url,{redirect:"follow",mode:"cors"});
+    const json=await res.json();
+    console.log("Sheet response:",json);
+    return json;
+  }catch(e){
+    console.warn("postToSheet error:",e);
+  }
+}
+
+async function saveAlias(mail,alias){
+  await postToSheet({type:"alias",mail,alias});
 }
 
 async function savePronosticoSheet(mail,alias,match_id,home_score,away_score,bonus){
-  try{
-    await fetch(SHEET_URL,{
-      method:"POST",
-      mode:"no-cors",
-      headers:{"Content-Type":"text/plain"},
-      body:JSON.stringify({type:"pronostico",mail,alias,match_id,home_score,away_score,bonus})
-    });
-  }catch(e){console.warn("Error guardando pronóstico:",e);}
+  await postToSheet({type:"pronostico",mail,alias,match_id,home_score,away_score,bonus});
 }
 
 /* ═══════════════════════════════════════════
@@ -1156,25 +1144,40 @@ function stopSync(){
    INTRO / LOADER
 ═══════════════════════════════════════════ */
 window.addEventListener("DOMContentLoaded",()=>{
+  // Siempre ocultar loader al inicio
+  const loader=document.getElementById("pageLoader");
+  if(loader){loader.classList.remove("show");loader.style.display="none";}
+
   const session=localStorage.getItem("p26_session");
   if(session){
-    // Auto-login: recuperar sesión sin mostrar intro
-    const player=REGISTRY.find(p=>p.mail.toLowerCase()===session.toLowerCase());
-    if(player){
-      const savedAlias=localStorage.getItem("p26_alias_"+session);
-      if(savedAlias)player.alias=savedAlias;
-      if(player.alias){
-        currentPlayer=player;
-        enterApp(player);
-        return;
+    try{
+      const player=REGISTRY.find(p=>p.mail.toLowerCase()===session.toLowerCase());
+      if(player){
+        const savedAlias=localStorage.getItem("p26_alias_"+session);
+        if(savedAlias)player.alias=savedAlias.toUpperCase();
+        if(player.alias){
+          currentPlayer=player;
+          // Asegurar que intro overlay esté oculto
+          const ov2=document.getElementById("introOverlay");
+          if(ov2){ov2.style.display="none";ov2.style.opacity="0";}
+          // Siempre re-guardar alias en Sheet (por si se borró)
+          saveAlias(player.mail, player.alias);
+          enterApp(player);
+          return;
+        }
       }
+    }catch(e){
+      console.warn("Auto-login falló:",e);
+      localStorage.removeItem("p26_session");
     }
   }
-  // Sin sesión: mostrar intro y login
+
+  // Sin sesión: mostrar intro video y login
   const vid=document.getElementById("introVideo"),ov=document.getElementById("introOverlay");
-  ov.classList.add("playing");
-  const end=()=>{ov.style.transition="opacity .5s";ov.style.opacity="0";setTimeout(()=>{ov.style.display="none";showLogin();},500);};
-  vid.addEventListener("ended",end);setTimeout(end,2200);
+  if(ov){ov.style.display="flex";ov.style.opacity="1";}
+  const end=()=>{ov.style.transition="opacity .5s";ov.style.opacity="0";setTimeout(()=>{ov.style.display="none";ov.style.transition="";showLogin();},500);};
+  if(vid)vid.addEventListener("ended",end);
+  setTimeout(end,2200);
   const se=localStorage.getItem("p26_email")||"";
   if(se)document.getElementById("emailInput").value=se;
 });
@@ -1244,7 +1247,7 @@ function handleLogin(){
   const player=REGISTRY.find(p=>p.mail.toLowerCase()===email);
   if(!player){showToast("❌ Mail no registrado en el prode");return;}
   const savedAlias=localStorage.getItem("p26_alias_"+email);
-  if(savedAlias)player.alias=savedAlias;
+  if(savedAlias)player.alias=savedAlias.toUpperCase();
   localStorage.setItem("p26_email",email);
   currentPlayer=player;
   if(!player.alias){
@@ -1253,13 +1256,16 @@ function handleLogin(){
       document.getElementById("aliasScreen").classList.add("active");
     });
   } else {
+    // Re-guardar alias en Sheet por si se borró
+    saveAlias(player.mail, player.alias);
     showLoader(500).then(()=>enterApp(player));
   }
 }
 
 async function confirmAlias(){
-  const alias=document.getElementById("aliasInput").value.trim();
-  if(!alias||alias.length<2){showToast("Ingresá un alias válido");return;}
+  const raw=document.getElementById("aliasInput").value.trim();
+  if(!raw||raw.length<2){showToast("Ingresá un alias válido");return;}
+  const alias=raw.toUpperCase(); // siempre mayúsculas
   currentPlayer.alias=alias;
   localStorage.setItem("p26_alias_"+currentPlayer.mail,alias);
   await saveAlias(currentPlayer.mail,alias);
@@ -1390,7 +1396,6 @@ function renderRanking(player){
     return `<div class="rank-row${isMe?" me":""}">
       <div class="rank-pos ${pc}">${i+1}</div>
       <div class="rank-player">
-        <div class="rank-av-sm" style="${avStyle}">${avInner}</div>
         <div class="rank-name-wrap">
           ${bannerDiv}
           <span class="rank-name">${displayName}</span>
@@ -1621,14 +1626,10 @@ async function saveRes(id,home,away){
   showToast("⏳ Guardando...");
   resultadosDB[id]={home,away,home_score:parseInt(h),away_score:parseInt(a),played:true};
   try{
-    await fetch(SHEET_URL,{
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({
-        type:"resultado",
-        match_id:id,home,away,
-        home_score:parseInt(h),away_score:parseInt(a),played:true
-      })
+    await postToSheet({
+      type:"resultado",
+      match_id:id,home,away,
+      home_score:parseInt(h),away_score:parseInt(a),played:true
     });
     showToast(`✓ ${home} ${h} – ${a} ${away}`);
     recalcularPuntos();
