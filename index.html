@@ -1311,10 +1311,15 @@ async function enterApp(player){
   // Cargar datos del Sheet en paralelo (no bloquea la UI)
   Promise.all([loadAllAliases(), loadMisPronosticos(), loadResultadosFromSheet()])
     .then(()=>{
-      renderRanking(player);
+      renderRanking(currentPlayer||player);
       renderGrupoMatches(curGrupo);
       renderResultados();
     });
+
+  // Forzar re-render del ranking después de 1 segundo (por si los aliases tardaron)
+  setTimeout(()=>{
+    if(currentPlayer)renderRanking(currentPlayer);
+  }, 1000);
 
   // Sincronización continua
   startSync();
