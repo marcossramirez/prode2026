@@ -1586,6 +1586,72 @@ async function toggleBonus(id,btn){
     }
   }
 }
+
+function initEsp(){
+  const locked=torneoStarted();
+  document.getElementById("espLockedNotice").style.display=locked?"flex":"none";
+  document.getElementById("espSaveBtn").style.display=locked?"none":"block";
+  ["esp1","esp2","esp3","esp4","esp5","esp6"].forEach(id=>{
+    const el=document.getElementById(id);
+    el.disabled=locked;if(locked)el.placeholder="Cerrado";
+  });
+}
+
+function saveEsp(){if(torneoStarted()){showToast("🔒 El torneo ya comenzó");return;}showToast("✓ GUARDADO");}
+
+/* RESULTADOS */
+
+function renderResultados(){
+  const all=[];
+  Object.keys(GROUPS).forEach(g=>getMatches(g).filter(m=>m.played).forEach(m=>all.push(m)));
+  all.sort((a,b)=>b.ts-a.ts);
+  document.getElementById("vFecha").innerHTML=
+    all.length>0?all.map(rCard).join(""):`<div class="no-res">Todavía no hay partidos terminados.</div>`;
+  renderResGruposContent("A");
+}
+
+function rCard(m){
+  if(!m.result)return"";
+  const fL=`<img class="t-flag" src="${flagUrl(m.home)}" onerror="this.style.display='none'">`;
+  const fR=`<img class="t-flag" src="${flagUrl(m.away)}" onerror="this.style.display='none'">`;
+  return `<div class="res-card">
+    <div class="res-date">${m.date} · ${m.time}</div>
+    <div class="res-teams">
+      <div class="res-team">${fL}<span>${m.home}</span></div>
+      <div class="res-score"><span>${m.result.home}</span><span class="sep">–</span><span>${m.result.away}</span></div>
+      <div class="res-team r"><span>${m.away}</span>${fR}</div>
+    </div></div>`;
+}
+
+function renderResGruposContent(g){
+  const ms=getMatches(g).filter(m=>m.played);
+  document.getElementById("resGruposContent").innerHTML=
+    ms.length>0?`<div class="grp-lbl">Grupo ${g}</div>`+ms.map(rCard).join("")
+    :`<div class="no-res">No hay partidos terminados en Grupo ${g} aún.</div>`;
+}
+
+/* ADMIN */
+
+function renderAdmin(){
+  const all=[...getMatches("A"),...getMatches("J")];
+  document.getElementById("adminMatches").innerHTML=all.map(m=>`
+    <div class="adm-card">
+      <div class="adm-teams">
+        <div class="adm-t">${m.home}</div>
+        <div class="adm-score">
+          <input class="adm-inp" type="number" min="0" placeholder="–" id="ah_${m.id}">
+          <span style="color:rgba(255,255,255,.3);font-family:'Barlow Condensed';font-weight:900;font-size:18px">:</span>
+          <input class="adm-inp" type="number" min="0" placeholder="–" id="aa_${m.id}">
+        </div>
+        <div class="adm-t r">${m.away}</div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <span style="font-size:11px;color:var(--dim)">${m.date} ${m.time} · ${m.stadium}</span>
+        <button class="btn-save" onclick="saveRes('${m.id}')">GUARDAR</button>
+      </div>
+    </div>`).join("");
+}
+
 function showToast(msg){
   const t=document.getElementById("toastEl");t.textContent=msg;t.classList.add("show");
   setTimeout(()=>t.classList.remove("show"),2500);
