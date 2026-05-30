@@ -1561,4 +1561,31 @@ function renderElimMatches(phId){
   }).join("");
 }
 
->
+async function toggleBonus(id,btn){
+  userBonus[id]=!userBonus[id];
+  btn.classList.toggle("on");
+  showToast(userBonus[id]?"⭐ BONUS ACTIVADO":"Bonus desactivado");
+  if(userPron[id]){
+    const h=userPron[id].home;
+    const a=userPron[id].away;
+    if(h!==undefined&&a!==undefined){
+      await postToSheet({
+        type:"pronostico",
+        mail:currentPlayer.mail,
+        alias:currentPlayer.alias,
+        match_id:id,
+        home_score:h,
+        away_score:a,
+        bonus:userBonus[id]
+      });
+    }
+  }
+}
+function showToast(msg){
+  const t=document.getElementById("toastEl");t.textContent=msg;t.classList.add("show");
+  setTimeout(()=>t.classList.remove("show"),2500);
+}
+</script>
+
+</body>
+</html>
