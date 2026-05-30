@@ -423,7 +423,7 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
 .match-card:hover{border-color:rgba(255,255,255,.2);transform:translateY(-1px);}
 .match-card.locked{opacity:.55;}
 .match-body{padding:0;}
-.match-teams{position:relative;display:grid;grid-template-columns:1fr auto 1fr;align-items:stretch;gap:0;overflow:hidden;}
+.match-teams{position:relative;display:grid;grid-template-columns:1fr auto 1fr;align-items:stretch;gap:0;overflow:hidden;margin:0;}
 .team-l{
   display:flex;align-items:center;
   min-width:0;padding:18px 8px 18px 0;
@@ -432,8 +432,8 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
 .team-l .team-flag-bg{
   position:absolute;inset:0;
   background-size:cover;background-position:left center;
-  -webkit-mask-image:linear-gradient(to right,rgba(0,0,0,1) 55%,rgba(0,0,0,0) 100%);
-  mask-image:linear-gradient(to right,rgba(0,0,0,1) 55%,rgba(0,0,0,0) 100%);
+  -webkit-mask-image:linear-gradient(to right,rgba(0,0,0,1) 60%,rgba(0,0,0,0) 95%);
+  mask-image:linear-gradient(to right,rgba(0,0,0,1) 60%,rgba(0,0,0,0) 95%);
   pointer-events:none;
 }
 .team-l .t-name{position:relative;z-index:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 8px rgba(0,0,0,1),0 0 20px rgba(0,0,0,.8);padding-left:12px;}
@@ -445,8 +445,8 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
 .team-r .team-flag-bg{
   position:absolute;inset:0;
   background-size:cover;background-position:right center;
-  -webkit-mask-image:linear-gradient(to left,rgba(0,0,0,1) 55%,rgba(0,0,0,0) 100%);
-  mask-image:linear-gradient(to left,rgba(0,0,0,1) 55%,rgba(0,0,0,0) 100%);
+  -webkit-mask-image:linear-gradient(to left,rgba(0,0,0,1) 60%,rgba(0,0,0,0) 95%);
+  mask-image:linear-gradient(to left,rgba(0,0,0,1) 60%,rgba(0,0,0,0) 95%);
   pointer-events:none;
 }
 .team-r .t-name{position:relative;z-index:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 8px rgba(0,0,0,1),0 0 20px rgba(0,0,0,.8);padding-right:12px;}
