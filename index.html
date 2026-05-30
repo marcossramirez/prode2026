@@ -985,26 +985,30 @@ async function loadResultadosFromSheet(){
 /* ═══════════════════════════════════════════
    GOOGLE SHEETS — pronósticos y aliases
 ═══════════════════════════════════════════ */
+const _pronTimers={};
 async function savePronostico(matchId,side,val){
   if(!currentPlayer)return;
   if(!userPron[matchId])userPron[matchId]={};
-  const parsed=parseInt(val);
-  if(isNaN(parsed)||val==="")return; // no guardar si está vacío
+  // Aceptar vacío como null para borrar
+  const parsed=val===""||val===null?null:parseInt(val);
+  if(parsed!==null&&isNaN(parsed))return;
   userPron[matchId][side]=parsed;
-  // Solo guardar cuando ambos valores están cargados
-  const h=userPron[matchId].home;
-  const a=userPron[matchId].away;
-  if(h===undefined||a===undefined)return;
-  await postToSheet({
-    type:"pronostico",
-    mail:currentPlayer.mail,
-    alias:currentPlayer.alias,
-    match_id:matchId,
-    home_score:h,
-    away_score:a,
-    bonus:userBonus[matchId]||false
-  });
-  showToast("✓ Pronóstico guardado");
+  // Cancelar timer anterior y esperar 1.5s antes de guardar
+  if(_pronTimers[matchId])clearTimeout(_pronTimers[matchId]);
+  _pronTimers[matchId]=setTimeout(async()=>{
+    const h=userPron[matchId].home??null;
+    const a=userPron[matchId].away??null;
+    await postToSheet({
+      type:"pronostico",
+      mail:currentPlayer.mail,
+      alias:currentPlayer.alias,
+      match_id:matchId,
+      home_score:h,
+      away_score:a,
+      bonus:userBonus[matchId]||false
+    });
+    showToast(h===null&&a===null?"✓ Pronóstico borrado":"✓ Pronóstico guardado");
+  },1500);
 }
 
 async function loadMisPronosticos(){
