@@ -427,6 +427,7 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
 .team-l{display:flex;align-items:center;gap:8px;}
 .team-r{display:flex;align-items:center;gap:6px;justify-content:flex-end;flex:1;min-width:0;overflow:hidden;}
 .t-flag{width:34px;height:23px;border-radius:3px;object-fit:cover;flex-shrink:0;box-shadow:0 1px 4px rgba(0,0,0,.4);}
+.t-flag-ph{width:34px;height:23px;border-radius:3px;flex-shrink:0;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);}
 .t-name{font-size:14px;font-weight:900;font-family:"Barlow Condensed",sans-serif;letter-spacing:0.5px;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:90px;}
 .match-mid{display:flex;flex-direction:column;align-items:center;gap:0;}
 .score-row{display:flex;align-items:center;gap:6px;}
@@ -1520,22 +1521,62 @@ function renderGrupoMatches(g){
 }
 
 function renderElimMatches(phId){
+  const BRACKET={"dieciseis": [{"home": "2do Grupo A", "away": "2do Grupo B", "ciudad": "Los Ángeles", "match": 73}, {"home": "1ro Grupo E", "away": "3ro Grupos A/B/C/D/F", "ciudad": "Boston", "match": 74}, {"home": "1ro Grupo F", "away": "2do Grupo C", "ciudad": "Guadalajara", "match": 75}, {"home": "1ro Grupo C", "away": "2do Grupo F", "ciudad": "Houston", "match": 76}, {"home": "1ro Grupo I", "away": "3ro Grupos C/D/F/G/H", "ciudad": "Nueva York", "match": 77}, {"home": "2do Grupo E", "away": "2do Grupo I", "ciudad": "Dallas", "match": 78}, {"home": "1ro Grupo A", "away": "3ro Grupos C/E/F/H/I", "ciudad": "Ciudad de México", "match": 79}, {"home": "1ro Grupo L", "away": "3ro Grupos E/H/I/J/K", "ciudad": "Atlanta", "match": 80}, {"home": "1ro Grupo D", "away": "3ro Grupos B/E/F/I/J", "ciudad": "San Francisco", "match": 81}, {"home": "1ro Grupo G", "away": "3ro Grupos A/E/H/I/J", "ciudad": "Seattle", "match": 82}, {"home": "2do Grupo K", "away": "2do Grupo L", "ciudad": "Toronto", "match": 83}, {"home": "1ro Grupo H", "away": "2do Grupo J", "ciudad": "Los Ángeles", "match": 84}, {"home": "1ro Grupo B", "away": "3ro Grupos E/F/G/I/J", "ciudad": "Vancouver", "match": 85}, {"home": "1ro Grupo J", "away": "2do Grupo H", "ciudad": "Miami", "match": 86}, {"home": "1ro Grupo K", "away": "3ro Grupos D/E/I/J/L", "ciudad": "Kansas City", "match": 87}, {"home": "2do Grupo D", "away": "2do Grupo G", "ciudad": "Dallas", "match": 88}], "octavos": [{"home": "Gan. M74", "away": "Gan. M77", "ciudad": "Filadelfia", "match": 89}, {"home": "Gan. M73", "away": "Gan. M75", "ciudad": "Houston", "match": 90}, {"home": "Gan. M76", "away": "Gan. M78", "ciudad": "Nueva York", "match": 91}, {"home": "Gan. M79", "away": "Gan. M80", "ciudad": "Ciudad de México", "match": 92}, {"home": "Gan. M83", "away": "Gan. M84", "ciudad": "Dallas", "match": 93}, {"home": "Gan. M81", "away": "Gan. M82", "ciudad": "Seattle", "match": 94}, {"home": "Gan. M86", "away": "Gan. M88", "ciudad": "Atlanta", "match": 95}, {"home": "Gan. M85", "away": "Gan. M87", "ciudad": "Vancouver", "match": 96}], "cuartos": [{"home": "Gan. M89", "away": "Gan. M90", "ciudad": "Boston", "match": 97}, {"home": "Gan. M93", "away": "Gan. M94", "ciudad": "Los Ángeles", "match": 98}, {"home": "Gan. M91", "away": "Gan. M92", "ciudad": "Miami", "match": 99}, {"home": "Gan. M95", "away": "Gan. M96", "ciudad": "Kansas City", "match": 100}], "semis": [{"home": "Gan. M97", "away": "Gan. M98", "ciudad": "Dallas", "match": 101}, {"home": "Gan. M99", "away": "Gan. M100", "ciudad": "Atlanta", "match": 102}], "3er": [{"home": "Perd. Semi 1", "away": "Perd. Semi 2", "ciudad": "Miami", "match": 103}], "final": [{"home": "Gan. Semi 1", "away": "Gan. Semi 2", "ciudad": "Nueva York · MetLife Stadium", "match": 104}]};
+  const matches=BRACKET[phId]||[];
   const ph=ELIM_PHASES.find(p=>p.id===phId)||ELIM_PHASES[0];
-  document.getElementById("elimMatches").innerHTML=Array.from({length:ph.count},(_,i)=>{
-    const mid=`elim_${phId}_${i}`;const pr=userPron[mid]||{};
-    return `<div class="elim-card">
-      <div class="elim-head">Partido ${i+1} — ${ph.label}</div>
-      <div class="elim-team"><div class="elim-tname">Por definir ${i*2+1}</div>
-        <input class="elim-inp" type="number" min="0" max="99" placeholder="–" value="${pr.home??''}" onchange="savePronostico('${mid}','home',this.value)">
-      </div>
-      <div class="elim-team"><div class="elim-tname">Por definir ${i*2+2}</div>
-        <input class="elim-inp" type="number" min="0" max="99" placeholder="–" value="${pr.away??''}" onchange="savePronostico('${mid}','away',this.value)">
+
+  function resolveTeam(label){
+    if(!label)return label;
+    const m=label.match(/^(1ro|2do) Grupo ([A-L])$/);
+    if(m){
+      const pos=m[1]==="1ro"?0:1;
+      const grp=m[2];
+      const grpTeams=GROUPS[grp]?.teams||[];
+      // Sort by pts from resultadosDB if available (simplified)
+      return label; // placeholder until group stage ends
+    }
+    return label;
+  }
+
+  document.getElementById("elimMatches").innerHTML=matches.map((m,i)=>{
+    const mid=`elim_${phId}_${i}`;
+    const pr=userPron[mid]||{};
+    const res=resultadosDB[mid]||null;
+    const lk=!!(res&&res.played);
+    const bon=userBonus[mid];
+    const homeTeam=resolveTeam(m.home);
+    const awayTeam=resolveTeam(m.away);
+    const fL=FLAGS[homeTeam]?`<img class="t-flag" src="${flagUrl(homeTeam)}" onerror="this.style.display='none'">`:`<div class="t-flag-ph"></div>`;
+    const fR=FLAGS[awayTeam]?`<img class="t-flag" src="${flagUrl(awayTeam)}" onerror="this.style.display='none'">`:`<div class="t-flag-ph"></div>`;
+    return `<div class="match-card${lk?" locked":""}">
+      <div class="match-body">
+        <div class="match-teams">
+          <div class="team-l">${fL}<div class="t-name">${homeTeam}</div></div>
+          <div class="match-mid">
+            <div class="score-row">
+              <input class="s-inp" type="number" min="0" max="99" value="${pr.home??''}" placeholder="–"
+                ${lk?"disabled":""} onchange="savePronostico('${mid}','home',this.value)">
+              <span class="${lk?"s-lock":"s-vs"}">${lk?"🔒":"VS"}</span>
+              <input class="s-inp" type="number" min="0" max="99" value="${pr.away??''}" placeholder="–"
+                ${lk?"disabled":""} onchange="savePronostico('${mid}','away',this.value)">
+            </div>
+            <div class="bonus-row">
+              <button class="bonus-btn${bon?" on":""}" onclick="toggleBonus('${mid}',this)"
+                ${lk?"disabled":""} title="Bonus: duplica puntos">⭐</button>
+            </div>
+          </div>
+          <div class="team-r"><div class="t-name">${awayTeam}</div>${fR}</div>
+        </div>
+        <div class="match-meta">
+          <div class="ml">${ph.label} · Partido ${i+1}</div>
+          <div class="mr">M${m.match} · ${m.ciudad}</div>
+        </div>
       </div>
     </div>`;
   }).join("");
 }
 
-async function toggleBonus(id,btn){
+function toggleBonus(id,btn){
   userBonus[id]=!userBonus[id];
   btn.classList.toggle("on");
   showToast(userBonus[id]?"⭐ BONUS ACTIVADO":"Bonus desactivado");
