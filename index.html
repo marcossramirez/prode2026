@@ -431,9 +431,9 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
 }
 .team-l .team-flag-bg{
   position:absolute;inset:0;
-  background-size:contain;background-position:left center;background-repeat:no-repeat;
-  -webkit-mask-image:linear-gradient(to right,rgba(0,0,0,1) 55%,rgba(0,0,0,0) 90%);
-  mask-image:linear-gradient(to right,rgba(0,0,0,1) 55%,rgba(0,0,0,0) 90%);
+  background-size:cover;background-position:center center;
+  -webkit-mask-image:linear-gradient(to right,rgba(0,0,0,1) 0%,rgba(0,0,0,1) 65%,rgba(0,0,0,0) 95%);
+  mask-image:linear-gradient(to right,rgba(0,0,0,1) 0%,rgba(0,0,0,1) 65%,rgba(0,0,0,0) 95%);
   pointer-events:none;
 }
 .team-l .t-name{position:relative;z-index:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 8px rgba(0,0,0,1),0 0 20px rgba(0,0,0,.8);padding-left:12px;}
@@ -444,9 +444,9 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
 }
 .team-r .team-flag-bg{
   position:absolute;inset:0;
-  background-size:contain;background-position:right center;background-repeat:no-repeat;
-  -webkit-mask-image:linear-gradient(to left,rgba(0,0,0,1) 55%,rgba(0,0,0,0) 90%);
-  mask-image:linear-gradient(to left,rgba(0,0,0,1) 55%,rgba(0,0,0,0) 90%);
+  background-size:cover;background-position:center center;
+  -webkit-mask-image:linear-gradient(to left,rgba(0,0,0,1) 0%,rgba(0,0,0,1) 65%,rgba(0,0,0,0) 95%);
+  mask-image:linear-gradient(to left,rgba(0,0,0,1) 0%,rgba(0,0,0,1) 65%,rgba(0,0,0,0) 95%);
   pointer-events:none;
 }
 .team-r .t-name{position:relative;z-index:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 8px rgba(0,0,0,1),0 0 20px rgba(0,0,0,.8);padding-right:12px;}
@@ -946,7 +946,7 @@ let syncInterval=null;
    UTILS
 ═══════════════════════════════════════════ */
 function torneoStarted(){return new Date()>=TORNEO_START;}
-function flagUrl(t){const c=FLAGS[t];return c?`https://flagcdn.com/w40/${c}.png`:""; }
+function flagUrl(t){const c=FLAGS[t];return c?`https://flagcdn.com/w320/${c}.png`:""; }
 function driveImg(url){if(!url||url==="URL_drive")return null;return url;}
 
 /* ═══════════════════════════════════════════
