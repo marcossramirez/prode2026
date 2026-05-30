@@ -1521,22 +1521,9 @@ function renderGrupoMatches(g){
 }
 
 function renderElimMatches(phId){
-  const BRACKET={"dieciseis": [{"home": "2do Grupo A", "away": "2do Grupo B", "ciudad": "Los Ángeles", "match": 73}, {"home": "1ro Grupo E", "away": "3ro Grupos A/B/C/D/F", "ciudad": "Boston", "match": 74}, {"home": "1ro Grupo F", "away": "2do Grupo C", "ciudad": "Guadalajara", "match": 75}, {"home": "1ro Grupo C", "away": "2do Grupo F", "ciudad": "Houston", "match": 76}, {"home": "1ro Grupo I", "away": "3ro Grupos C/D/F/G/H", "ciudad": "Nueva York", "match": 77}, {"home": "2do Grupo E", "away": "2do Grupo I", "ciudad": "Dallas", "match": 78}, {"home": "1ro Grupo A", "away": "3ro Grupos C/E/F/H/I", "ciudad": "Ciudad de México", "match": 79}, {"home": "1ro Grupo L", "away": "3ro Grupos E/H/I/J/K", "ciudad": "Atlanta", "match": 80}, {"home": "1ro Grupo D", "away": "3ro Grupos B/E/F/I/J", "ciudad": "San Francisco", "match": 81}, {"home": "1ro Grupo G", "away": "3ro Grupos A/E/H/I/J", "ciudad": "Seattle", "match": 82}, {"home": "2do Grupo K", "away": "2do Grupo L", "ciudad": "Toronto", "match": 83}, {"home": "1ro Grupo H", "away": "2do Grupo J", "ciudad": "Los Ángeles", "match": 84}, {"home": "1ro Grupo B", "away": "3ro Grupos E/F/G/I/J", "ciudad": "Vancouver", "match": 85}, {"home": "1ro Grupo J", "away": "2do Grupo H", "ciudad": "Miami", "match": 86}, {"home": "1ro Grupo K", "away": "3ro Grupos D/E/I/J/L", "ciudad": "Kansas City", "match": 87}, {"home": "2do Grupo D", "away": "2do Grupo G", "ciudad": "Dallas", "match": 88}], "octavos": [{"home": "Gan. M74", "away": "Gan. M77", "ciudad": "Filadelfia", "match": 89}, {"home": "Gan. M73", "away": "Gan. M75", "ciudad": "Houston", "match": 90}, {"home": "Gan. M76", "away": "Gan. M78", "ciudad": "Nueva York", "match": 91}, {"home": "Gan. M79", "away": "Gan. M80", "ciudad": "Ciudad de México", "match": 92}, {"home": "Gan. M83", "away": "Gan. M84", "ciudad": "Dallas", "match": 93}, {"home": "Gan. M81", "away": "Gan. M82", "ciudad": "Seattle", "match": 94}, {"home": "Gan. M86", "away": "Gan. M88", "ciudad": "Atlanta", "match": 95}, {"home": "Gan. M85", "away": "Gan. M87", "ciudad": "Vancouver", "match": 96}], "cuartos": [{"home": "Gan. M89", "away": "Gan. M90", "ciudad": "Boston", "match": 97}, {"home": "Gan. M93", "away": "Gan. M94", "ciudad": "Los Ángeles", "match": 98}, {"home": "Gan. M91", "away": "Gan. M92", "ciudad": "Miami", "match": 99}, {"home": "Gan. M95", "away": "Gan. M96", "ciudad": "Kansas City", "match": 100}], "semis": [{"home": "Gan. M97", "away": "Gan. M98", "ciudad": "Dallas", "match": 101}, {"home": "Gan. M99", "away": "Gan. M100", "ciudad": "Atlanta", "match": 102}], "3er": [{"home": "Perd. Semi 1", "away": "Perd. Semi 2", "ciudad": "Miami", "match": 103}], "final": [{"home": "Gan. Semi 1", "away": "Gan. Semi 2", "ciudad": "Nueva York · MetLife Stadium", "match": 104}]};
+  const BRACKET={"dieciseis": [{"home": "2do Grupo A", "away": "2do Grupo B", "match": 73, "fecha": "dom, 28 jun", "time": "16:00 ARG", "stadium": "SoFi Stadium", "ciudad": "Los Ángeles, USA"}, {"home": "1ro Grupo C", "away": "2do Grupo F", "match": 76, "fecha": "lun, 29 jun", "time": "14:00 ARG", "stadium": "NRG Stadium", "ciudad": "Houston, USA"}, {"home": "1ro Grupo E", "away": "3ro A/B/C/D/F", "match": 74, "fecha": "lun, 29 jun", "time": "17:30 ARG", "stadium": "Gillette Stadium", "ciudad": "Boston, USA"}, {"home": "1ro Grupo F", "away": "2do Grupo C", "match": 75, "fecha": "lun, 29 jun", "time": "22:00 ARG", "stadium": "Estadio BBVA", "ciudad": "Monterrey, MEX"}, {"home": "2do Grupo E", "away": "2do Grupo I", "match": 78, "fecha": "mar, 30 jun", "time": "14:00 ARG", "stadium": "AT&T Stadium", "ciudad": "Dallas, USA"}, {"home": "1ro Grupo I", "away": "3ro C/D/F/G/H", "match": 77, "fecha": "mar, 30 jun", "time": "18:00 ARG", "stadium": "MetLife Stadium", "ciudad": "Nueva York, USA"}, {"home": "1ro Grupo A", "away": "3ro C/E/F/H/I", "match": 79, "fecha": "mar, 30 jun", "time": "22:00 ARG", "stadium": "Estadio Azteca", "ciudad": "Ciudad de México, MEX"}, {"home": "1ro Grupo L", "away": "3ro E/H/I/J/K", "match": 80, "fecha": "mié, 1 jul", "time": "13:00 ARG", "stadium": "Mercedes-Benz Stadium", "ciudad": "Atlanta, USA"}, {"home": "1ro Grupo G", "away": "3ro A/E/H/I/J", "match": 82, "fecha": "mié, 1 jul", "time": "17:00 ARG", "stadium": "Lumen Field", "ciudad": "Seattle, USA"}, {"home": "1ro Grupo D", "away": "3ro B/E/F/I/J", "match": 81, "fecha": "mié, 1 jul", "time": "21:00 ARG", "stadium": "Levi's Stadium", "ciudad": "San Francisco, USA"}, {"home": "2do Grupo K", "away": "2do Grupo L", "match": 83, "fecha": "jue, 2 jul", "time": "13:00 ARG", "stadium": "BMO Field", "ciudad": "Toronto, CAN"}, {"home": "1ro Grupo H", "away": "2do Grupo J", "match": 84, "fecha": "jue, 2 jul", "time": "16:00 ARG", "stadium": "SoFi Stadium", "ciudad": "Los Ángeles, USA"}, {"home": "1ro Grupo B", "away": "3ro E/F/G/I/J", "match": 85, "fecha": "jue, 2 jul", "time": "21:00 ARG", "stadium": "BC Place", "ciudad": "Vancouver, CAN"}, {"home": "2do Grupo D", "away": "2do Grupo G", "match": 88, "fecha": "vie, 3 jul", "time": "15:00 ARG", "stadium": "AT&T Stadium", "ciudad": "Dallas, USA"}, {"home": "1ro Grupo J", "away": "2do Grupo H", "match": 86, "fecha": "vie, 3 jul", "time": "19:00 ARG", "stadium": "Hard Rock Stadium", "ciudad": "Miami, USA"}, {"home": "1ro Grupo K", "away": "3ro D/E/I/J/L", "match": 87, "fecha": "vie, 3 jul", "time": "22:30 ARG", "stadium": "GEHA Field Arrowhead", "ciudad": "Kansas City, USA"}], "octavos": [{"home": "Gan. M73", "away": "Gan. M75", "match": 90, "fecha": "sáb, 4 jul", "time": "14:00 ARG", "stadium": "NRG Stadium", "ciudad": "Houston, USA"}, {"home": "Gan. M74", "away": "Gan. M77", "match": 89, "fecha": "sáb, 4 jul", "time": "18:00 ARG", "stadium": "Lincoln Financial Field", "ciudad": "Filadelfia, USA"}, {"home": "Gan. M76", "away": "Gan. M78", "match": 91, "fecha": "dom, 5 jul", "time": "17:00 ARG", "stadium": "MetLife Stadium", "ciudad": "Nueva York, USA"}, {"home": "Gan. M79", "away": "Gan. M80", "match": 92, "fecha": "dom, 5 jul", "time": "21:00 ARG", "stadium": "Estadio Azteca", "ciudad": "Ciudad de México, MEX"}, {"home": "Gan. M83", "away": "Gan. M84", "match": 93, "fecha": "lun, 6 jul", "time": "16:00 ARG", "stadium": "AT&T Stadium", "ciudad": "Dallas, USA"}, {"home": "Gan. M81", "away": "Gan. M82", "match": 94, "fecha": "lun, 6 jul", "time": "21:00 ARG", "stadium": "Lumen Field", "ciudad": "Seattle, USA"}, {"home": "Gan. M86", "away": "Gan. M88", "match": 95, "fecha": "mar, 7 jul", "time": "13:00 ARG", "stadium": "Mercedes-Benz Stadium", "ciudad": "Atlanta, USA"}, {"home": "Gan. M85", "away": "Gan. M87", "match": 96, "fecha": "mar, 7 jul", "time": "17:00 ARG", "stadium": "BC Place", "ciudad": "Vancouver, CAN"}], "cuartos": [{"home": "Gan. M89", "away": "Gan. M90", "match": 97, "fecha": "jue, 9 jul", "time": "21:00 ARG", "stadium": "Gillette Stadium", "ciudad": "Boston, USA"}, {"home": "Gan. M93", "away": "Gan. M94", "match": 98, "fecha": "vie, 10 jul", "time": "21:00 ARG", "stadium": "SoFi Stadium", "ciudad": "Los Ángeles, USA"}, {"home": "Gan. M91", "away": "Gan. M92", "match": 99, "fecha": "sáb, 11 jul", "time": "17:00 ARG", "stadium": "Hard Rock Stadium", "ciudad": "Miami, USA"}, {"home": "Gan. M95", "away": "Gan. M96", "match": 100, "fecha": "sáb, 11 jul", "time": "21:00 ARG", "stadium": "GEHA Field Arrowhead", "ciudad": "Kansas City, USA"}], "semis": [{"home": "Gan. M97", "away": "Gan. M98", "match": 101, "fecha": "mar, 14 jul", "time": "21:00 ARG", "stadium": "AT&T Stadium", "ciudad": "Dallas, USA"}, {"home": "Gan. M99", "away": "Gan. M100", "match": 102, "fecha": "mié, 15 jul", "time": "21:00 ARG", "stadium": "Mercedes-Benz Stadium", "ciudad": "Atlanta, USA"}], "3er": [{"home": "Perd. Semi 1", "away": "Perd. Semi 2", "match": 103, "fecha": "sáb, 18 jul", "time": "16:00 ARG", "stadium": "Hard Rock Stadium", "ciudad": "Miami, USA"}], "final": [{"home": "Gan. Semi 1", "away": "Gan. Semi 2", "match": 104, "fecha": "dom, 19 jul", "time": "16:00 ARG", "stadium": "MetLife Stadium", "ciudad": "Nueva York, USA"}]};
   const matches=BRACKET[phId]||[];
   const ph=ELIM_PHASES.find(p=>p.id===phId)||ELIM_PHASES[0];
-
-  function resolveTeam(label){
-    if(!label)return label;
-    const m=label.match(/^(1ro|2do) Grupo ([A-L])$/);
-    if(m){
-      const pos=m[1]==="1ro"?0:1;
-      const grp=m[2];
-      const grpTeams=GROUPS[grp]?.teams||[];
-      // Sort by pts from resultadosDB if available (simplified)
-      return label; // placeholder until group stage ends
-    }
-    return label;
-  }
 
   document.getElementById("elimMatches").innerHTML=matches.map((m,i)=>{
     const mid=`elim_${phId}_${i}`;
@@ -1544,14 +1531,12 @@ function renderElimMatches(phId){
     const res=resultadosDB[mid]||null;
     const lk=!!(res&&res.played);
     const bon=userBonus[mid];
-    const homeTeam=resolveTeam(m.home);
-    const awayTeam=resolveTeam(m.away);
-    const fL=FLAGS[homeTeam]?`<img class="t-flag" src="${flagUrl(homeTeam)}" onerror="this.style.display='none'">`:`<div class="t-flag-ph"></div>`;
-    const fR=FLAGS[awayTeam]?`<img class="t-flag" src="${flagUrl(awayTeam)}" onerror="this.style.display='none'">`:`<div class="t-flag-ph"></div>`;
+    const fL=FLAGS[m.home]?`<img class="t-flag" src="${flagUrl(m.home)}" onerror="this.style.display='none'">`:`<div class="t-flag-ph"></div>`;
+    const fR=FLAGS[m.away]?`<img class="t-flag" src="${flagUrl(m.away)}" onerror="this.style.display='none'">`:`<div class="t-flag-ph"></div>`;
     return `<div class="match-card${lk?" locked":""}">
       <div class="match-body">
         <div class="match-teams">
-          <div class="team-l">${fL}<div class="t-name">${homeTeam}</div></div>
+          <div class="team-l">${fL}<div class="t-name">${m.home}</div></div>
           <div class="match-mid">
             <div class="score-row">
               <input class="s-inp" type="number" min="0" max="99" value="${pr.home??''}" placeholder="–"
@@ -1565,130 +1550,15 @@ function renderElimMatches(phId){
                 ${lk?"disabled":""} title="Bonus: duplica puntos">⭐</button>
             </div>
           </div>
-          <div class="team-r"><div class="t-name">${awayTeam}</div>${fR}</div>
+          <div class="team-r"><div class="t-name">${m.away}</div>${fR}</div>
         </div>
         <div class="match-meta">
-          <div class="ml">${ph.label} · Partido ${i+1}</div>
-          <div class="mr">M${m.match} · ${m.ciudad}</div>
+          <div class="ml">${m.fecha} | ${m.time}</div>
+          <div class="mr">${m.stadium} | ${m.ciudad}</div>
         </div>
       </div>
     </div>`;
   }).join("");
 }
 
-async function toggleBonus(id,btn){
-  userBonus[id]=!userBonus[id];
-  btn.classList.toggle("on");
-  showToast(userBonus[id]?"⭐ BONUS ACTIVADO":"Bonus desactivado");
-  // Guardar en Sheet
-  if(userPron[id]){
-    await savePronostico(id, userPron[id].home!==undefined?'home':'away',
-      userPron[id].home!==undefined?userPron[id].home:userPron[id].away);
-  }
-}
-
-/* ═══════════════════════════════════════════
-   ESPECIALES
-═══════════════════════════════════════════ */
-function initEsp(){
-  const locked=torneoStarted();
-  document.getElementById("espLockedNotice").style.display=locked?"flex":"none";
-  const espBtn=document.getElementById("espSaveBtn");if(espBtn)espBtn.style.display=locked?"none":"block";
-  ["esp1","esp2","esp3","esp4","esp5","esp6"].forEach(id=>{
-    const el=document.getElementById(id);
-    el.disabled=locked;if(locked)el.placeholder="Cerrado";
-  });
-}
-function saveEsp(){if(torneoStarted()){showToast("🔒 El torneo ya comenzó");return;}showToast("✓ GUARDADO");}
-
-/* ═══════════════════════════════════════════
-   RESULTADOS
-═══════════════════════════════════════════ */
-function selRes(view,btn){
-  document.querySelectorAll("#tab-resultados .phase-nav .phase-btn").forEach(b=>b.classList.remove("active"));
-  btn.classList.add("active");
-  document.getElementById("vFecha").style.display=view==="fecha"?"block":"none";
-  document.getElementById("vGrupos").style.display=view==="grupos"?"block":"none";
-  document.getElementById("vElim").style.display=view==="elim"?"block":"none";
-}
-function renderResultados(){
-  const all=[];
-  Object.keys(GROUPS).forEach(g=>getMatches(g).filter(m=>m.played).forEach(m=>all.push(m)));
-  all.sort((a,b)=>b.ts-a.ts);
-  document.getElementById("vFecha").innerHTML=
-    all.length>0?all.map(rCard).join(""):`<div class="no-res">Todavía no hay partidos terminados.</div>`;
-  renderResGruposContent(curResGrupo);
-}
-function rCard(m){
-  if(!m.result)return"";
-  const fL=`<img class="t-flag" src="${flagUrl(m.home)}" onerror="this.style.display='none'">`;
-  const fR=`<img class="t-flag" src="${flagUrl(m.away)}" onerror="this.style.display='none'">`;
-  return `<div class="res-card">
-    <div class="res-date">${m.date} · ${m.time}</div>
-    <div class="res-teams">
-      <div class="res-team">${fL}<span>${m.home}</span></div>
-      <div class="res-score"><span>${m.result.home}</span><span class="sep">–</span><span>${m.result.away}</span></div>
-      <div class="res-team r"><span>${m.away}</span>${fR}</div>
-    </div></div>`;
-}
-function renderResGruposContent(g){
-  const ms=getMatches(g).filter(m=>m.played);
-  document.getElementById("resGruposContent").innerHTML=
-    ms.length>0?`<div class="grp-lbl">Grupo ${g}</div>`+ms.map(rCard).join("")
-    :`<div class="no-res">No hay partidos terminados en Grupo ${g} aún.</div>`;
-}
-
-/* ═══════════════════════════════════════════
-   ADMIN
-═══════════════════════════════════════════ */
-function renderAdmin(){
-  if(!isAdmin)return;
-  const all=[...getMatches("A"),...getMatches("J")];
-  document.getElementById("adminMatches").innerHTML=all.map(m=>`
-    <div class="adm-card">
-      <div class="adm-teams">
-        <div class="adm-t">${m.home}</div>
-        <div class="adm-score">
-          <input class="adm-inp" type="number" min="0" placeholder="–" id="ah_${m.id}" value="${m.result?m.result.home:""}">
-          <span style="color:rgba(255,255,255,.3);font-family:'Barlow Condensed';font-weight:900;font-size:18px">:</span>
-          <input class="adm-inp" type="number" min="0" placeholder="–" id="aa_${m.id}" value="${m.result?m.result.away:""}">
-        </div>
-        <div class="adm-t r">${m.away}</div>
-      </div>
-      <div style="display:flex;align-items:center;justify-content:space-between">
-        <span style="font-size:11px;color:var(--dim)">${m.date} ${m.time} · ${m.stadium}</span>
-        <button class="btn-save" onclick="saveRes('${m.id}','${m.home}','${m.away}')">GUARDAR</button>
-      </div>
-    </div>`).join("");
-}
-
-async function saveRes(id,home,away){
-  const h=document.getElementById("ah_"+id).value;
-  const a=document.getElementById("aa_"+id).value;
-  if(h===""||a===""){showToast("Completá ambos scores");return;}
-  showToast("⏳ Guardando...");
-  resultadosDB[id]={home,away,home_score:parseInt(h),away_score:parseInt(a),played:true};
-  try{
-    await postToSheet({
-      type:"resultado",
-      match_id:id,home,away,
-      home_score:parseInt(h),away_score:parseInt(a),played:true
-    });
-    showToast(`✓ ${home} ${h} – ${a} ${away}`);
-    recalcularPuntos();
-    renderGrupoMatches(curGrupo);
-    renderResultados();
-  }catch(e){
-    showToast("❌ Error al guardar");
-  }
-}
-
-/* TOAST */
-function showToast(msg){
-  const t=document.getElementById("toastEl");t.textContent=msg;t.classList.add("show");
-  setTimeout(()=>t.classList.remove("show"),2500);
-}
-</script>
-
-</body>
-</html>
+>
