@@ -503,12 +503,12 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
 /* ══════════════════════════════
    RESULTADOS
 ══════════════════════════════ */
-.res-toggle{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;}
+.res-toggle{display:flex;gap:8px;margin-bottom:20px;flex-wrap:nowrap;overflow-x:auto;}
 .tog-btn{
-  padding:9px 18px;border-radius:40px;
+  padding:8px 14px;border-radius:40px;
   border:2px solid var(--border2);background:transparent;
-  color:rgba(255,255,255,.5);font-family:"Barlow Condensed",sans-serif;font-size:14px;font-weight:900;
-  cursor:pointer;transition:all .2s;letter-spacing:1px;text-transform:uppercase;
+  color:rgba(255,255,255,.5);font-family:"Barlow Condensed",sans-serif;font-size:12px;font-weight:800;
+  cursor:pointer;transition:all .2s;letter-spacing:1px;text-transform:uppercase;white-space:nowrap;
 }
 .tog-btn:hover{border-color:var(--white);color:var(--white);}
 .tog-btn.active{background:var(--green);border-color:var(--green);color:var(--black);}
