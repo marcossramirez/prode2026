@@ -1264,7 +1264,7 @@ function handleLogin(){
   }
 }
 
-async function confirmAlias(){
+async async function confirmAlias(){
   const raw=document.getElementById("aliasInput").value.trim();
   if(!raw||raw.length<2){showToast("Ingresá un alias válido");return;}
   const alias=raw.toUpperCase(); // siempre mayúsculas
@@ -1576,7 +1576,7 @@ function renderElimMatches(phId){
   }).join("");
 }
 
-function toggleBonus(id,btn){
+async function toggleBonus(id,btn){
   userBonus[id]=!userBonus[id];
   btn.classList.toggle("on");
   showToast(userBonus[id]?"⭐ BONUS ACTIVADO":"Bonus desactivado");
