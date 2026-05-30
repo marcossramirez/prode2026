@@ -430,8 +430,8 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
   position:relative;z-index:1;overflow:hidden;
 }
 .team-l .team-flag-bg{
-  position:absolute;inset:0;
-  background-size:150% auto;background-position:left center;
+  position:absolute;top:-2px;bottom:-2px;left:-2px;right:0;
+  background-size:cover;background-position:center center;
   -webkit-mask-image:linear-gradient(to right,rgba(0,0,0,1) 0%,rgba(0,0,0,1) 80%,rgba(0,0,0,0) 100%);
   mask-image:linear-gradient(to right,rgba(0,0,0,1) 0%,rgba(0,0,0,1) 80%,rgba(0,0,0,0) 100%);
   pointer-events:none;
@@ -443,8 +443,8 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
   position:relative;z-index:1;overflow:hidden;
 }
 .team-r .team-flag-bg{
-  position:absolute;inset:0;
-  background-size:150% auto;background-position:right center;
+  position:absolute;top:-2px;bottom:-2px;left:0;right:-2px;
+  background-size:cover;background-position:center center;
   -webkit-mask-image:linear-gradient(to left,rgba(0,0,0,1) 0%,rgba(0,0,0,1) 80%,rgba(0,0,0,0) 100%);
   mask-image:linear-gradient(to left,rgba(0,0,0,1) 0%,rgba(0,0,0,1) 80%,rgba(0,0,0,0) 100%);
   pointer-events:none;
