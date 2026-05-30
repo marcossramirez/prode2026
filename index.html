@@ -790,7 +790,7 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
           <div class="esp-row"><div class="esp-lbl">Primera Selección Eliminada<span class="esp-pts">3 PTS</span></div><input class="esp-inp" id="esp4" placeholder="Ej: Arabia Saudita"></div>
           <div class="esp-row"><div class="esp-lbl">Total de Goles en Grupos<span class="esp-pts">4 PTS</span></div><input class="esp-inp" id="esp5" type="number" placeholder="Ej: 98"></div>
           <div class="esp-row"><div class="esp-lbl">Partidos por Penales (elim.)<span class="esp-pts">4 PTS</span></div><input class="esp-inp" id="esp6" type="number" placeholder="Ej: 4"></div>
-          <div id="espSaveBtn" style="margin-top:18px"><button class="btn-main" style="width:auto;padding:12px 32px" onclick="saveEsp()">GUARDAR</button></div>
+          
         </div>
       </div>
     </div>
@@ -1551,7 +1551,7 @@ async function toggleBonus(id,btn){
 function initEsp(){
   const locked=torneoStarted();
   document.getElementById("espLockedNotice").style.display=locked?"flex":"none";
-  document.getElementById("espSaveBtn").style.display=locked?"none":"block";
+  const espBtn=document.getElementById("espSaveBtn");if(espBtn)espBtn.style.display=locked?"none":"block";
   ["esp1","esp2","esp3","esp4","esp5","esp6"].forEach(id=>{
     const el=document.getElementById(id);
     el.disabled=locked;if(locked)el.placeholder="Cerrado";
