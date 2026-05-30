@@ -228,8 +228,8 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
    CONTENT
 ══════════════════════════════ */
 .content{flex:1;padding:28px 24px;max-width:960px;margin:0 auto;width:100%;}
-.tab-content{display:none;overflow-x:hidden;}
-.tab-content.active{display:block;animation:fadeUp .2s ease;overflow-x:hidden;}
+.tab-content{display:none;}
+.tab-content.active{display:block;animation:fadeUp .2s ease;}
 @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 
 /* Section title — big bold FIFA style */
@@ -374,7 +374,7 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
 /* ══════════════════════════════
    DROPDOWN — brand style
 ══════════════════════════════ */
-.dd-wrap{position:relative;margin-bottom:16px;}
+.dd-wrap{position:relative;margin-bottom:16px;z-index:100;}
 .dd-btn{
   width:100%;padding:13px 18px;border-radius:14px;
   background:var(--surface2);
@@ -798,11 +798,9 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
 
     <!-- ── RESULTADOS ── -->
     <div id="tab-resultados" class="tab-content">
-      <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px;">
-        <div class="sec-title" style="margin-bottom:0">Resultados</div>
-        <button class="phase-btn active" id="btnFecha" onclick="selRes('fecha',this)" style="white-space:nowrap;flex-shrink:0;">Por Fecha</button>
-      </div>
-      <div class="res-toggle">
+      <div class="sec-title">Resultados</div>
+      <div class="phase-nav">
+        <button class="phase-btn active" id="btnFecha" onclick="selRes('fecha',this)">Por Fecha</button>
         <button class="phase-btn" onclick="selRes('grupos',this)">Fase de Grupos</button>
         <button class="phase-btn" onclick="selRes('elim',this)">Fase Eliminatoria</button>
       </div>
@@ -1566,7 +1564,7 @@ function saveEsp(){if(torneoStarted()){showToast("🔒 El torneo ya comenzó");r
    RESULTADOS
 ═══════════════════════════════════════════ */
 function selRes(view,btn){
-  document.querySelectorAll("#tab-resultados .phase-btn").forEach(b=>b.classList.remove("active"));
+  document.querySelectorAll("#tab-resultados .phase-nav .phase-btn").forEach(b=>b.classList.remove("active"));
   btn.classList.add("active");
   document.getElementById("vFecha").style.display=view==="fecha"?"block":"none";
   document.getElementById("vGrupos").style.display=view==="grupos"?"block":"none";
