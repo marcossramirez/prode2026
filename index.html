@@ -1013,22 +1013,19 @@ async function savePronostico(matchId,side,val){
 
 async function loadMisPronosticos(){
   if(!currentPlayer)return;
-  // Primero cargar desde localStorage
-  const local=localStorage.getItem(`p26_pron_${currentPlayer.mail}`);
-  if(local)userPron=JSON.parse(local);
-  // Luego sincronizar desde Sheet
+  // Solo cargar desde Sheet — sin localStorage
   try{
     const res=await fetch(`${SHEET_URL}?type=pronosticos`);
     const data=await res.json();
+    userPron={};userBonus={};
     const misPron=data.filter(p=>p.mail===currentPlayer.mail);
     misPron.forEach(p=>{
       if(!userPron[p.match_id])userPron[p.match_id]={};
-      if(p.home_score!==null&&p.home_score!=="")userPron[p.match_id].home=parseInt(p.home_score);
-      if(p.away_score!==null&&p.away_score!=="")userPron[p.match_id].away=parseInt(p.away_score);
+      userPron[p.match_id].home=p.home_score===""||p.home_score===null?null:parseInt(p.home_score);
+      userPron[p.match_id].away=p.away_score===""||p.away_score===null?null:parseInt(p.away_score);
       if(p.bonus==="TRUE"||p.bonus===true)userBonus[p.match_id]=true;
     });
     pronosticosDB=data;
-    localStorage.setItem(`p26_pron_${currentPlayer.mail}`,JSON.stringify(userPron));
     renderGrupoMatches(curGrupo);
   }catch(e){console.warn("Error cargando pronósticos:",e);}
 }
