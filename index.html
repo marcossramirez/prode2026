@@ -422,10 +422,32 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
 }
 .match-card:hover{border-color:rgba(255,255,255,.2);transform:translateY(-1px);}
 .match-card.locked{opacity:.55;}
-.match-body{padding:16px 18px;}
-.match-teams{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px;}
-.team-l{display:flex;align-items:center;gap:8px;}
-.team-r{display:flex;align-items:center;gap:6px;justify-content:flex-end;flex:1;min-width:0;overflow:hidden;}
+.match-body{padding:0;}
+.match-teams{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:0;}
+.team-l{
+  position:relative;display:flex;align-items:center;
+  min-width:0;overflow:hidden;padding:10px 10px 10px 12px;
+}
+.team-l .team-flag-bg{
+  position:absolute;inset:0;
+  background-size:cover;background-position:left center;
+  -webkit-mask-image:linear-gradient(to right,rgba(0,0,0,0.35) 0%,rgba(0,0,0,0) 100%);
+  mask-image:linear-gradient(to right,rgba(0,0,0,0.35) 0%,rgba(0,0,0,0) 100%);
+  pointer-events:none;border-radius:0;
+}
+.team-l .t-name{position:relative;z-index:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.team-r{
+  position:relative;display:flex;align-items:center;justify-content:flex-end;
+  min-width:0;overflow:hidden;padding:10px 12px 10px 10px;
+}
+.team-r .team-flag-bg{
+  position:absolute;inset:0;
+  background-size:cover;background-position:right center;
+  -webkit-mask-image:linear-gradient(to left,rgba(0,0,0,0.35) 0%,rgba(0,0,0,0) 100%);
+  mask-image:linear-gradient(to left,rgba(0,0,0,0.35) 0%,rgba(0,0,0,0) 100%);
+  pointer-events:none;
+}
+.team-r .t-name{position:relative;z-index:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .t-flag{width:34px;height:23px;border-radius:3px;object-fit:cover;flex-shrink:0;box-shadow:0 1px 4px rgba(0,0,0,.4);}
 .t-flag-ph{width:34px;height:23px;border-radius:3px;flex-shrink:0;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);}
 .t-name{font-size:14px;font-weight:900;font-family:"Barlow Condensed",sans-serif;letter-spacing:0.5px;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:90px;}
@@ -455,7 +477,7 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
 .bonus-btn:disabled{cursor:not-allowed;}
 .match-meta{
   display:grid;grid-template-columns:1fr 1fr;
-  margin-top:10px;padding-top:10px;
+  margin-top:0;padding:10px 14px;
   border-top:1px solid var(--border);font-size:10px;color:var(--dim);
 }
 .match-meta .mr{text-align:right;}
@@ -1496,12 +1518,15 @@ function getMatches(g){
 function renderGrupoMatches(g){
   document.getElementById("grupoMatches").innerHTML=getMatches(g).map(m=>{
     const lk=m.locked,bon=userBonus[m.id],pr=userPron[m.id]||{};
-    const fL=`<img class="t-flag" src="${flagUrl(m.home)}" onerror="this.style.display='none'">`;
-    const fR=`<img class="t-flag" src="${flagUrl(m.away)}" onerror="this.style.display='none'">`;
+    const fLurl=flagUrl(m.home);
+    const fRurl=flagUrl(m.away);
     return `<div class="match-card${lk?" locked":""}">
       <div class="match-body">
         <div class="match-teams">
-          <div class="team-l">${fL}<div class="t-name">${m.home}</div></div>
+          <div class="team-l">
+            ${fLurl?`<div class="team-flag-bg" style="background-image:url('${fLurl}')"></div>`:""}
+            <div class="t-name">${m.home}</div>
+          </div>
           <div class="match-mid">
             <div class="score-row">
               <input class="s-inp" type="number" min="0" max="99" value="${pr.home??''}" placeholder="–"
@@ -1515,7 +1540,10 @@ function renderGrupoMatches(g){
                 ${lk?"disabled":""} title="Bonus: duplica puntos">⭐</button>
             </div>
           </div>
-          <div class="team-r"><div class="t-name">${m.away}</div>${fR}</div>
+          <div class="team-r">
+            ${fRurl?`<div class="team-flag-bg" style="background-image:url('${fRurl}')"></div>`:""}
+            <div class="t-name">${m.away}</div>
+          </div>
         </div>
         <div class="match-meta">
           <div class="ml">${m.date} | ${m.time} ARG</div>
