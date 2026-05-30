@@ -426,28 +426,28 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
 .match-teams{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:0;}
 .team-l{
   position:relative;display:flex;align-items:center;
-  min-width:0;overflow:hidden;padding:12px 8px 12px 14px;
+  min-width:0;overflow:hidden;padding:16px 8px 16px 14px;
 }
 .team-l .team-flag-bg{
-  position:absolute;inset:0;
+  position:absolute;top:0;left:0;right:0;bottom:0;
   background-size:cover;background-position:left center;
-  -webkit-mask-image:linear-gradient(to right,rgba(0,0,0,1) 0%,rgba(0,0,0,1) 65%,rgba(0,0,0,0) 100%);
-  mask-image:linear-gradient(to right,rgba(0,0,0,1) 0%,rgba(0,0,0,1) 65%,rgba(0,0,0,0) 100%);
+  -webkit-mask-image:linear-gradient(to right,rgba(0,0,0,1) 0%,rgba(0,0,0,1) 55%,rgba(0,0,0,0) 90%);
+  mask-image:linear-gradient(to right,rgba(0,0,0,1) 0%,rgba(0,0,0,1) 55%,rgba(0,0,0,0) 90%);
   pointer-events:none;
 }
-.team-l .t-name{position:relative;z-index:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.team-l .t-name{position:relative;z-index:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 4px rgba(0,0,0,.8);}
 .team-r{
   position:relative;display:flex;align-items:center;justify-content:flex-end;
-  min-width:0;overflow:hidden;padding:12px 14px 12px 8px;
+  min-width:0;overflow:hidden;padding:16px 14px 16px 8px;
 }
 .team-r .team-flag-bg{
-  position:absolute;inset:0;
+  position:absolute;top:0;left:0;right:0;bottom:0;
   background-size:cover;background-position:right center;
-  -webkit-mask-image:linear-gradient(to left,rgba(0,0,0,1) 0%,rgba(0,0,0,1) 65%,rgba(0,0,0,0) 100%);
-  mask-image:linear-gradient(to left,rgba(0,0,0,1) 0%,rgba(0,0,0,1) 65%,rgba(0,0,0,0) 100%);
+  -webkit-mask-image:linear-gradient(to left,rgba(0,0,0,1) 0%,rgba(0,0,0,1) 55%,rgba(0,0,0,0) 90%);
+  mask-image:linear-gradient(to left,rgba(0,0,0,1) 0%,rgba(0,0,0,1) 55%,rgba(0,0,0,0) 90%);
   pointer-events:none;
 }
-.team-r .t-name{position:relative;z-index:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.team-r .t-name{position:relative;z-index:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 4px rgba(0,0,0,.8);}
 .t-flag{width:34px;height:23px;border-radius:3px;object-fit:cover;flex-shrink:0;box-shadow:0 1px 4px rgba(0,0,0,.4);}
 .t-flag-ph{width:34px;height:23px;border-radius:3px;flex-shrink:0;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);}
 .t-name{font-size:14px;font-weight:900;font-family:"Barlow Condensed",sans-serif;letter-spacing:0.5px;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:90px;}
@@ -873,34 +873,34 @@ const WC2026_ID=1; // ID del Mundial 2026 en API-Football
    DATOS ESTÁTICOS
 ═══════════════════════════════════════════ */
 const GROUPS={
-  A:{teams:["México","Sudáfrica","Corea del Sur","Chequia"]},
-  B:{teams:["Canadá","Bosnia y Herzegovina","Qatar","Suiza"]},
+  A:{teams:["México","Sudáfrica","Corea del Sur","Rep. Checa"]},
+  B:{teams:["Canadá","Bosnia y Herz.","Qatar","Suiza"]},
   C:{teams:["Brasil","Marruecos","Haití","Escocia"]},
-  D:{teams:["EEUU","Paraguay","Australia","Türkiye"]},
-  E:{teams:["Alemania","Curazao","Costa de Marfil","Ecuador"]},
-  F:{teams:["Holanda","Japón","Suecia","Túnez"]},
+  D:{teams:["EE.UU.","Paraguay","Australia","Turquía"]},
+  E:{teams:["Alemania","Curazao","C. de Marfil","Ecuador"]},
+  F:{teams:["Países Bajos","Japón","Suecia","Túnez"]},
   G:{teams:["Bélgica","Egipto","Irán","Nueva Zelanda"]},
   H:{teams:["España","Cabo Verde","Arabia Saudita","Uruguay"]},
   I:{teams:["Francia","Senegal","Irak","Noruega"]},
-  J:{teams:["Argentina","Algeria","Austria","Jordania"]},
-  K:{teams:["Portugal","DR Congo","Uzbekistán","Colombia"]},
+  J:{teams:["Argentina","Argelia","Austria","Jordania"]},
+  K:{teams:["Portugal","Rep. D. Congo","Uzbekistán","Colombia"]},
   L:{teams:["Inglaterra","Croacia","Ghana","Panamá"]}
 };
 const FLAGS={
-  "México":"mx","Sudáfrica":"za","Corea del Sur":"kr","Chequia":"cz","Canadá":"ca",
-  "Bosnia y Herzegovina":"ba","Qatar":"qa","Suiza":"ch","Brasil":"br","Marruecos":"ma",
-  "Haití":"ht","Escocia":"gb-sct","EEUU":"us","Paraguay":"py","Australia":"au","Türkiye":"tr",
-  "Alemania":"de","Curazao":"cw","Costa de Marfil":"ci","Ecuador":"ec","Holanda":"nl",
+  "México":"mx","Sudáfrica":"za","Corea del Sur":"kr","Rep. Checa":"cz","Canadá":"ca",
+  "Bosnia y Herz.":"ba","Qatar":"qa","Suiza":"ch","Brasil":"br","Marruecos":"ma",
+  "Haití":"ht","Escocia":"gb-sct","EE.UU.":"us","Paraguay":"py","Australia":"au","Turquía":"tr",
+  "Alemania":"de","Curazao":"cw","C. de Marfil":"ci","Ecuador":"ec","Países Bajos":"nl",
   "Japón":"jp","Suecia":"se","Túnez":"tn","Bélgica":"be","Egipto":"eg","Irán":"ir",
   "Nueva Zelanda":"nz","España":"es","Cabo Verde":"cv","Arabia Saudita":"sa","Uruguay":"uy",
-  "Francia":"fr","Senegal":"sn","Irak":"iq","Noruega":"no","Argentina":"ar","Algeria":"dz",
-  "Austria":"at","Jordania":"jo","Portugal":"pt","DR Congo":"cd","Uzbekistán":"uz",
+  "Francia":"fr","Senegal":"sn","Irak":"iq","Noruega":"no","Argentina":"ar","Argelia":"dz",
+  "Austria":"at","Jordania":"jo","Portugal":"pt","Rep. D. Congo":"cd","Uzbekistán":"uz",
   "Colombia":"co","Inglaterra":"gb","Croacia":"hr","Ghana":"gh","Panamá":"pa"
 };
 const STADS=[
-  {s:"AT&T Stadium",c:"Dallas, USA"},{s:"Estadio Azteca",c:"Ciudad de México, MEX"},
-  {s:"MetLife Stadium",c:"Nueva York, USA"},{s:"Hard Rock Stadium",c:"Miami, USA"},
-  {s:"Rose Bowl",c:"Los Ángeles, USA"},{s:"Estadio BBVA",c:"Monterrey, MEX"}
+  {s:"AT&T Stadium",c:"Dallas"},{s:"Estadio Azteca",c:"Cdad. México"},
+  {s:"MetLife Stadium",c:"Nueva York"},{s:"Hard Rock Stadium",c:"Miami"},
+  {s:"Rose Bowl",c:"Los Ángeles"},{s:"Estadio BBVA",c:"Monterrey"}
 ];
 const ELIM_PHASES=[
   {id:"dieciseis",label:"Dieciséisavos",count:16},
@@ -1554,7 +1554,7 @@ function renderGrupoMatches(g){
 }
 
 function renderElimMatches(phId){
-  const BRACKET={"dieciseis": [{"home": "2do Grupo A", "away": "2do Grupo B", "match": 73, "fecha": "dom, 28 jun", "time": "16:00 ARG", "stadium": "SoFi Stadium", "ciudad": "Los Ángeles, USA"}, {"home": "1ro Grupo C", "away": "2do Grupo F", "match": 76, "fecha": "lun, 29 jun", "time": "14:00 ARG", "stadium": "NRG Stadium", "ciudad": "Houston, USA"}, {"home": "1ro Grupo E", "away": "3ro A/B/C/D/F", "match": 74, "fecha": "lun, 29 jun", "time": "17:30 ARG", "stadium": "Gillette Stadium", "ciudad": "Boston, USA"}, {"home": "1ro Grupo F", "away": "2do Grupo C", "match": 75, "fecha": "lun, 29 jun", "time": "22:00 ARG", "stadium": "Estadio BBVA", "ciudad": "Monterrey, MEX"}, {"home": "2do Grupo E", "away": "2do Grupo I", "match": 78, "fecha": "mar, 30 jun", "time": "14:00 ARG", "stadium": "AT&T Stadium", "ciudad": "Dallas, USA"}, {"home": "1ro Grupo I", "away": "3ro C/D/F/G/H", "match": 77, "fecha": "mar, 30 jun", "time": "18:00 ARG", "stadium": "MetLife Stadium", "ciudad": "Nueva York, USA"}, {"home": "1ro Grupo A", "away": "3ro C/E/F/H/I", "match": 79, "fecha": "mar, 30 jun", "time": "22:00 ARG", "stadium": "Estadio Azteca", "ciudad": "Ciudad de México, MEX"}, {"home": "1ro Grupo L", "away": "3ro E/H/I/J/K", "match": 80, "fecha": "mié, 1 jul", "time": "13:00 ARG", "stadium": "Mercedes-Benz Stadium", "ciudad": "Atlanta, USA"}, {"home": "1ro Grupo G", "away": "3ro A/E/H/I/J", "match": 82, "fecha": "mié, 1 jul", "time": "17:00 ARG", "stadium": "Lumen Field", "ciudad": "Seattle, USA"}, {"home": "1ro Grupo D", "away": "3ro B/E/F/I/J", "match": 81, "fecha": "mié, 1 jul", "time": "21:00 ARG", "stadium": "Levi's Stadium", "ciudad": "San Francisco, USA"}, {"home": "2do Grupo K", "away": "2do Grupo L", "match": 83, "fecha": "jue, 2 jul", "time": "13:00 ARG", "stadium": "BMO Field", "ciudad": "Toronto, CAN"}, {"home": "1ro Grupo H", "away": "2do Grupo J", "match": 84, "fecha": "jue, 2 jul", "time": "16:00 ARG", "stadium": "SoFi Stadium", "ciudad": "Los Ángeles, USA"}, {"home": "1ro Grupo B", "away": "3ro E/F/G/I/J", "match": 85, "fecha": "jue, 2 jul", "time": "21:00 ARG", "stadium": "BC Place", "ciudad": "Vancouver, CAN"}, {"home": "2do Grupo D", "away": "2do Grupo G", "match": 88, "fecha": "vie, 3 jul", "time": "15:00 ARG", "stadium": "AT&T Stadium", "ciudad": "Dallas, USA"}, {"home": "1ro Grupo J", "away": "2do Grupo H", "match": 86, "fecha": "vie, 3 jul", "time": "19:00 ARG", "stadium": "Hard Rock Stadium", "ciudad": "Miami, USA"}, {"home": "1ro Grupo K", "away": "3ro D/E/I/J/L", "match": 87, "fecha": "vie, 3 jul", "time": "22:30 ARG", "stadium": "GEHA Field Arrowhead", "ciudad": "Kansas City, USA"}], "octavos": [{"home": "Gan. M73", "away": "Gan. M75", "match": 90, "fecha": "sáb, 4 jul", "time": "14:00 ARG", "stadium": "NRG Stadium", "ciudad": "Houston, USA"}, {"home": "Gan. M74", "away": "Gan. M77", "match": 89, "fecha": "sáb, 4 jul", "time": "18:00 ARG", "stadium": "Lincoln Financial Field", "ciudad": "Filadelfia, USA"}, {"home": "Gan. M76", "away": "Gan. M78", "match": 91, "fecha": "dom, 5 jul", "time": "17:00 ARG", "stadium": "MetLife Stadium", "ciudad": "Nueva York, USA"}, {"home": "Gan. M79", "away": "Gan. M80", "match": 92, "fecha": "dom, 5 jul", "time": "21:00 ARG", "stadium": "Estadio Azteca", "ciudad": "Ciudad de México, MEX"}, {"home": "Gan. M83", "away": "Gan. M84", "match": 93, "fecha": "lun, 6 jul", "time": "16:00 ARG", "stadium": "AT&T Stadium", "ciudad": "Dallas, USA"}, {"home": "Gan. M81", "away": "Gan. M82", "match": 94, "fecha": "lun, 6 jul", "time": "21:00 ARG", "stadium": "Lumen Field", "ciudad": "Seattle, USA"}, {"home": "Gan. M86", "away": "Gan. M88", "match": 95, "fecha": "mar, 7 jul", "time": "13:00 ARG", "stadium": "Mercedes-Benz Stadium", "ciudad": "Atlanta, USA"}, {"home": "Gan. M85", "away": "Gan. M87", "match": 96, "fecha": "mar, 7 jul", "time": "17:00 ARG", "stadium": "BC Place", "ciudad": "Vancouver, CAN"}], "cuartos": [{"home": "Gan. M89", "away": "Gan. M90", "match": 97, "fecha": "jue, 9 jul", "time": "21:00 ARG", "stadium": "Gillette Stadium", "ciudad": "Boston, USA"}, {"home": "Gan. M93", "away": "Gan. M94", "match": 98, "fecha": "vie, 10 jul", "time": "21:00 ARG", "stadium": "SoFi Stadium", "ciudad": "Los Ángeles, USA"}, {"home": "Gan. M91", "away": "Gan. M92", "match": 99, "fecha": "sáb, 11 jul", "time": "17:00 ARG", "stadium": "Hard Rock Stadium", "ciudad": "Miami, USA"}, {"home": "Gan. M95", "away": "Gan. M96", "match": 100, "fecha": "sáb, 11 jul", "time": "21:00 ARG", "stadium": "GEHA Field Arrowhead", "ciudad": "Kansas City, USA"}], "semis": [{"home": "Gan. M97", "away": "Gan. M98", "match": 101, "fecha": "mar, 14 jul", "time": "21:00 ARG", "stadium": "AT&T Stadium", "ciudad": "Dallas, USA"}, {"home": "Gan. M99", "away": "Gan. M100", "match": 102, "fecha": "mié, 15 jul", "time": "21:00 ARG", "stadium": "Mercedes-Benz Stadium", "ciudad": "Atlanta, USA"}], "3er": [{"home": "Perd. Semi 1", "away": "Perd. Semi 2", "match": 103, "fecha": "sáb, 18 jul", "time": "16:00 ARG", "stadium": "Hard Rock Stadium", "ciudad": "Miami, USA"}], "final": [{"home": "Gan. Semi 1", "away": "Gan. Semi 2", "match": 104, "fecha": "dom, 19 jul", "time": "16:00 ARG", "stadium": "MetLife Stadium", "ciudad": "Nueva York, USA"}]};
+  const BRACKET={"dieciseis": [{"home": "2do Grupo A", "away": "2do Grupo B", "match": 73, "fecha": "dom, 28 jun", "time": "16:00 ARG", "stadium": "SoFi Stadium", "ciudad": "Los Ángeles"}, {"home": "1ro Grupo C", "away": "2do Grupo F", "match": 76, "fecha": "lun, 29 jun", "time": "14:00 ARG", "stadium": "NRG Stadium", "ciudad": "Houston"}, {"home": "1ro Grupo E", "away": "3ro A/B/C/D/F", "match": 74, "fecha": "lun, 29 jun", "time": "17:30 ARG", "stadium": "Gillette Stadium", "ciudad": "Boston"}, {"home": "1ro Grupo F", "away": "2do Grupo C", "match": 75, "fecha": "lun, 29 jun", "time": "22:00 ARG", "stadium": "Estadio BBVA", "ciudad": "Monterrey"}, {"home": "2do Grupo E", "away": "2do Grupo I", "match": 78, "fecha": "mar, 30 jun", "time": "14:00 ARG", "stadium": "AT&T Stadium", "ciudad": "Dallas"}, {"home": "1ro Grupo I", "away": "3ro C/D/F/G/H", "match": 77, "fecha": "mar, 30 jun", "time": "18:00 ARG", "stadium": "MetLife Stadium", "ciudad": "Nueva York"}, {"home": "1ro Grupo A", "away": "3ro C/E/F/H/I", "match": 79, "fecha": "mar, 30 jun", "time": "22:00 ARG", "stadium": "Estadio Azteca", "ciudad": "Cdad. México"}, {"home": "1ro Grupo L", "away": "3ro E/H/I/J/K", "match": 80, "fecha": "mié, 1 jul", "time": "13:00 ARG", "stadium": "Mercedes-Benz Stadium", "ciudad": "Atlanta"}, {"home": "1ro Grupo G", "away": "3ro A/E/H/I/J", "match": 82, "fecha": "mié, 1 jul", "time": "17:00 ARG", "stadium": "Lumen Field", "ciudad": "Seattle"}, {"home": "1ro Grupo D", "away": "3ro B/E/F/I/J", "match": 81, "fecha": "mié, 1 jul", "time": "21:00 ARG", "stadium": "Levi's Stadium", "ciudad": "San Francisco"}, {"home": "2do Grupo K", "away": "2do Grupo L", "match": 83, "fecha": "jue, 2 jul", "time": "13:00 ARG", "stadium": "BMO Field", "ciudad": "Toronto"}, {"home": "1ro Grupo H", "away": "2do Grupo J", "match": 84, "fecha": "jue, 2 jul", "time": "16:00 ARG", "stadium": "SoFi Stadium", "ciudad": "Los Ángeles"}, {"home": "1ro Grupo B", "away": "3ro E/F/G/I/J", "match": 85, "fecha": "jue, 2 jul", "time": "21:00 ARG", "stadium": "BC Place", "ciudad": "Vancouver"}, {"home": "2do Grupo D", "away": "2do Grupo G", "match": 88, "fecha": "vie, 3 jul", "time": "15:00 ARG", "stadium": "AT&T Stadium", "ciudad": "Dallas"}, {"home": "1ro Grupo J", "away": "2do Grupo H", "match": 86, "fecha": "vie, 3 jul", "time": "19:00 ARG", "stadium": "Hard Rock Stadium", "ciudad": "Miami"}, {"home": "1ro Grupo K", "away": "3ro D/E/I/J/L", "match": 87, "fecha": "vie, 3 jul", "time": "22:30 ARG", "stadium": "GEHA Field Arrowhead", "ciudad": "Kansas City"}], "octavos": [{"home": "Gan. M73", "away": "Gan. M75", "match": 90, "fecha": "sáb, 4 jul", "time": "14:00 ARG", "stadium": "NRG Stadium", "ciudad": "Houston"}, {"home": "Gan. M74", "away": "Gan. M77", "match": 89, "fecha": "sáb, 4 jul", "time": "18:00 ARG", "stadium": "Lincoln Financial Field", "ciudad": "Filadelfia"}, {"home": "Gan. M76", "away": "Gan. M78", "match": 91, "fecha": "dom, 5 jul", "time": "17:00 ARG", "stadium": "MetLife Stadium", "ciudad": "Nueva York"}, {"home": "Gan. M79", "away": "Gan. M80", "match": 92, "fecha": "dom, 5 jul", "time": "21:00 ARG", "stadium": "Estadio Azteca", "ciudad": "Cdad. México"}, {"home": "Gan. M83", "away": "Gan. M84", "match": 93, "fecha": "lun, 6 jul", "time": "16:00 ARG", "stadium": "AT&T Stadium", "ciudad": "Dallas"}, {"home": "Gan. M81", "away": "Gan. M82", "match": 94, "fecha": "lun, 6 jul", "time": "21:00 ARG", "stadium": "Lumen Field", "ciudad": "Seattle"}, {"home": "Gan. M86", "away": "Gan. M88", "match": 95, "fecha": "mar, 7 jul", "time": "13:00 ARG", "stadium": "Mercedes-Benz Stadium", "ciudad": "Atlanta"}, {"home": "Gan. M85", "away": "Gan. M87", "match": 96, "fecha": "mar, 7 jul", "time": "17:00 ARG", "stadium": "BC Place", "ciudad": "Vancouver"}], "cuartos": [{"home": "Gan. M89", "away": "Gan. M90", "match": 97, "fecha": "jue, 9 jul", "time": "21:00 ARG", "stadium": "Gillette Stadium", "ciudad": "Boston"}, {"home": "Gan. M93", "away": "Gan. M94", "match": 98, "fecha": "vie, 10 jul", "time": "21:00 ARG", "stadium": "SoFi Stadium", "ciudad": "Los Ángeles"}, {"home": "Gan. M91", "away": "Gan. M92", "match": 99, "fecha": "sáb, 11 jul", "time": "17:00 ARG", "stadium": "Hard Rock Stadium", "ciudad": "Miami"}, {"home": "Gan. M95", "away": "Gan. M96", "match": 100, "fecha": "sáb, 11 jul", "time": "21:00 ARG", "stadium": "GEHA Field Arrowhead", "ciudad": "Kansas City"}], "semis": [{"home": "Gan. M97", "away": "Gan. M98", "match": 101, "fecha": "mar, 14 jul", "time": "21:00 ARG", "stadium": "AT&T Stadium", "ciudad": "Dallas"}, {"home": "Gan. M99", "away": "Gan. M100", "match": 102, "fecha": "mié, 15 jul", "time": "21:00 ARG", "stadium": "Mercedes-Benz Stadium", "ciudad": "Atlanta"}], "3er": [{"home": "Perd. Semi 1", "away": "Perd. Semi 2", "match": 103, "fecha": "sáb, 18 jul", "time": "16:00 ARG", "stadium": "Hard Rock Stadium", "ciudad": "Miami"}], "final": [{"home": "Gan. Semi 1", "away": "Gan. Semi 2", "match": 104, "fecha": "dom, 19 jul", "time": "16:00 ARG", "stadium": "MetLife Stadium", "ciudad": "Nueva York"}]};
   const matches=BRACKET[phId]||[];
   const ph=ELIM_PHASES.find(p=>p.id===phId)||ELIM_PHASES[0];
 
