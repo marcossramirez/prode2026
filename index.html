@@ -505,12 +505,11 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
 ══════════════════════════════ */
 .res-toggle{display:flex;gap:6px;margin-bottom:20px;flex-wrap:nowrap;width:100%;overflow:hidden;}
 .tog-btn{
-  padding:10px 8px;border-radius:40px;
+  padding:10px 22px;border-radius:40px;
   border:2px solid var(--border2);background:transparent;
   color:rgba(255,255,255,.5);font-family:"Barlow Condensed",sans-serif;font-size:15px;font-weight:800;
   letter-spacing:1px;text-transform:uppercase;
   cursor:pointer;transition:all .2s;
-  flex:1;text-align:center;white-space:nowrap;
 }
 .tog-btn:hover{border-color:var(--white);color:var(--white);}
 .tog-btn.active{background:var(--green);border-color:var(--green);color:var(--black);}
@@ -801,7 +800,7 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
     <div id="tab-resultados" class="tab-content">
       <div class="sec-title">Resultados</div>
       <div class="res-toggle">
-        <button class="tog-btn active" onclick="selRes('fecha',this)">Por Fecha</button>
+        <button class="tog-btn active" onclick="selRes('fecha',this)">Fecha</button>
         <button class="tog-btn" onclick="selRes('grupos',this)">Fase de Grupos</button>
         <button class="tog-btn" onclick="selRes('elim',this)">Fase Eliminatoria</button>
       </div>
