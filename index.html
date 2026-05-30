@@ -1264,7 +1264,7 @@ function handleLogin(){
   }
 }
 
-async async function confirmAlias(){
+async function confirmAlias(){
   const raw=document.getElementById("aliasInput").value.trim();
   if(!raw||raw.length<2){showToast("Ingresá un alias válido");return;}
   const alias=raw.toUpperCase(); // siempre mayúsculas
