@@ -1590,7 +1590,7 @@ async function toggleBonus(id,btn){
 function initEsp(){
   const locked=torneoStarted();
   document.getElementById("espLockedNotice").style.display=locked?"flex":"none";
-  document.getElementById("espSaveBtn").style.display=locked?"none":"block";
+  const espBtn=document.getElementById("espSaveBtn");if(espBtn)espBtn.style.display=locked?"none":"block";
   ["esp1","esp2","esp3","esp4","esp5","esp6"].forEach(id=>{
     const el=document.getElementById(id);
     el.disabled=locked;if(locked)el.placeholder="Cerrado";
