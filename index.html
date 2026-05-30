@@ -1150,6 +1150,8 @@ window.addEventListener("DOMContentLoaded",()=>{
           // Asegurar que intro overlay esté oculto
           const ov2=document.getElementById("introOverlay");
           if(ov2){ov2.style.display="none";ov2.style.opacity="0";}
+          // Siempre re-guardar alias en Sheet (por si se borró)
+          saveAlias(player.mail, player.alias);
           enterApp(player);
           return;
         }
@@ -1244,6 +1246,8 @@ function handleLogin(){
       document.getElementById("aliasScreen").classList.add("active");
     });
   } else {
+    // Re-guardar alias en Sheet por si se borró
+    saveAlias(player.mail, player.alias);
     showLoader(500).then(()=>enterApp(player));
   }
 }
