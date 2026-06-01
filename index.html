@@ -423,17 +423,27 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
 }
 .match-flag-l{
   position:absolute;top:0;left:0;bottom:0;width:50%;
-  background-size:cover;background-position:left center;
-  -webkit-mask-image:linear-gradient(to right,rgba(0,0,0,1) 0%,rgba(0,0,0,1) 90%,rgba(0,0,0,0) 100%);
-  mask-image:linear-gradient(to right,rgba(0,0,0,1) 0%,rgba(0,0,0,1) 90%,rgba(0,0,0,0) 100%);
+  overflow:hidden;
   pointer-events:none;z-index:1;
+  -webkit-mask-image:linear-gradient(to right,rgba(0,0,0,1) 0%,rgba(0,0,0,1) 70%,rgba(0,0,0,0) 100%);
+  mask-image:linear-gradient(to right,rgba(0,0,0,1) 0%,rgba(0,0,0,1) 70%,rgba(0,0,0,0) 100%);
+}
+.match-flag-l img{
+  width:100%;height:100%;
+  object-fit:contain;object-position:left center;
+  display:block;
 }
 .match-flag-r{
   position:absolute;top:0;right:0;bottom:0;width:50%;
-  background-size:cover;background-position:right center;
-  -webkit-mask-image:linear-gradient(to left,rgba(0,0,0,1) 0%,rgba(0,0,0,1) 90%,rgba(0,0,0,0) 100%);
-  mask-image:linear-gradient(to left,rgba(0,0,0,1) 0%,rgba(0,0,0,1) 90%,rgba(0,0,0,0) 100%);
+  overflow:hidden;
   pointer-events:none;z-index:1;
+  -webkit-mask-image:linear-gradient(to left,rgba(0,0,0,1) 0%,rgba(0,0,0,1) 70%,rgba(0,0,0,0) 100%);
+  mask-image:linear-gradient(to left,rgba(0,0,0,1) 0%,rgba(0,0,0,1) 70%,rgba(0,0,0,0) 100%);
+}
+.match-flag-r img{
+  width:100%;height:100%;
+  object-fit:contain;object-position:right center;
+  display:block;
 }
 .match-card:hover{border-color:rgba(255,255,255,.2);transform:translateY(-1px);}
 .match-card.locked{opacity:.55;}
@@ -1529,8 +1539,8 @@ function renderGrupoMatches(g){
     return `<div class="match-card${lk?" locked":""}">
       <div class="match-body">
         <div class="match-teams">
-          ${fLurl?`<div class="match-flag-l" style="background-image:url('${fLurl}')"></div>`:""}
-          ${fRurl?`<div class="match-flag-r" style="background-image:url('${fRurl}')"></div>`:""}
+          ${fLurl?`<div class="match-flag-l"><img src="${fLurl}" alt="" onerror="this.parentNode.style.display='none'"></div>`:""}
+          ${fRurl?`<div class="match-flag-r"><img src="${fRurl}" alt="" onerror="this.parentNode.style.display='none'"></div>`:""}
           <div class="team-l">
             <div class="t-name">${m.home}</div>
           </div>
