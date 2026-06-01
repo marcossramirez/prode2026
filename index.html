@@ -419,6 +419,7 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
   border:1px solid var(--border);
   border-radius:16px;margin-bottom:10px;
   transition:all .2s;overflow:hidden;
+  position:relative;
 }
 .match-card:hover{border-color:rgba(255,255,255,.2);transform:translateY(-1px);}
 .match-card.locked{opacity:.55;}
@@ -427,11 +428,11 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
 .team-l{
   display:flex;align-items:center;
   min-width:0;padding:0 6px 0 0;
-  position:relative;z-index:1;overflow:hidden;
+  position:relative;z-index:1;
 }
 .team-l .team-flag-bg{
-  position:absolute;top:-14px;bottom:-2px;left:-2px;right:0;
-  background-size:cover;background-position:center center;
+  position:absolute;top:0;bottom:0;left:0;right:0;
+  background-size:cover;background-position:left center;
   -webkit-mask-image:linear-gradient(to right,rgba(0,0,0,1) 0%,rgba(0,0,0,1) 80%,rgba(0,0,0,0) 100%);
   mask-image:linear-gradient(to right,rgba(0,0,0,1) 0%,rgba(0,0,0,1) 80%,rgba(0,0,0,0) 100%);
   pointer-events:none;
@@ -440,11 +441,11 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
 .team-r{
   display:flex;align-items:center;justify-content:flex-end;
   min-width:0;padding:0 0 0 6px;
-  position:relative;z-index:1;overflow:hidden;
+  position:relative;z-index:1;
 }
 .team-r .team-flag-bg{
-  position:absolute;top:-14px;bottom:-2px;left:0;right:-2px;
-  background-size:cover;background-position:center center;
+  position:absolute;top:-14px;bottom:0;left:0;right:0;
+  background-size:cover;background-position:right center;
   -webkit-mask-image:linear-gradient(to left,rgba(0,0,0,1) 0%,rgba(0,0,0,1) 80%,rgba(0,0,0,0) 100%);
   mask-image:linear-gradient(to left,rgba(0,0,0,1) 0%,rgba(0,0,0,1) 80%,rgba(0,0,0,0) 100%);
   pointer-events:none;
