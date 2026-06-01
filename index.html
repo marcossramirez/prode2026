@@ -422,14 +422,14 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
   position:relative;
 }
 .match-flag-l{
-  position:absolute;top:0;left:0;bottom:28px;width:50%;
+  position:absolute;inset:0;width:50%;
   background-size:cover;background-position:left center;
   -webkit-mask-image:linear-gradient(to right,rgba(0,0,0,1) 0%,rgba(0,0,0,1) 75%,rgba(0,0,0,0) 95%);
   mask-image:linear-gradient(to right,rgba(0,0,0,1) 0%,rgba(0,0,0,1) 75%,rgba(0,0,0,0) 95%);
   pointer-events:none;z-index:1;
 }
 .match-flag-r{
-  position:absolute;top:0;right:0;bottom:28px;width:50%;
+  position:absolute;inset:0;left:auto;width:50%;
   background-size:cover;background-position:right center;
   -webkit-mask-image:linear-gradient(to left,rgba(0,0,0,1) 0%,rgba(0,0,0,1) 75%,rgba(0,0,0,0) 95%);
   mask-image:linear-gradient(to left,rgba(0,0,0,1) 0%,rgba(0,0,0,1) 75%,rgba(0,0,0,0) 95%);
@@ -1527,10 +1527,10 @@ function renderGrupoMatches(g){
     const fLurl=flagUrl(m.home);
     const fRurl=flagUrl(m.away);
     return `<div class="match-card${lk?" locked":""}">
-      ${fLurl?`<div class="match-flag-l" style="background-image:url('${fLurl}')"></div>`:""}
-      ${fRurl?`<div class="match-flag-r" style="background-image:url('${fRurl}')"></div>`:""}
       <div class="match-body">
         <div class="match-teams">
+          ${fLurl?`<div class="match-flag-l" style="background-image:url('${fLurl}')"></div>`:""}
+          ${fRurl?`<div class="match-flag-r" style="background-image:url('${fRurl}')"></div>`:""}
           <div class="team-l">
             <div class="t-name">${m.home}</div>
           </div>
