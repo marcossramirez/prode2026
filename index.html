@@ -893,34 +893,128 @@ const WC2026_ID=1; // ID del Mundial 2026 en API-Football
 ═══════════════════════════════════════════ */
 const GROUPS={
   A:{teams:["México","Sudáfrica","Corea del Sur","Rep. Checa"]},
-  B:{teams:["Canadá","Bosnia y Herz.","Qatar","Suiza"]},
+  B:{teams:["Canadá","Qatar","Suiza","Italia"]},
   C:{teams:["Brasil","Marruecos","Haití","Escocia"]},
   D:{teams:["EE.UU.","Paraguay","Australia","Turquía"]},
   E:{teams:["Alemania","Curazao","C. de Marfil","Ecuador"]},
-  F:{teams:["Países Bajos","Japón","Suecia","Túnez"]},
+  F:{teams:["Países Bajos","Japón","Túnez","Ucrania"]},
   G:{teams:["Bélgica","Egipto","Irán","Nueva Zelanda"]},
   H:{teams:["España","Cabo Verde","Arabia Saudita","Uruguay"]},
-  I:{teams:["Francia","Senegal","Irak","Noruega"]},
+  I:{teams:["Francia","Senegal","Noruega","Irak"]},
   J:{teams:["Argentina","Argelia","Austria","Jordania"]},
-  K:{teams:["Portugal","Rep. D. Congo","Uzbekistán","Colombia"]},
+  K:{teams:["Portugal","Colombia","Uzbekistán","Rep. D. Congo"]},
   L:{teams:["Inglaterra","Croacia","Ghana","Panamá"]}
 };
 const FLAGS={
   "México":"mx","Sudáfrica":"za","Corea del Sur":"kr","Rep. Checa":"cz","Canadá":"ca",
-  "Bosnia y Herz.":"ba","Qatar":"qa","Suiza":"ch","Brasil":"br","Marruecos":"ma",
+  "Qatar":"qa","Suiza":"ch","Italia":"it","Brasil":"br","Marruecos":"ma",
   "Haití":"ht","Escocia":"gb-sct","EE.UU.":"us","Paraguay":"py","Australia":"au","Turquía":"tr",
   "Alemania":"de","Curazao":"cw","C. de Marfil":"ci","Ecuador":"ec","Países Bajos":"nl",
-  "Japón":"jp","Suecia":"se","Túnez":"tn","Bélgica":"be","Egipto":"eg","Irán":"ir",
+  "Japón":"jp","Túnez":"tn","Ucrania":"ua","Bélgica":"be","Egipto":"eg","Irán":"ir",
   "Nueva Zelanda":"nz","España":"es","Cabo Verde":"cv","Arabia Saudita":"sa","Uruguay":"uy",
-  "Francia":"fr","Senegal":"sn","Irak":"iq","Noruega":"no","Argentina":"ar","Argelia":"dz",
+  "Francia":"fr","Senegal":"sn","Noruega":"no","Irak":"iq","Argentina":"ar","Argelia":"dz",
   "Austria":"at","Jordania":"jo","Portugal":"pt","Rep. D. Congo":"cd","Uzbekistán":"uz",
-  "Colombia":"co","Inglaterra":"gb","Croacia":"hr","Ghana":"gh","Panamá":"pa"
+  "Colombia":"co","Inglaterra":"gb","Croacia":"hr","Ghana":"gh","Panamá":"pa",
+  "Suecia":"se","Bosnia y Herz.":"ba"
 };
-const STADS=[
-  {s:"AT&T Stadium",c:"Dallas"},{s:"Estadio Azteca",c:"Cdad. México"},
-  {s:"MetLife Stadium",c:"Nueva York"},{s:"Hard Rock Stadium",c:"Miami"},
-  {s:"Rose Bowl",c:"Los Ángeles"},{s:"Estadio BBVA",c:"Monterrey"}
-];
+const FIXTURE_GRUPOS={
+  A:[
+    {home:"México",away:"Sudáfrica",date:"jue, 11 jun",time:"20:00",stadium:"Estadio Azteca",city:"Cdad. México"},
+    {home:"Corea del Sur",away:"Rep. Checa",date:"jue, 11 jun",time:"23:00",stadium:"Estadio Guadalajara",city:"Zapopan, México"},
+    {home:"México",away:"Corea del Sur",date:"jue, 19 jun",time:"22:00",stadium:"Estadio Guadalajara",city:"Zapopan, México"},
+    {home:"Sudáfrica",away:"Rep. Checa",date:"vie, 18 jun",time:"14:00",stadium:"Mercedes-Benz Stadium",city:"Atlanta"},
+    {home:"México",away:"Rep. Checa",date:"lun, 24 jun",time:"22:00",stadium:"Estadio Azteca",city:"Cdad. México"},
+    {home:"Corea del Sur",away:"Sudáfrica",date:"lun, 24 jun",time:"22:00",stadium:"Estadio Monterrey",city:"Guadalupe, México"}
+  ],
+  B:[
+    {home:"Canadá",away:"Qatar",date:"vie, 12 jun",time:"17:00",stadium:"BMO Field",city:"Toronto"},
+    {home:"Suiza",away:"Italia",date:"sáb, 13 jun",time:"17:00",stadium:"SoFi Stadium",city:"Los Ángeles"},
+    {home:"Suiza",away:"Canadá",date:"jue, 18 jun",time:"22:00",stadium:"BC Place",city:"Vancouver"},
+    {home:"Italia",away:"Qatar",date:"vie, 18 jun",time:"17:00",stadium:"Levi's Stadium",city:"San Francisco"},
+    {home:"Canadá",away:"Italia",date:"mié, 24 jun",time:"22:00",stadium:"BC Place",city:"Vancouver"},
+    {home:"Qatar",away:"Suiza",date:"mié, 24 jun",time:"22:00",stadium:"Lumen Field",city:"Seattle"}
+  ],
+  C:[
+    {home:"Brasil",away:"Marruecos",date:"sáb, 13 jun",time:"20:00",stadium:"MetLife Stadium",city:"Nueva York"},
+    {home:"Haití",away:"Escocia",date:"sáb, 13 jun",time:"23:00",stadium:"Gillette Stadium",city:"Boston"},
+    {home:"Brasil",away:"Haití",date:"vie, 19 jun",time:"23:00",stadium:"Lincoln Financial Field",city:"Filadelfia"},
+    {home:"Marruecos",away:"Escocia",date:"vie, 19 jun",time:"22:00",stadium:"Gillette Stadium",city:"Boston"},
+    {home:"Brasil",away:"Escocia",date:"mié, 24 jun",time:"21:00",stadium:"Hard Rock Stadium",city:"Miami"},
+    {home:"Marruecos",away:"Haití",date:"mié, 24 jun",time:"21:00",stadium:"Mercedes-Benz Stadium",city:"Atlanta"}
+  ],
+  D:[
+    {home:"EE.UU.",away:"Paraguay",date:"vie, 12 jun",time:"23:00",stadium:"SoFi Stadium",city:"Los Ángeles"},
+    {home:"Australia",away:"Turquía",date:"sáb, 13 jun",time:"01:00",stadium:"BC Place",city:"Vancouver"},
+    {home:"EE.UU.",away:"Australia",date:"sáb, 20 jun",time:"02:00",stadium:"Lumen Field",city:"Seattle"},
+    {home:"Paraguay",away:"Turquía",date:"sáb, 20 jun",time:"01:00",stadium:"Levi's Stadium",city:"San Francisco"},
+    {home:"EE.UU.",away:"Turquía",date:"jue, 25 jun",time:"02:00",stadium:"SoFi Stadium",city:"Los Ángeles"},
+    {home:"Paraguay",away:"Australia",date:"jue, 25 jun",time:"02:00",stadium:"Levi's Stadium",city:"San Francisco"}
+  ],
+  E:[
+    {home:"Alemania",away:"Curazao",date:"dom, 14 jun",time:"15:00",stadium:"NRG Stadium",city:"Houston"},
+    {home:"C. de Marfil",away:"Ecuador",date:"dom, 14 jun",time:"19:00",stadium:"Lincoln Financial Field",city:"Filadelfia"},
+    {home:"Alemania",away:"C. de Marfil",date:"sáb, 21 jun",time:"00:00",stadium:"BMO Field",city:"Toronto"},
+    {home:"Ecuador",away:"Curazao",date:"sáb, 20 jun",time:"21:00",stadium:"GEHA Field Arrowhead",city:"Kansas City"},
+    {home:"Alemania",away:"Ecuador",date:"mié, 25 jun",time:"21:00",stadium:"MetLife Stadium",city:"Nueva York"},
+    {home:"Curazao",away:"C. de Marfil",date:"mié, 25 jun",time:"21:00",stadium:"Lincoln Financial Field",city:"Filadelfia"}
+  ],
+  F:[
+    {home:"Países Bajos",away:"Japón",date:"dom, 14 jun",time:"18:00",stadium:"AT&T Stadium",city:"Dallas"},
+    {home:"Túnez",away:"Ucrania",date:"dom, 14 jun",time:"22:00",stadium:"Estadio Monterrey",city:"Guadalupe, México"},
+    {home:"Países Bajos",away:"Ucrania",date:"dom, 20 jun",time:"15:00",stadium:"NRG Stadium",city:"Houston"},
+    {home:"Japón",away:"Túnez",date:"sáb, 20 jun",time:"01:00",stadium:"Estadio Monterrey",city:"Guadalupe, México"},
+    {home:"Países Bajos",away:"Túnez",date:"jue, 25 jun",time:"23:00",stadium:"GEHA Field Arrowhead",city:"Kansas City"},
+    {home:"Japón",away:"Ucrania",date:"jue, 25 jun",time:"23:00",stadium:"AT&T Stadium",city:"Dallas"}
+  ],
+  G:[
+    {home:"Bélgica",away:"Egipto",date:"lun, 15 jun",time:"17:00",stadium:"BC Place",city:"Vancouver"},
+    {home:"Irán",away:"Nueva Zelanda",date:"lun, 15 jun",time:"23:00",stadium:"SoFi Stadium",city:"Los Ángeles"},
+    {home:"Bélgica",away:"Irán",date:"dom, 21 jun",time:"17:00",stadium:"SoFi Stadium",city:"Los Ángeles"},
+    {home:"Egipto",away:"Nueva Zelanda",date:"dom, 21 jun",time:"23:00",stadium:"BC Place",city:"Vancouver"},
+    {home:"Bélgica",away:"Nueva Zelanda",date:"jue, 26 jun",time:"23:00",stadium:"BC Place",city:"Vancouver"},
+    {home:"Egipto",away:"Irán",date:"jue, 26 jun",time:"23:00",stadium:"Lumen Field",city:"Seattle"}
+  ],
+  H:[
+    {home:"España",away:"Cabo Verde",date:"lun, 15 jun",time:"14:00",stadium:"Mercedes-Benz Stadium",city:"Atlanta"},
+    {home:"Arabia Saudita",away:"Uruguay",date:"lun, 15 jun",time:"20:00",stadium:"Hard Rock Stadium",city:"Miami"},
+    {home:"España",away:"Arabia Saudita",date:"dom, 21 jun",time:"14:00",stadium:"Mercedes-Benz Stadium",city:"Atlanta"},
+    {home:"Uruguay",away:"Cabo Verde",date:"dom, 21 jun",time:"20:00",stadium:"Hard Rock Stadium",city:"Miami"},
+    {home:"España",away:"Uruguay",date:"vie, 26 jun",time:"20:00",stadium:"Estadio Guadalajara",city:"Zapopan, México"},
+    {home:"Cabo Verde",away:"Arabia Saudita",date:"vie, 26 jun",time:"20:00",stadium:"NRG Stadium",city:"Houston"}
+  ],
+  I:[
+    {home:"Francia",away:"Senegal",date:"mar, 16 jun",time:"17:00",stadium:"MetLife Stadium",city:"Nueva York"},
+    {home:"Irak",away:"Noruega",date:"mar, 16 jun",time:"20:00",stadium:"Gillette Stadium",city:"Boston"},
+    {home:"Francia",away:"Irak",date:"lun, 22 jun",time:"19:00",stadium:"Lincoln Financial Field",city:"Filadelfia"},
+    {home:"Noruega",away:"Senegal",date:"lun, 22 jun",time:"23:00",stadium:"MetLife Stadium",city:"Nueva York"},
+    {home:"Francia",away:"Noruega",date:"vie, 26 jun",time:"15:00",stadium:"Gillette Stadium",city:"Boston"},
+    {home:"Senegal",away:"Irak",date:"vie, 26 jun",time:"15:00",stadium:"BMO Field",city:"Toronto"}
+  ],
+  J:[
+    {home:"Argentina",away:"Argelia",date:"mar, 16 jun",time:"23:00",stadium:"GEHA Field Arrowhead",city:"Kansas City"},
+    {home:"Austria",away:"Jordania",date:"mié, 17 jun",time:"01:00",stadium:"Levi's Stadium",city:"San Francisco"},
+    {home:"Argentina",away:"Austria",date:"lun, 22 jun",time:"15:00",stadium:"AT&T Stadium",city:"Dallas"},
+    {home:"Jordania",away:"Argelia",date:"lun, 22 jun",time:"23:00",stadium:"Levi's Stadium",city:"San Francisco"},
+    {home:"Argentina",away:"Jordania",date:"sáb, 27 jun",time:"02:00",stadium:"AT&T Stadium",city:"Dallas"},
+    {home:"Argelia",away:"Austria",date:"sáb, 27 jun",time:"02:00",stadium:"GEHA Field Arrowhead",city:"Kansas City"}
+  ],
+  K:[
+    {home:"Portugal",away:"Rep. D. Congo",date:"mié, 17 jun",time:"15:00",stadium:"NRG Stadium",city:"Houston"},
+    {home:"Uzbekistán",away:"Colombia",date:"mié, 17 jun",time:"22:00",stadium:"Estadio Azteca",city:"Cdad. México"},
+    {home:"Portugal",away:"Uzbekistán",date:"mar, 23 jun",time:"15:00",stadium:"NRG Stadium",city:"Houston"},
+    {home:"Colombia",away:"Rep. D. Congo",date:"mar, 23 jun",time:"22:00",stadium:"Estadio Guadalajara",city:"Zapopan, México"},
+    {home:"Portugal",away:"Colombia",date:"sáb, 27 jun",time:"20:00",stadium:"Hard Rock Stadium",city:"Miami"},
+    {home:"Rep. D. Congo",away:"Uzbekistán",date:"sáb, 27 jun",time:"20:00",stadium:"Mercedes-Benz Stadium",city:"Atlanta"}
+  ],
+  L:[
+    {home:"Inglaterra",away:"Croacia",date:"mié, 17 jun",time:"18:00",stadium:"AT&T Stadium",city:"Dallas"},
+    {home:"Ghana",away:"Panamá",date:"mié, 17 jun",time:"21:00",stadium:"BMO Field",city:"Toronto"},
+    {home:"Inglaterra",away:"Ghana",date:"mar, 23 jun",time:"18:00",stadium:"Gillette Stadium",city:"Boston"},
+    {home:"Panamá",away:"Croacia",date:"mar, 23 jun",time:"21:00",stadium:"BMO Field",city:"Toronto"},
+    {home:"Inglaterra",away:"Panamá",date:"sáb, 27 jun",time:"21:00",stadium:"MetLife Stadium",city:"Nueva York"},
+    {home:"Croacia",away:"Ghana",date:"sáb, 27 jun",time:"21:00",stadium:"Lincoln Financial Field",city:"Filadelfia"}
+  ]
+};
 const ELIM_PHASES=[
   {id:"dieciseis",label:"Dieciséisavos",count:16},
   {id:"octavos",label:"Octavos",count:8},
@@ -1515,23 +1609,19 @@ function selResElim(id,lbl){
 }
 
 function getMatches(g){
-  const teams=GROUPS[g].teams,ms=[],base=new Date("2026-06-11T18:00:00");let idx=0;
-  for(let i=0;i<teams.length;i++) for(let j=i+1;j<teams.length;j++){
-    const d=new Date(base.getTime()+idx*2*86400000);
-    const st=STADS[idx%STADS.length];
+  const fixtures=FIXTURE_GRUPOS[g]||[];
+  return fixtures.map((f,idx)=>{
     const mid=g+idx;
     const res=resultadosDB[mid]||null;
-    ms.push({
-      id:mid,home:teams[i],away:teams[j],
-      date:d.toLocaleDateString("es-AR",{weekday:"short",day:"2-digit",month:"short"}),
-      time:["18:00","20:00","22:00"][idx%3],stadium:st.s,city:st.c,
+    return {
+      id:mid,home:f.home,away:f.away,
+      date:f.date,time:f.time,stadium:f.stadium,city:f.city,
       played:!!(res&&res.played),
       result:res&&res.played?{home:res.home_score,away:res.away_score}:null,
       locked:!!(res&&res.played),
-      ts:base.getTime()+idx*2*86400000
-    });idx++;
-  }
-  return ms;
+      ts:0
+    };
+  });
 }
 
 function renderGrupoMatches(g){
