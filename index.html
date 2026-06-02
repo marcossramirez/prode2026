@@ -893,687 +893,130 @@ const WC2026_ID=1; // ID del Mundial 2026 en API-Football
 ═══════════════════════════════════════════ */
 const GROUPS={
   A:{teams:["México","Sudáfrica","Corea del Sur","Rep. Checa"]},
-  B:{teams:["Canadá","Qatar","Suiza","Italia"]},
+  B:{teams:["Canadá","Bosnia y Herz.","Qatar","Suiza"]},
   C:{teams:["Brasil","Marruecos","Haití","Escocia"]},
   D:{teams:["EE.UU.","Paraguay","Australia","Turquía"]},
   E:{teams:["Alemania","Curazao","C. de Marfil","Ecuador"]},
-  F:{teams:["Países Bajos","Japón","Túnez","Ucrania"]},
+  F:{teams:["Países Bajos","Japón","Suecia","Túnez"]},
   G:{teams:["Bélgica","Egipto","Irán","Nueva Zelanda"]},
   H:{teams:["España","Cabo Verde","Arabia Saudita","Uruguay"]},
-  I:{teams:["Francia","Senegal","Noruega","Irak"]},
+  I:{teams:["Francia","Senegal","Irak","Noruega"]},
   J:{teams:["Argentina","Argelia","Austria","Jordania"]},
-  K:{teams:["Portugal","Colombia","Uzbekistán","Rep. D. Congo"]},
+  K:{teams:["Portugal","Rep. D. Congo","Uzbekistán","Colombia"]},
   L:{teams:["Inglaterra","Croacia","Ghana","Panamá"]}
 };
 const FLAGS={
-  "México":"mx","Sudáfrica":"za","Corea del Sur":"kr","Rep. Checa":"cz","Canadá":"ca",
-  "Qatar":"qa","Suiza":"ch","Italia":"it","Brasil":"br","Marruecos":"ma",
-  "Haití":"ht","Escocia":"gb-sct","EE.UU.":"us","Paraguay":"py","Australia":"au","Turquía":"tr",
-  "Alemania":"de","Curazao":"cw","C. de Marfil":"ci","Ecuador":"ec","Países Bajos":"nl",
-  "Japón":"jp","Túnez":"tn","Ucrania":"ua","Bélgica":"be","Egipto":"eg","Irán":"ir",
-  "Nueva Zelanda":"nz","España":"es","Cabo Verde":"cv","Arabia Saudita":"sa","Uruguay":"uy",
-  "Francia":"fr","Senegal":"sn","Noruega":"no","Irak":"iq","Argentina":"ar","Argelia":"dz",
-  "Austria":"at","Jordania":"jo","Portugal":"pt","Rep. D. Congo":"cd","Uzbekistán":"uz",
-  "Colombia":"co","Inglaterra":"gb","Croacia":"hr","Ghana":"gh","Panamá":"pa",
-  "Suecia":"se","Bosnia y Herz.":"ba"
+  "México":"mx","Sudáfrica":"za","Corea del Sur":"kr","Rep. Checa":"cz",
+  "Canadá":"ca","Bosnia y Herz.":"ba","Qatar":"qa","Suiza":"ch",
+  "Brasil":"br","Marruecos":"ma","Haití":"ht","Escocia":"gb-sct",
+  "EE.UU.":"us","Paraguay":"py","Australia":"au","Turquía":"tr",
+  "Alemania":"de","Curazao":"cw","C. de Marfil":"ci","Ecuador":"ec",
+  "Países Bajos":"nl","Japón":"jp","Suecia":"se","Túnez":"tn",
+  "Bélgica":"be","Egipto":"eg","Irán":"ir","Nueva Zelanda":"nz",
+  "España":"es","Cabo Verde":"cv","Arabia Saudita":"sa","Uruguay":"uy",
+  "Francia":"fr","Senegal":"sn","Irak":"iq","Noruega":"no",
+  "Argentina":"ar","Argelia":"dz","Austria":"at","Jordania":"jo",
+  "Portugal":"pt","Rep. D. Congo":"cd","Uzbekistán":"uz","Colombia":"co",
+  "Inglaterra":"gb","Croacia":"hr","Ghana":"gh","Panamá":"pa",
+  "Italia":"it","Ucrania":"ua"
 };
 const FIXTURE_GRUPOS={
   A:[
-    {home:"México",away:"Sudáfrica",date:"jue, 11 jun",time:"20:00",stadium:"Estadio Azteca",city:"Cdad. México"},
-    {home:"Corea del Sur",away:"Rep. Checa",date:"jue, 11 jun",time:"23:00",stadium:"Estadio Guadalajara",city:"Zapopan, México"},
-    {home:"México",away:"Corea del Sur",date:"jue, 19 jun",time:"22:00",stadium:"Estadio Guadalajara",city:"Zapopan, México"},
-    {home:"Sudáfrica",away:"Rep. Checa",date:"vie, 18 jun",time:"14:00",stadium:"Mercedes-Benz Stadium",city:"Atlanta"},
-    {home:"México",away:"Rep. Checa",date:"lun, 24 jun",time:"22:00",stadium:"Estadio Azteca",city:"Cdad. México"},
-    {home:"Corea del Sur",away:"Sudáfrica",date:"lun, 24 jun",time:"22:00",stadium:"Estadio Monterrey",city:"Guadalupe, México"}
+    {home:"México",away:"Sudáfrica",date:"jue, 11 jun",time:"16:00",stadium:"E. Azteca",city:"Cdad. México"},
+    {home:"Corea del Sur",away:"Rep. Checa",date:"jue, 11 jun",time:"23:00",stadium:"E. Guadalajara",city:"Zapopan"},
+    {home:"Rep. Checa",away:"Sudáfrica",date:"jue, 18 jun",time:"13:00",stadium:"M-Benz Stadium",city:"Atlanta"},
+    {home:"México",away:"Corea del Sur",date:"jue, 18 jun",time:"22:00",stadium:"E. Guadalajara",city:"Zapopan"},
+    {home:"Rep. Checa",away:"México",date:"mié, 24 jun",time:"22:00",stadium:"E. Azteca",city:"Cdad. México"},
+    {home:"Sudáfrica",away:"Corea del Sur",date:"mié, 24 jun",time:"22:00",stadium:"E. Monterrey",city:"Monterrey"}
   ],
   B:[
-    {home:"Canadá",away:"Qatar",date:"vie, 12 jun",time:"17:00",stadium:"BMO Field",city:"Toronto"},
-    {home:"Suiza",away:"Italia",date:"sáb, 13 jun",time:"17:00",stadium:"SoFi Stadium",city:"Los Ángeles"},
-    {home:"Suiza",away:"Canadá",date:"jue, 18 jun",time:"22:00",stadium:"BC Place",city:"Vancouver"},
-    {home:"Italia",away:"Qatar",date:"vie, 18 jun",time:"17:00",stadium:"Levi's Stadium",city:"San Francisco"},
-    {home:"Canadá",away:"Italia",date:"mié, 24 jun",time:"22:00",stadium:"BC Place",city:"Vancouver"},
-    {home:"Qatar",away:"Suiza",date:"mié, 24 jun",time:"22:00",stadium:"Lumen Field",city:"Seattle"}
+    {home:"Canadá",away:"Bosnia y Herz.",date:"vie, 12 jun",time:"16:00",stadium:"BMO Field",city:"Toronto"},
+    {home:"Qatar",away:"Suiza",date:"sáb, 13 jun",time:"16:00",stadium:"Levi's Stadium",city:"San Francisco"},
+    {home:"Suiza",away:"Bosnia y Herz.",date:"jue, 18 jun",time:"16:00",stadium:"SoFi Stadium",city:"Los Ángeles"},
+    {home:"Canadá",away:"Qatar",date:"jue, 18 jun",time:"19:00",stadium:"BC Place",city:"Vancouver"},
+    {home:"Suiza",away:"Canadá",date:"mié, 24 jun",time:"16:00",stadium:"BC Place",city:"Vancouver"},
+    {home:"Bosnia y Herz.",away:"Qatar",date:"mié, 24 jun",time:"16:00",stadium:"Lumen Field",city:"Seattle"}
   ],
   C:[
-    {home:"Brasil",away:"Marruecos",date:"sáb, 13 jun",time:"20:00",stadium:"MetLife Stadium",city:"Nueva York"},
-    {home:"Haití",away:"Escocia",date:"sáb, 13 jun",time:"23:00",stadium:"Gillette Stadium",city:"Boston"},
-    {home:"Brasil",away:"Haití",date:"vie, 19 jun",time:"23:00",stadium:"Lincoln Financial Field",city:"Filadelfia"},
-    {home:"Marruecos",away:"Escocia",date:"vie, 19 jun",time:"22:00",stadium:"Gillette Stadium",city:"Boston"},
-    {home:"Brasil",away:"Escocia",date:"mié, 24 jun",time:"21:00",stadium:"Hard Rock Stadium",city:"Miami"},
-    {home:"Marruecos",away:"Haití",date:"mié, 24 jun",time:"21:00",stadium:"Mercedes-Benz Stadium",city:"Atlanta"}
+    {home:"Brasil",away:"Marruecos",date:"sáb, 13 jun",time:"19:00",stadium:"MetLife Stadium",city:"Nueva York"},
+    {home:"Haití",away:"Escocia",date:"sáb, 13 jun",time:"22:00",stadium:"Gillette Stadium",city:"Boston"},
+    {home:"Escocia",away:"Marruecos",date:"vie, 19 jun",time:"19:00",stadium:"Gillette Stadium",city:"Boston"},
+    {home:"Brasil",away:"Haití",date:"vie, 19 jun",time:"21:30",stadium:"Lincoln Field",city:"Filadelfia"},
+    {home:"Escocia",away:"Brasil",date:"mié, 24 jun",time:"19:00",stadium:"Hard Rock",city:"Miami"},
+    {home:"Marruecos",away:"Haití",date:"mié, 24 jun",time:"19:00",stadium:"M-Benz Stadium",city:"Atlanta"}
   ],
   D:[
-    {home:"EE.UU.",away:"Paraguay",date:"vie, 12 jun",time:"23:00",stadium:"SoFi Stadium",city:"Los Ángeles"},
+    {home:"EE.UU.",away:"Paraguay",date:"vie, 12 jun",time:"22:00",stadium:"SoFi Stadium",city:"Los Ángeles"},
     {home:"Australia",away:"Turquía",date:"sáb, 13 jun",time:"01:00",stadium:"BC Place",city:"Vancouver"},
-    {home:"EE.UU.",away:"Australia",date:"sáb, 20 jun",time:"02:00",stadium:"Lumen Field",city:"Seattle"},
-    {home:"Paraguay",away:"Turquía",date:"sáb, 20 jun",time:"01:00",stadium:"Levi's Stadium",city:"San Francisco"},
-    {home:"EE.UU.",away:"Turquía",date:"jue, 25 jun",time:"02:00",stadium:"SoFi Stadium",city:"Los Ángeles"},
-    {home:"Paraguay",away:"Australia",date:"jue, 25 jun",time:"02:00",stadium:"Levi's Stadium",city:"San Francisco"}
+    {home:"EE.UU.",away:"Australia",date:"vie, 19 jun",time:"16:00",stadium:"Lumen Field",city:"Seattle"},
+    {home:"Turquía",away:"Paraguay",date:"vie, 19 jun",time:"00:00",stadium:"Levi's Stadium",city:"San Francisco"},
+    {home:"Turquía",away:"EE.UU.",date:"jue, 25 jun",time:"23:00",stadium:"SoFi Stadium",city:"Los Ángeles"},
+    {home:"Paraguay",away:"Australia",date:"jue, 25 jun",time:"23:00",stadium:"Levi's Stadium",city:"San Francisco"}
   ],
   E:[
-    {home:"Alemania",away:"Curazao",date:"dom, 14 jun",time:"15:00",stadium:"NRG Stadium",city:"Houston"},
-    {home:"C. de Marfil",away:"Ecuador",date:"dom, 14 jun",time:"19:00",stadium:"Lincoln Financial Field",city:"Filadelfia"},
-    {home:"Alemania",away:"C. de Marfil",date:"sáb, 21 jun",time:"00:00",stadium:"BMO Field",city:"Toronto"},
-    {home:"Ecuador",away:"Curazao",date:"sáb, 20 jun",time:"21:00",stadium:"GEHA Field Arrowhead",city:"Kansas City"},
-    {home:"Alemania",away:"Ecuador",date:"mié, 25 jun",time:"21:00",stadium:"MetLife Stadium",city:"Nueva York"},
-    {home:"Curazao",away:"C. de Marfil",date:"mié, 25 jun",time:"21:00",stadium:"Lincoln Financial Field",city:"Filadelfia"}
+    {home:"Alemania",away:"Curazao",date:"dom, 14 jun",time:"14:00",stadium:"NRG Stadium",city:"Houston"},
+    {home:"C. de Marfil",away:"Ecuador",date:"dom, 14 jun",time:"20:00",stadium:"Lincoln Field",city:"Filadelfia"},
+    {home:"Alemania",away:"C. de Marfil",date:"sáb, 20 jun",time:"17:00",stadium:"BMO Field",city:"Toronto"},
+    {home:"Ecuador",away:"Curazao",date:"sáb, 20 jun",time:"21:00",stadium:"Arrowhead",city:"Kansas City"},
+    {home:"Curazao",away:"C. de Marfil",date:"jue, 25 jun",time:"17:00",stadium:"Lincoln Field",city:"Filadelfia"},
+    {home:"Ecuador",away:"Alemania",date:"jue, 25 jun",time:"17:00",stadium:"MetLife Stadium",city:"Nueva York"}
   ],
   F:[
-    {home:"Países Bajos",away:"Japón",date:"dom, 14 jun",time:"18:00",stadium:"AT&T Stadium",city:"Dallas"},
-    {home:"Túnez",away:"Ucrania",date:"dom, 14 jun",time:"22:00",stadium:"Estadio Monterrey",city:"Guadalupe, México"},
-    {home:"Países Bajos",away:"Ucrania",date:"dom, 20 jun",time:"15:00",stadium:"NRG Stadium",city:"Houston"},
-    {home:"Japón",away:"Túnez",date:"sáb, 20 jun",time:"01:00",stadium:"Estadio Monterrey",city:"Guadalupe, México"},
-    {home:"Países Bajos",away:"Túnez",date:"jue, 25 jun",time:"23:00",stadium:"GEHA Field Arrowhead",city:"Kansas City"},
-    {home:"Japón",away:"Ucrania",date:"jue, 25 jun",time:"23:00",stadium:"AT&T Stadium",city:"Dallas"}
+    {home:"Países Bajos",away:"Japón",date:"dom, 14 jun",time:"17:00",stadium:"AT&T Stadium",city:"Dallas"},
+    {home:"Suecia",away:"Túnez",date:"dom, 14 jun",time:"23:00",stadium:"E. Monterrey",city:"Monterrey"},
+    {home:"Países Bajos",away:"Suecia",date:"sáb, 20 jun",time:"14:00",stadium:"NRG Stadium",city:"Houston"},
+    {home:"Túnez",away:"Japón",date:"dom, 21 jun",time:"01:00",stadium:"E. Monterrey",city:"Monterrey"},
+    {home:"Japón",away:"Suecia",date:"jue, 25 jun",time:"20:00",stadium:"AT&T Stadium",city:"Dallas"},
+    {home:"Túnez",away:"Países Bajos",date:"jue, 25 jun",time:"20:00",stadium:"Arrowhead",city:"Kansas City"}
   ],
   G:[
-    {home:"Bélgica",away:"Egipto",date:"lun, 15 jun",time:"17:00",stadium:"BC Place",city:"Vancouver"},
-    {home:"Irán",away:"Nueva Zelanda",date:"lun, 15 jun",time:"23:00",stadium:"SoFi Stadium",city:"Los Ángeles"},
-    {home:"Bélgica",away:"Irán",date:"dom, 21 jun",time:"17:00",stadium:"SoFi Stadium",city:"Los Ángeles"},
-    {home:"Egipto",away:"Nueva Zelanda",date:"dom, 21 jun",time:"23:00",stadium:"BC Place",city:"Vancouver"},
-    {home:"Bélgica",away:"Nueva Zelanda",date:"jue, 26 jun",time:"23:00",stadium:"BC Place",city:"Vancouver"},
-    {home:"Egipto",away:"Irán",date:"jue, 26 jun",time:"23:00",stadium:"Lumen Field",city:"Seattle"}
+    {home:"Bélgica",away:"Egipto",date:"lun, 15 jun",time:"16:00",stadium:"Lumen Field",city:"Seattle"},
+    {home:"Irán",away:"Nueva Zelanda",date:"lun, 15 jun",time:"22:00",stadium:"SoFi Stadium",city:"Los Ángeles"},
+    {home:"Bélgica",away:"Irán",date:"dom, 21 jun",time:"16:00",stadium:"SoFi Stadium",city:"Los Ángeles"},
+    {home:"Nueva Zelanda",away:"Egipto",date:"dom, 21 jun",time:"22:00",stadium:"BC Place",city:"Vancouver"},
+    {home:"Egipto",away:"Irán",date:"vie, 26 jun",time:"00:00",stadium:"Lumen Field",city:"Seattle"},
+    {home:"Nueva Zelanda",away:"Bélgica",date:"vie, 26 jun",time:"00:00",stadium:"BC Place",city:"Vancouver"}
   ],
   H:[
-    {home:"España",away:"Cabo Verde",date:"lun, 15 jun",time:"14:00",stadium:"Mercedes-Benz Stadium",city:"Atlanta"},
-    {home:"Arabia Saudita",away:"Uruguay",date:"lun, 15 jun",time:"20:00",stadium:"Hard Rock Stadium",city:"Miami"},
-    {home:"España",away:"Arabia Saudita",date:"dom, 21 jun",time:"14:00",stadium:"Mercedes-Benz Stadium",city:"Atlanta"},
-    {home:"Uruguay",away:"Cabo Verde",date:"dom, 21 jun",time:"20:00",stadium:"Hard Rock Stadium",city:"Miami"},
-    {home:"España",away:"Uruguay",date:"vie, 26 jun",time:"20:00",stadium:"Estadio Guadalajara",city:"Zapopan, México"},
-    {home:"Cabo Verde",away:"Arabia Saudita",date:"vie, 26 jun",time:"20:00",stadium:"NRG Stadium",city:"Houston"}
+    {home:"España",away:"Cabo Verde",date:"lun, 15 jun",time:"13:00",stadium:"M-Benz Stadium",city:"Atlanta"},
+    {home:"Arabia Saudita",away:"Uruguay",date:"lun, 15 jun",time:"19:00",stadium:"Hard Rock",city:"Miami"},
+    {home:"España",away:"Arabia Saudita",date:"dom, 21 jun",time:"13:00",stadium:"M-Benz Stadium",city:"Atlanta"},
+    {home:"Uruguay",away:"Cabo Verde",date:"dom, 21 jun",time:"19:00",stadium:"Hard Rock",city:"Miami"},
+    {home:"Cabo Verde",away:"Arabia Saudita",date:"vie, 26 jun",time:"21:00",stadium:"NRG Stadium",city:"Houston"},
+    {home:"Uruguay",away:"España",date:"vie, 26 jun",time:"21:00",stadium:"E. Guadalajara",city:"Zapopan"}
   ],
   I:[
-    {home:"Francia",away:"Senegal",date:"mar, 16 jun",time:"17:00",stadium:"MetLife Stadium",city:"Nueva York"},
-    {home:"Irak",away:"Noruega",date:"mar, 16 jun",time:"20:00",stadium:"Gillette Stadium",city:"Boston"},
-    {home:"Francia",away:"Irak",date:"lun, 22 jun",time:"19:00",stadium:"Lincoln Financial Field",city:"Filadelfia"},
-    {home:"Noruega",away:"Senegal",date:"lun, 22 jun",time:"23:00",stadium:"MetLife Stadium",city:"Nueva York"},
-    {home:"Francia",away:"Noruega",date:"vie, 26 jun",time:"15:00",stadium:"Gillette Stadium",city:"Boston"},
-    {home:"Senegal",away:"Irak",date:"vie, 26 jun",time:"15:00",stadium:"BMO Field",city:"Toronto"}
+    {home:"Francia",away:"Senegal",date:"mar, 16 jun",time:"16:00",stadium:"MetLife Stadium",city:"Nueva York"},
+    {home:"Irak",away:"Noruega",date:"mar, 16 jun",time:"19:00",stadium:"Gillette Stadium",city:"Boston"},
+    {home:"Francia",away:"Irak",date:"lun, 22 jun",time:"18:00",stadium:"Lincoln Field",city:"Filadelfia"},
+    {home:"Noruega",away:"Senegal",date:"lun, 22 jun",time:"21:00",stadium:"MetLife Stadium",city:"Nueva York"},
+    {home:"Noruega",away:"Francia",date:"vie, 26 jun",time:"16:00",stadium:"Gillette Stadium",city:"Boston"},
+    {home:"Senegal",away:"Irak",date:"vie, 26 jun",time:"16:00",stadium:"BMO Field",city:"Toronto"}
   ],
   J:[
-    {home:"Argentina",away:"Argelia",date:"mar, 16 jun",time:"23:00",stadium:"GEHA Field Arrowhead",city:"Kansas City"},
+    {home:"Argentina",away:"Argelia",date:"mar, 16 jun",time:"22:00",stadium:"Arrowhead",city:"Kansas City"},
     {home:"Austria",away:"Jordania",date:"mié, 17 jun",time:"01:00",stadium:"Levi's Stadium",city:"San Francisco"},
-    {home:"Argentina",away:"Austria",date:"lun, 22 jun",time:"15:00",stadium:"AT&T Stadium",city:"Dallas"},
-    {home:"Jordania",away:"Argelia",date:"lun, 22 jun",time:"23:00",stadium:"Levi's Stadium",city:"San Francisco"},
-    {home:"Argentina",away:"Jordania",date:"sáb, 27 jun",time:"02:00",stadium:"AT&T Stadium",city:"Dallas"},
-    {home:"Argelia",away:"Austria",date:"sáb, 27 jun",time:"02:00",stadium:"GEHA Field Arrowhead",city:"Kansas City"}
+    {home:"Argentina",away:"Austria",date:"lun, 22 jun",time:"14:00",stadium:"AT&T Stadium",city:"Dallas"},
+    {home:"Jordania",away:"Argelia",date:"lun, 22 jun",time:"00:00",stadium:"Levi's Stadium",city:"San Francisco"},
+    {home:"Jordania",away:"Argentina",date:"sáb, 27 jun",time:"23:00",stadium:"AT&T Stadium",city:"Dallas"},
+    {home:"Argelia",away:"Austria",date:"sáb, 27 jun",time:"23:00",stadium:"Arrowhead",city:"Kansas City"}
   ],
   K:[
-    {home:"Portugal",away:"Rep. D. Congo",date:"mié, 17 jun",time:"15:00",stadium:"NRG Stadium",city:"Houston"},
-    {home:"Uzbekistán",away:"Colombia",date:"mié, 17 jun",time:"22:00",stadium:"Estadio Azteca",city:"Cdad. México"},
-    {home:"Portugal",away:"Uzbekistán",date:"mar, 23 jun",time:"15:00",stadium:"NRG Stadium",city:"Houston"},
-    {home:"Colombia",away:"Rep. D. Congo",date:"mar, 23 jun",time:"22:00",stadium:"Estadio Guadalajara",city:"Zapopan, México"},
-    {home:"Portugal",away:"Colombia",date:"sáb, 27 jun",time:"20:00",stadium:"Hard Rock Stadium",city:"Miami"},
-    {home:"Rep. D. Congo",away:"Uzbekistán",date:"sáb, 27 jun",time:"20:00",stadium:"Mercedes-Benz Stadium",city:"Atlanta"}
+    {home:"Portugal",away:"Rep. D. Congo",date:"vie, 17 jun",time:"14:00",stadium:"NRG Stadium",city:"Houston"},
+    {home:"Uzbekistán",away:"Colombia",date:"vie, 17 jun",time:"23:00",stadium:"E. Azteca",city:"Cdad. México"},
+    {home:"Portugal",away:"Uzbekistán",date:"mar, 23 jun",time:"14:00",stadium:"NRG Stadium",city:"Houston"},
+    {home:"Colombia",away:"Rep. D. Congo",date:"mar, 23 jun",time:"23:00",stadium:"E. Guadalajara",city:"Zapopan"},
+    {home:"Colombia",away:"Portugal",date:"sáb, 27 jun",time:"20:30",stadium:"Hard Rock",city:"Miami"},
+    {home:"Rep. D. Congo",away:"Uzbekistán",date:"sáb, 27 jun",time:"20:30",stadium:"M-Benz Stadium",city:"Atlanta"}
   ],
   L:[
-    {home:"Inglaterra",away:"Croacia",date:"mié, 17 jun",time:"18:00",stadium:"AT&T Stadium",city:"Dallas"},
-    {home:"Ghana",away:"Panamá",date:"mié, 17 jun",time:"21:00",stadium:"BMO Field",city:"Toronto"},
-    {home:"Inglaterra",away:"Ghana",date:"mar, 23 jun",time:"18:00",stadium:"Gillette Stadium",city:"Boston"},
-    {home:"Panamá",away:"Croacia",date:"mar, 23 jun",time:"21:00",stadium:"BMO Field",city:"Toronto"},
-    {home:"Inglaterra",away:"Panamá",date:"sáb, 27 jun",time:"21:00",stadium:"MetLife Stadium",city:"Nueva York"},
-    {home:"Croacia",away:"Ghana",date:"sáb, 27 jun",time:"21:00",stadium:"Lincoln Financial Field",city:"Filadelfia"}
+    {home:"Inglaterra",away:"Croacia",date:"vie, 17 jun",time:"17:00",stadium:"AT&T Stadium",city:"Dallas"},
+    {home:"Ghana",away:"Panamá",date:"vie, 17 jun",time:"20:00",stadium:"BMO Field",city:"Toronto"},
+    {home:"Inglaterra",away:"Ghana",date:"mar, 23 jun",time:"17:00",stadium:"Gillette Stadium",city:"Boston"},
+    {home:"Panamá",away:"Croacia",date:"mar, 23 jun",time:"20:00",stadium:"BMO Field",city:"Toronto"},
+    {home:"Panamá",away:"Inglaterra",date:"sáb, 27 jun",time:"18:00",stadium:"MetLife Stadium",city:"Nueva York"},
+    {home:"Croacia",away:"Ghana",date:"sáb, 27 jun",time:"18:00",stadium:"Lincoln Field",city:"Filadelfia"}
   ]
-};
-const ELIM_PHASES=[
-  {id:"dieciseis",label:"Dieciséisavos",count:16},
-  {id:"octavos",label:"Octavos",count:8},
-  {id:"cuartos",label:"Cuartos de Final",count:4},
-  {id:"semis",label:"Semifinal",count:2},
-  {id:"3er",label:"3er y 4to Puesto",count:1},
-  {id:"final",label:"Final",count:1}
-];
-const REGISTRY=[
-  {mail:"marcos.s.ramirez.89@gmail.com",alias:null,foto_perfil:"https://i.imgur.com/skq7XFv.jpeg",banner:"https://i.imgur.com/Jr0CWGe.jpeg",pts:0,trend:0,pct:0,gAci:0,gErr:0},
-  {mail:"jalric89@gmail.com",alias:null,foto_perfil:"https://i.imgur.com/ZQAGJyC.jpeg",banner:"https://i.imgur.com/Rmg299o.jpeg",pts:0,trend:0,pct:0,gAci:0,gErr:0},
-  {mail:"santiagogigler@hotmail.com",alias:null,foto_perfil:"https://i.imgur.com/Tr79Zcl.jpeg",banner:"https://i.imgur.com/TYzqx6H.png",pts:0,trend:0,pct:0,gAci:0,gErr:0},
-  {mail:"mathiasazaro@gmail.com",alias:null,foto_perfil:"https://i.imgur.com/mXD49jN.jpeg",banner:"https://i.imgur.com/k2ElRUa.jpeg",pts:0,trend:0,pct:0,gAci:0,gErr:0},
-  {mail:"pau.damore@gmail.com",alias:null,foto_perfil:"https://i.imgur.com/1zf57ei.jpeg",banner:"https://i.imgur.com/xErdH7K.jpeg",pts:0,trend:0,pct:0,gAci:0,gErr:0},
-  {mail:"marce_scheider@hotmail.com",alias:null,foto_perfil:"https://i.imgur.com/uGJkspy.jpeg",banner:"https://i.imgur.com/Rheyjaf.jpeg",pts:0,trend:0,pct:0,gAci:0,gErr:0},
-  {mail:"lilafernandez05@gmail.com",alias:null,foto_perfil:"https://i.imgur.com/3JgpjYT.jpeg",banner:"https://i.imgur.com/kYtsEaa.jpeg",pts:0,trend:0,pct:0,gAci:0,gErr:0},
-  {mail:"pazmariamilagros@gmail.com",alias:null,foto_perfil:"https://i.imgur.com/F7IiFV4.jpeg",banner:"https://i.imgur.com/u0Ei1ga.jpeg",pts:0,trend:0,pct:0,gAci:0,gErr:0},
-  {mail:"mmercedespaz94@gmail.com",alias:null,foto_perfil:"https://i.imgur.com/2QznC4Z.jpeg",banner:"https://i.imgur.com/NAYDSQf.jpeg",pts:0,trend:0,pct:0,gAci:0,gErr:0},
-  {mail:"nicoperez.vilo@gmail.com",alias:null,foto_perfil:"https://i.imgur.com/H3dwmol.jpeg",banner:"https://i.imgur.com/gI7GW1v.jpeg",pts:0,trend:0,pct:0,gAci:0,gErr:0},
-  {mail:"meri.terzaghi@gmail.com",alias:null,foto_perfil:"https://i.imgur.com/sAy73g7.jpeg",banner:"https://i.imgur.com/R0hNkJW.jpeg",pts:0,trend:0,pct:0,gAci:0,gErr:0},
-  {mail:"mendy.martin@hotmail.com",alias:null,foto_perfil:"https://i.imgur.com/jifwYy2.jpeg",banner:"https://i.imgur.com/nZvmdkI.jpeg",pts:0,trend:0,pct:0,gAci:0,gErr:0},
-  {mail:"flormontemarani@gmail.com",alias:null,foto_perfil:"https://i.imgur.com/OHKXSY5.jpeg",banner:"https://i.imgur.com/udL7aFn.jpeg",pts:0,trend:0,pct:0,gAci:0,gErr:0},
-  {mail:"admin@prode.com",alias:"Admin",foto_perfil:null,banner:null,pts:0,trend:0,pct:0,gAci:0,gErr:0,isAdmin:true}
-];
-const PLAYERS=REGISTRY.filter(p=>!p.isAdmin);
-const TORNEO_START=new Date("2026-06-11T18:00:00");
-
-/* ═══════════════════════════════════════════
-   ESTADO GLOBAL
-═══════════════════════════════════════════ */
-let uname=null,isAdmin=false,currentPlayer=null;
-let userBonus={},userPron={};
-let curGrupo="A",curResGrupo="A",curElim="dieciseis",curResElim="dieciseis";
-let resultadosDB={}; // {match_id: {home_score, away_score, played}}
-let pronosticosDB=[]; // todos los pronósticos de todos
-let aliasesDB={}; // {mail: alias}
-let syncInterval=null;
-
-/* ═══════════════════════════════════════════
-   UTILS
-═══════════════════════════════════════════ */
-function torneoStarted(){return new Date()>=TORNEO_START;}
-function flagUrl(t){const c=FLAGS[t];return c?`https://flagcdn.com/w320/${c}.png`:""; }
-function driveImg(url){if(!url||url==="URL_drive")return null;return url;}
-
-/* ═══════════════════════════════════════════
-   API-FOOTBALL — resultados en tiempo real
-═══════════════════════════════════════════ */
-async function fetchResultadosAPI(){
-  try{
-    // Usamos un proxy CORS para API-Football
-    const url=`https://v3.football.api-sports.io/fixtures?league=1&season=2026&status=FT`;
-    const res=await fetch(url,{
-      headers:{
-        "x-rapidapi-key":API_FOOTBALL_KEY,
-        "x-rapidapi-host":"v3.football.api-sports.io"
-      }
-    });
-    if(!res.ok)return;
-    const data=await res.json();
-    if(!data.response)return;
-    data.response.forEach(f=>{
-      const mid=`api_${f.fixture.id}`;
-      resultadosDB[mid]={
-        home:f.teams.home.name,
-        away:f.teams.away.name,
-        home_score:f.goals.home,
-        away_score:f.goals.away,
-        played:f.fixture.status.short==="FT",
-        date:f.fixture.date,
-        stadium:f.fixture.venue.name,
-        city:f.fixture.venue.city
-      };
-    });
-    // Guardar en Sheet también
-    await saveResultadosToSheet();
-    renderResultados();
-    recalcularPuntos();
-  }catch(e){
-    console.warn("API-Football no disponible:",e);
-    // Fallback: cargar desde Sheet
-    await loadResultadosFromSheet();
-  }
-}
-
-async function saveResultadosToSheet(){
-  // Solo el admin puede guardar resultados en el sheet
-  if(!isAdmin)return;
-  try{
-    await fetch(SHEET_URL,{
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({type:"resultados_bulk",data:resultadosDB})
-    });
-  }catch(e){console.warn("Error guardando resultados:",e);}
-}
-
-async function loadResultadosFromSheet(){
-  try{
-    const res=await fetch(`${SHEET_URL}?type=resultados`);
-    const data=await res.json();
-    data.forEach(r=>{
-      resultadosDB[r.match_id]={
-        home:r.home,away:r.away,
-        home_score:parseInt(r.home_score),
-        away_score:parseInt(r.away_score),
-        played:r.played==="TRUE"||r.played===true
-      };
-    });
-    renderResultados();
-    recalcularPuntos();
-  }catch(e){console.warn("Error cargando resultados del sheet:",e);}
-}
-
-/* ═══════════════════════════════════════════
-   GOOGLE SHEETS — pronósticos y aliases
-═══════════════════════════════════════════ */
-const _pronTimers={};
-async function savePronostico(matchId,side,val){
-  if(!currentPlayer)return;
-  if(!userPron[matchId])userPron[matchId]={};
-  // Aceptar vacío como null para borrar
-  const parsed=val===""||val===null?null:parseInt(val);
-  if(parsed!==null&&isNaN(parsed))return;
-  userPron[matchId][side]=parsed;
-  // Cancelar timer anterior y esperar 1.5s antes de guardar
-  if(_pronTimers[matchId])clearTimeout(_pronTimers[matchId]);
-  _pronTimers[matchId]=setTimeout(async()=>{
-    const h=userPron[matchId].home??null;
-    const a=userPron[matchId].away??null;
-    await postToSheet({
-      type:"pronostico",
-      mail:currentPlayer.mail,
-      alias:currentPlayer.alias,
-      match_id:matchId,
-      home_score:h,
-      away_score:a,
-      bonus:userBonus[matchId]||false
-    });
-    showToast(h===null&&a===null?"✓ Pronóstico borrado":"✓ Pronóstico guardado");
-  },1500);
-}
-
-async function loadMisPronosticos(){
-  if(!currentPlayer)return;
-  // Solo cargar desde Sheet — sin localStorage
-  try{
-    const res=await fetch(`${SHEET_URL}?type=pronosticos`);
-    const data=await res.json();
-    userPron={};userBonus={};
-    const misPron=data.filter(p=>p.mail===currentPlayer.mail);
-    misPron.forEach(p=>{
-      if(!userPron[p.match_id])userPron[p.match_id]={};
-      userPron[p.match_id].home=p.home_score===""||p.home_score===null?null:parseInt(p.home_score);
-      userPron[p.match_id].away=p.away_score===""||p.away_score===null?null:parseInt(p.away_score);
-      if(p.bonus==="TRUE"||p.bonus===true)userBonus[p.match_id]=true;
-    });
-    pronosticosDB=data;
-    renderGrupoMatches(curGrupo);
-  }catch(e){console.warn("Error cargando pronósticos:",e);}
-}
-
-async function loadAllAliases(){
-  try{
-    const res=await fetch(`${SHEET_URL}?type=aliases`);
-    const data=await res.json();
-    data.forEach(a=>{
-      const alias=a.alias?a.alias.toUpperCase():a.alias;
-      aliasesDB[a.mail]=alias;
-      const player=REGISTRY.find(p=>p.mail===a.mail);
-      if(player)player.alias=alias;
-    });
-    // Re-render ranking con aliases actualizados
-    if(currentPlayer)renderRanking(currentPlayer);
-  }catch(e){console.warn("Error cargando aliases:",e);}
-}
-
-/* Polling de aliases cada 30 segundos para ver nuevos jugadores */
-function startAliasSync(){
-  setInterval(loadAllAliases, 30000);
-}
-
-/* ── Envío de datos via GET (sin CORS) ── */
-async function postToSheet(data){
-  try{
-    const encoded=encodeURIComponent(JSON.stringify(data));
-    const url=`${SHEET_URL}?type=write&data=${encoded}`;
-    const res=await fetch(url,{redirect:"follow",mode:"cors"});
-    const json=await res.json();
-    console.log("Sheet response:",json);
-    return json;
-  }catch(e){
-    console.warn("postToSheet error:",e);
-  }
-}
-
-async function saveAlias(mail,alias){
-  await postToSheet({type:"alias",mail,alias});
-}
-
-async function savePronosticoSheet(mail,alias,match_id,home_score,away_score,bonus){
-  await postToSheet({type:"pronostico",mail,alias,match_id,home_score,away_score,bonus});
-}
-
-/* ═══════════════════════════════════════════
-   PUNTOS — cálculo automático
-═══════════════════════════════════════════ */
-function calcPuntos(pron,result,bonus){
-  if(!result||!result.played)return 0;
-  if(pron.home===undefined||pron.away===undefined)return 0;
-  let pts=0;
-  const rH=result.home_score,rA=result.away_score;
-  const pH=pron.home,pA=pron.away;
-  // Ganador/empate
-  const rRes=rH>rA?1:rH<rA?-1:0;
-  const pRes=pH>pA?1:pH<pA?-1:0;
-  if(rRes===pRes)pts+=2;
-  // Exacto
-  if(rH===pH&&rA===pA)pts+=2;
-  if(bonus)pts*=2;
-  return pts;
-}
-
-function recalcularPuntos(){
-  PLAYERS.forEach(p=>{
-    if(!p.alias)return;
-    const misPron=pronosticosDB.filter(pr=>pr.mail===p.mail);
-    let total=0,aciertos=0,gAci=0,gErr=0,jugados=0;
-    misPron.forEach(pr=>{
-      const res=resultadosDB[pr.match_id];
-      if(!res||!res.played)return;
-      jugados++;
-      const pH=parseInt(pr.home_score),pA=parseInt(pr.away_score);
-      const rH=res.home_score,rA=res.away_score;
-      const pts=calcPuntos({home:pH,away:pA},res,pr.bonus==="TRUE"||pr.bonus===true);
-      total+=pts;
-      if(pts>0)aciertos++;
-      // Goles
-      if(pH===rH)gAci++;else gErr++;
-      if(pA===rA)gAci++;else gErr++;
-    });
-    p.pts=total;
-    p.pct=jugados>0?Math.round((aciertos/jugados)*100):0;
-    p.gAci=gAci;
-    p.gErr=gErr;
-  });
-  if(currentPlayer)renderRanking(currentPlayer);
-}
-
-/* ═══════════════════════════════════════════
-   SINCRONIZACIÓN AUTOMÁTICA
-═══════════════════════════════════════════ */
-function startSync(){
-  // Cargar resultados inmediatamente
-  fetchResultadosAPI();
-  // Luego cada 3 minutos
-  syncInterval=setInterval(fetchResultadosAPI,3*60*1000);
-}
-function stopSync(){
-  if(syncInterval)clearInterval(syncInterval);
-}
-
-/* ═══════════════════════════════════════════
-   INTRO / LOADER
-═══════════════════════════════════════════ */
-window.addEventListener("DOMContentLoaded",()=>{
-  // Siempre ocultar loader al inicio
-  const loader=document.getElementById("pageLoader");
-  if(loader){loader.classList.remove("show");loader.style.display="none";}
-
-  const session=localStorage.getItem("p26_session");
-  if(session){
-    try{
-      const player=REGISTRY.find(p=>p.mail.toLowerCase()===session.toLowerCase());
-      if(player){
-        const savedAlias=localStorage.getItem("p26_alias_"+session);
-        if(savedAlias)player.alias=savedAlias.toUpperCase();
-        if(player.alias){
-          currentPlayer=player;
-          // Asegurar que intro overlay esté oculto
-          const ov2=document.getElementById("introOverlay");
-          if(ov2){ov2.style.display="none";ov2.style.opacity="0";}
-          // Siempre re-guardar alias en Sheet (por si se borró)
-          saveAlias(player.mail, player.alias);
-          enterApp(player);
-          return;
-        }
-      }
-    }catch(e){
-      console.warn("Auto-login falló:",e);
-      localStorage.removeItem("p26_session");
-    }
-  }
-
-  // Sin sesión: mostrar intro video y login
-  const vid=document.getElementById("introVideo"),ov=document.getElementById("introOverlay");
-  if(ov){ov.style.display="flex";ov.style.opacity="1";}
-  const end=()=>{ov.style.transition="opacity .5s";ov.style.opacity="0";setTimeout(()=>{ov.style.display="none";ov.style.transition="";showLogin();},500);};
-  if(vid)vid.addEventListener("ended",end);
-  setTimeout(end,2200);
-  const se=localStorage.getItem("p26_email")||"";
-  if(se)document.getElementById("emailInput").value=se;
-});
-function showLogin(){document.getElementById("loginScreen").classList.add("active");}
-
-function showLoader(ms=440){
-  const l=document.getElementById("pageLoader");
-  l.classList.add("show");l.style.opacity="1";
-  return new Promise(r=>setTimeout(()=>{
-    l.style.transition="opacity .3s";l.style.opacity="0";
-    setTimeout(()=>{l.classList.remove("show");l.style.transition="";l.style.opacity="";r();},300);
-  },ms));
-}
-
-/* ═══════════════════════════════════════════
-   CONFETTI
-═══════════════════════════════════════════ */
-function launchConfetti(){
-  const cv=document.getElementById("confettiCanvas"),ctx=cv.getContext("2d");
-  cv.width=window.innerWidth;cv.height=window.innerHeight;cv.style.display="block";
-  const cols=["#FFFFFF","#75AADB","#3D3FE8","#00FF47","#F5E642","#4DFFD2","#ffffff","#aad4f5"];
-  const ps=Array.from({length:520},()=>({
-    x:Math.random()*cv.width,y:-50-Math.random()*400,
-    w:5+Math.random()*10,h:3+Math.random()*7,
-    color:cols[Math.floor(Math.random()*cols.length)],
-    rot:Math.random()*360,rv:(Math.random()-0.5)*5,
-    vx:(Math.random()-0.5)*2.5,vy:1.4+Math.random()*3,op:1
-  }));
-  let f=0;
-  function draw(){
-    ctx.clearRect(0,0,cv.width,cv.height);let alive=false;
-    ps.forEach(p=>{
-      if(p.op<=0)return;
-      ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.rot*Math.PI/180);
-      ctx.globalAlpha=Math.max(0,p.op);ctx.fillStyle=p.color;
-      ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);ctx.restore();
-      p.x+=p.vx;p.y+=p.vy;p.rot+=p.rv;
-      if(f>100)p.op=Math.max(0,p.op-0.005);
-      if(p.op>0)alive=true;
-    });
-    f++;
-    if(alive)requestAnimationFrame(draw);
-    else{ctx.clearRect(0,0,cv.width,cv.height);cv.style.display="none";}
-  }
-  draw();
-}
-
-/* ═══════════════════════════════════════════
-   AUTH
-═══════════════════════════════════════════ */
-function loginGoogle(){
-  const ov=document.getElementById("introOverlay");
-  const vid=document.getElementById("introVideo");
-  ov.style.display="flex";ov.style.opacity="1";
-  ov.classList.add("playing");
-  vid.currentTime=0;vid.play().catch(()=>{});
-  setTimeout(()=>{
-    ov.style.transition="opacity .5s";ov.style.opacity="0";
-    setTimeout(()=>{ov.style.display="none";ov.style.transition="";ov.classList.remove("playing");
-    showToast("Ingresá tu mail registrado");},500);
-  },2200);
-}
-
-function handleLogin(){
-  const email=document.getElementById("emailInput").value.trim().toLowerCase();
-  if(!email){showToast("Ingresá tu mail");return;}
-  const player=REGISTRY.find(p=>p.mail.toLowerCase()===email);
-  if(!player){showToast("❌ Mail no registrado en el prode");return;}
-  const savedAlias=localStorage.getItem("p26_alias_"+email);
-  if(savedAlias)player.alias=savedAlias.toUpperCase();
-  localStorage.setItem("p26_email",email);
-  currentPlayer=player;
-  if(!player.alias){
-    showLoader(300).then(()=>{
-      document.getElementById("loginScreen").classList.remove("active");
-      document.getElementById("aliasScreen").classList.add("active");
-    });
-  } else {
-    // Re-guardar alias en Sheet por si se borró
-    saveAlias(player.mail, player.alias);
-    showLoader(500).then(()=>enterApp(player));
-  }
-}
-
-async function confirmAlias(){
-  const raw=document.getElementById("aliasInput").value.trim();
-  if(!raw||raw.length<2){showToast("Ingresá un alias válido");return;}
-  const alias=raw.toUpperCase(); // siempre mayúsculas
-  currentPlayer.alias=alias;
-  localStorage.setItem("p26_alias_"+currentPlayer.mail,alias);
-  await saveAlias(currentPlayer.mail,alias);
-  document.getElementById("aliasScreen").classList.remove("active");
-  showLoader(400).then(()=>enterApp(currentPlayer));
-}
-
-async function enterApp(player){
-  uname=player.alias;isAdmin=!!player.isAdmin;
-  // Guardar sesión
-  localStorage.setItem("p26_session",player.mail);
-
-  // Mostrar app inmediatamente sin esperar al Sheet
-  document.getElementById("loginScreen").classList.remove("active");
-  document.getElementById("appScreen").classList.add("active");
-
-  // Nav avatar — sin nombre, solo imagen
-  const navAv=document.getElementById("navAv");
-  const pfUrl=driveImg(player.foto_perfil);
-  if(pfUrl){
-    navAv.style.backgroundImage=`url('${pfUrl}')`;
-    navAv.style.backgroundSize="cover";
-    navAv.style.backgroundPosition="center";
-    navAv.textContent="";
-  } else {
-    navAv.textContent=player.alias[0].toUpperCase();
-  }
-  // Ocultar nombre del nav
-  const navNameEl=document.getElementById("navName");
-  if(navNameEl)navNameEl.style.display="none";
-
-  if(isAdmin)document.getElementById("adminTab").style.display="inline-block";
-  launchConfetti();
-
-  // Render inmediato con datos locales
-  buildGrupoDD();buildResGrupoDD();
-  renderGrupoMatches("A");renderElimMatches("dieciseis");
-  initEsp();renderAdmin();
-  renderRanking(player);
-
-  // Cargar datos del Sheet en paralelo (no bloquea la UI)
-  Promise.all([loadAllAliases(), loadMisPronosticos(), loadResultadosFromSheet()])
-    .then(()=>{
-      renderRanking(currentPlayer||player);
-      renderGrupoMatches(curGrupo);
-      renderResultados();
-    });
-
-  // Forzar re-render del ranking después de 1 segundo (por si los aliases tardaron)
-  setTimeout(()=>{
-    if(currentPlayer)renderRanking(currentPlayer);
-  }, 1000);
-
-  // Sincronización continua
-  startSync();
-  startAliasSync();
-}
-
-function logout(){
-  stopSync();
-  localStorage.removeItem("p26_session");
-  document.getElementById("appScreen").classList.remove("active");
-  document.getElementById("aliasScreen").classList.remove("active");
-  currentPlayer=null;uname=null;isAdmin=false;
-  userPron={};userBonus={};
-  showLoader(300).then(()=>document.getElementById("loginScreen").classList.add("active"));
-}
-
-/* ═══════════════════════════════════════════
-   NAV
-═══════════════════════════════════════════ */
-function showTab(tab,btn){
-  showLoader(360).then(()=>{
-    document.querySelectorAll(".tab-content").forEach(t=>t.classList.remove("active"));
-    document.querySelectorAll(".nav-tab").forEach(b=>b.classList.remove("active"));
-    document.getElementById("tab-"+tab).classList.add("active");btn.classList.add("active");
-    if(tab==="resultados")renderResultados();
-    if(tab==="ranking")renderRanking(currentPlayer);
-  });
-}
-
-/* ═══════════════════════════════════════════
-   RANKING
-═══════════════════════════════════════════ */
-function renderRanking(player){
-  // ── Tarjeta de perfil privada ──
-  const pfUrl=driveImg(player.foto_perfil);
-  const profAvEl=document.getElementById("profAv");
-  if(pfUrl){
-    profAvEl.style.backgroundImage=`url('${pfUrl}')`;
-    profAvEl.style.backgroundSize="cover";
-    profAvEl.style.backgroundPosition="center";
-    profAvEl.textContent="";
-  } else {
-    profAvEl.textContent=(player.alias||"?")[0].toUpperCase();
-  }
-  document.getElementById("profName").textContent=(player.alias||"").toUpperCase();
-  document.getElementById("profStats").innerHTML=`
-    <div class="profile-stat"><span>% aciertos</span><span class="psv" style="color:#00FF47">${player.pct}%</span></div>
-    <div class="profile-stat"><span>Goles acertados</span><span class="psv" style="color:#00FF47">⚽ ${player.gAci}</span></div>
-    <div class="profile-stat"><span>Goles errados</span><span class="psv" style="color:#E8292A">✗ ${player.gErr}</span></div>`;
-
-  // ── Tabla de posiciones — TODOS los jugadores registrados ──
-  // Aplicar aliases del sheet a cada jugador
-  PLAYERS.forEach(p=>{
-    if(aliasesDB[p.mail])p.alias=aliasesDB[p.mail];
-  });
-
-  // Ordenar: primero por puntos desc, luego alfabético para los que tienen 0
-  const sorted=[...PLAYERS].sort((a,b)=>{
-    if(b.pts!==a.pts)return b.pts-a.pts;
-    const na=a.alias||a.mail;
-    const nb=b.alias||b.mail;
-    return na.localeCompare(nb);
-  });
-
-  document.getElementById("rankRows").innerHTML=sorted.map((p,i)=>{
-    const pc=i===0?"p1":i===1?"p2":i===2?"p3":"";
-    const isMe=p.mail===player.mail;
-    const pf=driveImg(p.foto_perfil);
-    const bn=driveImg(p.banner);
-    const displayName=p.alias||`<span style="color:rgba(255,255,255,.2);font-size:20px">—</span>`;
-
-    let tEl;
-    if(p.trend>0)tEl=`<span style="color:#00FF47;font-size:15px">▲</span><span style="color:#00FF47;font-weight:700">${p.trend}</span>`;
-    else if(p.trend<0)tEl=`<span style="color:#E8292A;font-size:15px">▼</span><span style="color:#E8292A;font-weight:700">${Math.abs(p.trend)}</span>`;
-    else tEl=`<span style="color:rgba(255,255,255,.3);font-size:18px">—</span>`;
-
-    const avStyle=pf?`background-image:url('${pf}');background-size:cover;background-position:center;`:``;
-    const avInner=pf?"":(p.alias||"?")[0].toUpperCase();
-    const bannerDiv=bn?`<div class="rank-banner" style="background-image:url('${bn}')"></div>`:"";
-
-    return `<div class="rank-row${isMe?" me":""}">
-      <div class="rank-pos ${pc}">${i+1}</div>
-      <div class="rank-player">
-        <div class="rank-name-wrap">
-          ${bannerDiv}
-          <span class="rank-name">${displayName}</span>
-        </div>
-      </div>
-      <div class="rank-pts">${p.pts}</div>
-      <div class="rank-trend">${tEl}</div>
-    </div>`;
-  }).join("");
-}
-
-/* ═══════════════════════════════════════════
-   PRONÓSTICOS
-═══════════════════════════════════════════ */
-function selPhase(ph,btn){
-  document.querySelectorAll(".phase-btn").forEach(b=>b.classList.remove("active"));btn.classList.add("active");
-  document.getElementById("phGrupos").style.display=ph==="grupos"?"block":"none";
-  document.getElementById("phElim").style.display=ph==="eliminacion"?"block":"none";
-  document.getElementById("phEsp").style.display=ph==="especiales"?"block":"none";
-}
-function buildGrupoDD(){
-  document.getElementById("grupoMenu").innerHTML=Object.keys(GROUPS).map(g=>`
-    <div class="dd-item${g==="A"?" sel":""}" onclick="selGrupo('${g}')">
-      <div class="grp-badge">${g}</div><span>${GROUPS[g].teams.join(" · ")}</span></div>`).join("");
-}
-function buildResGrupoDD(){
-  document.getElementById("resGrupoMenu").innerHTML=Object.keys(GROUPS).map(g=>`
-    <div class="dd-item${g==="A"?" sel":""}" onclick="selResGrupo('${g}')">
-      <div class="grp-badge">${g}</div><span>${GROUPS[g].teams.join(" · ")}</span></div>`).join("");
-}
-
-const DDM={
-  grupo:["grupoBtn","grupoMenu"],
-  elim:["elimBtn","elimMenu"],
-  resGrupo:["resGrupoBtn","resGrupoMenu"],
-  resElim:["resElimBtn","resElimMenu"]
 };
 function toggleDD(id){
   const [bId,mId]=DDM[id]||[];if(!bId)return;
