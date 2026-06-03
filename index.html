@@ -799,29 +799,30 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
       <div class="pts-legend">
         <div class="pts-head">Sistema de Puntos</div>
         <div class="pts-grid">
-          <div class="pts-sec">Fase de Grupos</div>
           <div class="pts-row"><span>Acertar ganador o empate</span><span class="pts-v">2 PTS</span></div>
-          <div class="pts-row"><span>Acertar resultado exacto</span><span class="pts-v">+2 PTS</span></div>
-          <div class="pts-row"><span>Partido perfecto</span><span class="pts-v">4 PTS</span></div>
-          <div class="pts-row"><span>2 clasificados en orden</span><span class="pts-v">4 PTS</span></div>
-          <div class="pts-row"><span>2 clasificados sin orden</span><span class="pts-v">2 PTS</span></div>
-          <div class="pts-row"><span>Bonus activo (duplica puntos)</span><span class="pts-v">×2</span></div>
-          <div class="pts-sec">Fase Eliminatoria</div>
-          <div class="pts-row"><span>Acertar ganador</span><span class="pts-v">2 PTS</span></div>
-          <div class="pts-row"><span>Acertar resultado exacto</span><span class="pts-v">+2 PTS</span></div>
-          <div class="pts-row"><span>Elegís penales y acertás ganador</span><span class="pts-v">+1 PTS</span></div>
-          <div class="pts-row"><span>Acertás resultado exacto de penales</span><span class="pts-v">+3 PTS</span></div>
+          <div class="pts-row"><span>Goles exactos de ambos equipos</span><span class="pts-v">4 PTS</span></div>
+          <div class="pts-row"><span>Bonus ⭐ + goles exactos</span><span class="pts-v">+2 PTS</span></div>
+          <div class="pts-row"><span>Bonus <span style="color:#3a86ff;font-weight:900">P</span> + al menos 1 penal cobrado a favor</span><span class="pts-v">+1 PT</span></div>
+          <div class="pts-row"><span>Bonus <span style="display:inline-block;width:9px;height:13px;background:#e63946;border-radius:2px;vertical-align:middle"></span> + al menos 1 tarjeta roja directa o doble amarilla</span><span class="pts-v">+1 PT</span></div>
+          <div class="pts-sec">Bonus disponibles por jugador</div>
+          <div class="pts-row"><span>⭐ Grupos / Eliminatoria</span><span class="pts-v">15 / 5</span></div>
+          <div class="pts-row"><span><span style="color:#3a86ff;font-weight:900">P</span> Grupos / Eliminatoria</span><span class="pts-v">15 / 5</span></div>
+          <div class="pts-row"><span><span style="display:inline-block;width:9px;height:13px;background:#e63946;border-radius:2px;vertical-align:middle"></span> Grupos / Eliminatoria</span><span class="pts-v">15 / 5</span></div>
+          <div class="pts-sec">Definición por Penales</div>
+          <div class="pts-row"><span>Acertás que va a penales y quién gana</span><span class="pts-v">+1 PT</span></div>
+          <div class="pts-row"><span>Acertás resultado exacto de la tanda</span><span class="pts-v">+3 PTS</span></div>
           <div class="pts-sec">Podio Final</div>
           <div class="pts-row"><span>Campeón</span><span class="pts-v">10 PTS</span></div>
           <div class="pts-row"><span>Subcampeón</span><span class="pts-v">8 PTS</span></div>
           <div class="pts-row"><span>3er y 4to puesto</span><span class="pts-v">4 PTS</span></div>
           <div class="pts-sec">Especiales</div>
-          <div class="pts-row"><span>País del goleador del torneo</span><span class="pts-v">4 PTS</span></div>
-          <div class="pts-row"><span>País del mejor jugador FIFA</span><span class="pts-v">4 PTS</span></div>
-          <div class="pts-row"><span>Máximo goleador (nombre)</span><span class="pts-v">6 PTS</span></div>
-          <div class="pts-row"><span>Primera selección eliminada</span><span class="pts-v">3 PTS</span></div>
-          <div class="pts-row"><span>Total goles grupos (±1)</span><span class="pts-v">4 PTS</span></div>
-          <div class="pts-row"><span>Partidos por penales elim. (±1)</span><span class="pts-v">4 PTS</span></div>
+          <div class="pts-row"><span>Balón de Oro</span><span class="pts-v">4 PTS</span></div>
+          <div class="pts-row"><span>Bota de Oro</span><span class="pts-v">6 PTS</span></div>
+          <div class="pts-row"><span>Guante de Oro</span><span class="pts-v">4 PTS</span></div>
+          <div class="pts-row"><span>Mejor Jugador Joven</span><span class="pts-v">4 PTS</span></div>
+          <div class="pts-row"><span>Primer país eliminado</span><span class="pts-v">3 PTS</span></div>
+          <div class="pts-row"><span>Total goles fase de grupos (±1)</span><span class="pts-v">4 PTS</span></div>
+          <div class="pts-row"><span>Total partidos definidos por penales (±1)</span><span class="pts-v">4 PTS</span></div>
         </div>
       </div>
     </div>
@@ -860,12 +861,13 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
           <span class="lk">🔒</span><span>Los especiales están cerrados — el torneo ya comenzó.</span>
         </div>
         <div class="esp-card">
-          <div class="esp-row"><div class="esp-lbl">País del Goleador del Torneo<span class="esp-pts">4 PTS</span></div><input class="esp-inp" id="esp1" placeholder="Ej: Argentina"></div>
-          <div class="esp-row"><div class="esp-lbl">País del Mejor Jugador FIFA<span class="esp-pts">4 PTS</span></div><input class="esp-inp" id="esp2" placeholder="Ej: Francia"></div>
-          <div class="esp-row"><div class="esp-lbl">Máximo Goleador Individual<span class="esp-pts">6 PTS</span></div><input class="esp-inp" id="esp3" placeholder="Ej: Lautaro Martínez"></div>
-          <div class="esp-row"><div class="esp-lbl">Primera Selección Eliminada<span class="esp-pts">3 PTS</span></div><input class="esp-inp" id="esp4" placeholder="Ej: Arabia Saudita"></div>
-          <div class="esp-row"><div class="esp-lbl">Total de Goles en Grupos<span class="esp-pts">4 PTS</span></div><input class="esp-inp" id="esp5" type="number" placeholder="Ej: 98"></div>
-          <div class="esp-row"><div class="esp-lbl">Partidos por Penales (elim.)<span class="esp-pts">4 PTS</span></div><input class="esp-inp" id="esp6" type="number" placeholder="Ej: 4"></div>
+          <div class="esp-row"><div class="esp-lbl">Balón de Oro — Mejor jugador del torneo<span class="esp-pts">4 PTS</span></div><input class="esp-inp" id="esp1" placeholder="Ej: Lamine Yamal"></div>
+          <div class="esp-row"><div class="esp-lbl">Bota de Oro — Máximo goleador<span class="esp-pts">6 PTS</span></div><input class="esp-inp" id="esp2" placeholder="Ej: Kylian Mbappé"></div>
+          <div class="esp-row"><div class="esp-lbl">Guante de Oro — Mejor arquero<span class="esp-pts">4 PTS</span></div><input class="esp-inp" id="esp3" placeholder="Ej: Emiliano Martínez"></div>
+          <div class="esp-row"><div class="esp-lbl">Mejor Jugador Joven — Sub 21<span class="esp-pts">4 PTS</span></div><input class="esp-inp" id="esp4" placeholder="Ej: Lamine Yamal"></div>
+          <div class="esp-row"><div class="esp-lbl">Primer país eliminado<span class="esp-pts">3 PTS</span></div><input class="esp-inp" id="esp5" placeholder="Ej: Arabia Saudita"></div>
+          <div class="esp-row"><div class="esp-lbl">Total goles fase de grupos (±1)<span class="esp-pts">4 PTS</span></div><input class="esp-inp" id="esp6" type="number" placeholder="Ej: 120"></div>
+          <div class="esp-row"><div class="esp-lbl">Total partidos definidos por penales (±1)<span class="esp-pts">4 PTS</span></div><input class="esp-inp" id="esp7" type="number" placeholder="Ej: 4"></div>
           
         </div>
       </div>
@@ -1218,7 +1220,11 @@ async function savePronostico(matchId,side,val){
       match_id:matchId,
       home_score:h,
       away_score:a,
-      bonus:userBonus[matchId]||false
+      bonus:userBonus[matchId]||false,
+      penal_home:userPenal[matchId]?.home||false,
+      penal_away:userPenal[matchId]?.away||false,
+      tarjeta_home:userTarjeta[matchId]?.home||false,
+      tarjeta_away:userTarjeta[matchId]?.away||false
     });
     showToast(h===null&&a===null?"✓ Pronóstico borrado":"✓ Pronóstico guardado");
   },1500);
@@ -1803,7 +1809,11 @@ async function toggleBonus(id,btn){
         match_id:id,
         home_score:h,
         away_score:a,
-        bonus:userBonus[id]
+        bonus:userBonus[id],
+        penal_home:userPenal[id]?.home||false,
+        penal_away:userPenal[id]?.away||false,
+        tarjeta_home:userTarjeta[id]?.home||false,
+        tarjeta_away:userTarjeta[id]?.away||false
       });
     }
   }
@@ -1813,7 +1823,7 @@ function initEsp(){
   const locked=torneoStarted();
   document.getElementById("espLockedNotice").style.display=locked?"flex":"none";
   const espBtn=document.getElementById("espSaveBtn");if(espBtn)espBtn.style.display=locked?"none":"block";
-  ["esp1","esp2","esp3","esp4","esp5","esp6"].forEach(id=>{
+  ["esp1","esp2","esp3","esp4","esp5","esp6","esp7"].forEach(id=>{
     const el=document.getElementById(id);
     el.disabled=locked;if(locked)el.placeholder="Cerrado";
   });
