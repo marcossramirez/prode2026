@@ -418,16 +418,15 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
   background:transparent;
   border:1px solid var(--border);
   border-radius:16px;margin-bottom:16px;
-  transition:all .2s;
+  transition:all .2s;overflow:hidden;
   position:relative;
-  overflow:visible;
 }
 .match-flag-area{
   position:relative;
   width:100%;
-  border-radius:14px 14px 0 0;
+  border-radius:0;
   overflow:hidden;
-  height:110px;
+  height:150px;
 }
 .match-flag-l{
   position:absolute;top:0;left:0;width:100%;height:100%;
@@ -509,13 +508,13 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
 .bonus-btn:hover:not([disabled]){filter:grayscale(.3) opacity(.6);}
 .bonus-btn:disabled{cursor:not-allowed;}
 .match-meta{
+  position:absolute;bottom:0;left:0;right:0;
   display:flex;justify-content:space-between;align-items:center;
-  padding:8px 14px;
-  border-top:none;font-size:10px;color:var(--dim);
+  padding:7px 14px 10px;
+  font-size:10px;color:rgba(255,255,255,.85);
   white-space:nowrap;overflow:hidden;line-height:1;
-  position:relative;z-index:3;background:var(--surface2);
-  border-radius:0 0 14px 14px;
-  margin-top:0;}
+  z-index:4;background:linear-gradient(transparent,rgba(0,0,0,.8));
+  border-radius:0 0 16px 16px;}
 .match-meta .mr{text-align:right;}
 
 /* ── Elim match card ── */
