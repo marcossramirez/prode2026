@@ -427,7 +427,7 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
   width:100%;
   border-radius:0;
   overflow:hidden;
-  height:95px;
+  height:90px;
   flex-shrink:0;
 }
 .match-flag-l{
@@ -445,12 +445,12 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
   pointer-events:none;z-index:1;
 }
 .match-flag-content{
-  position:absolute;inset:0;
+  position:absolute;top:0;left:0;right:0;bottom:30px;
   display:grid;grid-template-columns:1fr auto 1fr;
   align-items:center;
   z-index:2;
 }
-.match-flag-l{
+.bonus-row{display:flex;justify-content:center;position:absolute;bottom:8px;left:0;right:0;height:22px;align-items:center;z-index:3;}.match-flag-l{
   position:absolute;top:0;left:0;bottom:0;width:50%;
   background-size:100% 100%;background-position:left center;
   -webkit-mask-image:linear-gradient(to right,rgba(0,0,0,1) 0%,rgba(0,0,0,1) 90%,rgba(0,0,0,0) 100%);
@@ -1665,15 +1665,15 @@ function renderGrupoMatches(g){
               <input class="s-inp" type="number" min="0" max="99" value="${pr.away??''}" placeholder="–"
                 ${lk?"disabled":""} onchange="savePronostico('${m.id}','away',this.value)">
             </div>
-            <div class="bonus-row">
-              <button class="bonus-btn${bon?" on":""}" onclick="toggleBonus('${m.id}',this)"
-                ${lk?"disabled":""} title="Bonus: duplica puntos">⭐</button>
-            </div>
           </div>
           <div class="team-r">
             ${fRurl?`<div class="team-flag-bg" style="background-image:url('${fRurl}')"></div>`:""}
             <div class="t-name">${m.away}</div>
           </div>
+        </div>
+        <div class="bonus-row">
+          <button class="bonus-btn${bon?" on":""}" onclick="toggleBonus('${m.id}',this)"
+            ${lk?"disabled":""} title="Bonus: duplica puntos">⭐</button>
         </div>
       </div>
       <div class="match-meta">
