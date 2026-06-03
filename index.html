@@ -486,14 +486,14 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
 .match-teams{position:relative;display:grid;grid-template-columns:1fr auto 1fr;align-items:stretch;gap:0;overflow:hidden;margin:0;padding:0;}
 .team-l{
   display:flex;align-items:center;
-  min-width:0;padding:14px 6px 14px 10px;
+  min-width:0;padding:0 6px 20px 10px;
   position:relative;z-index:2;
 }
 .team-l .team-flag-bg{display:none;}
 .team-l .t-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 8px rgba(0,0,0,.9),0 0 16px rgba(0,0,0,.8);}
 .team-r{
   display:flex;align-items:center;justify-content:flex-end;
-  min-width:0;padding:14px 10px 14px 6px;
+  min-width:0;padding:0 10px 20px 6px;
   position:relative;z-index:2;
 }
 .team-r .team-flag-bg{display:none;}
@@ -1798,7 +1798,7 @@ async function toggleBonus(id,btn){
   }
   userBonus[id]=!userBonus[id];
   btn.classList.toggle("on");
-  showToast(userBonus[id]?"⭐ BONUS POR PARTIDO ACTIVADO":"Bonus desactivado");
+  showToast(userBonus[id]?"⭐ BONUS POR PARTIDO ACTIVADO":"BONUS DESACTIVADO");
   if(userPron[id]){
     const h=userPron[id].home;
     const a=userPron[id].away;
@@ -1889,7 +1889,7 @@ async function togglePenal(id,side,btn){
   }
   userPenal[id][side]=!active;
   btn.classList.toggle("on-penal");
-  showToast(userPenal[id][side]?"🔵 BONUS POR PENAL ACTIVADO":"Bonus desactivado");
+  showToast(userPenal[id][side]?"<span style='color:#3a86ff;font-weight:900'>P</span> BONUS POR PENAL ACTIVADO":"BONUS DESACTIVADO");
   await postToSheet({
     type:"pronostico",
     mail:currentPlayer.mail,
@@ -1913,7 +1913,7 @@ async function toggleTarjeta(id,side,btn){
   }
   userTarjeta[id][side]=!active;
   btn.classList.toggle("on-tarjeta");
-  showToast(userTarjeta[id][side]?"🟥 BONUS POR TARJETA ACTIVADO":"Bonus desactivado");
+  showToast(userTarjeta[id][side]?"<span style='display:inline-block;width:9px;height:13px;background:#e63946;border-radius:2px;vertical-align:middle;margin-right:4px'></span> BONUS POR TARJETA ACTIVADO":"BONUS DESACTIVADO");
   await postToSheet({
     type:"pronostico",
     mail:currentPlayer.mail,
@@ -1930,7 +1930,9 @@ async function toggleTarjeta(id,side,btn){
   renderGrupoMatches(curGrupo);
 }
 function showToast(msg){
-  const t=document.getElementById("toastEl");t.textContent=msg;t.classList.add("show");
+  const t=document.getElementById("toastEl");
+  if(msg.includes("<")){t.innerHTML=msg;}else{t.textContent=msg;}
+  t.classList.add("show");
   setTimeout(()=>t.classList.remove("show"),2500);
 }
 </script>
