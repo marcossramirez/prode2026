@@ -450,7 +450,23 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
   align-items:center;
   z-index:2;
 }
-.bonus-row{display:flex;justify-content:center;position:absolute;bottom:8px;left:0;right:0;height:22px;align-items:center;z-index:3;}.match-flag-l{
+.bonus-row{display:flex;justify-content:center;align-items:center;gap:16px;position:absolute;bottom:8px;left:0;right:0;height:22px;z-index:3;}
+.match-card-action{display:flex;align-items:center;gap:16px;}
+.red-card{
+  width:14px;height:20px;
+  background:#e63946;
+  border-radius:3px;
+  display:inline-block;
+  box-shadow:0 1px 4px rgba(0,0,0,.6);
+}
+.penalty-p{
+  font-size:18px;font-weight:900;
+  color:rgba(255,255,255,.4);
+  font-family:"Barlow Condensed",sans-serif;
+  letter-spacing:0;
+  line-height:1;
+  text-transform:uppercase;
+}.match-flag-l{
   position:absolute;top:0;left:0;bottom:0;width:50%;
   background-size:100% 100%;background-position:left center;
   -webkit-mask-image:linear-gradient(to right,rgba(0,0,0,1) 0%,rgba(0,0,0,1) 90%,rgba(0,0,0,0) 100%);
@@ -1672,8 +1688,16 @@ function renderGrupoMatches(g){
           </div>
         </div>
         <div class="bonus-row">
+          <div class="match-card-action">
+            <div class="red-card"></div>
+            <span class="penalty-p">P</span>
+          </div>
           <button class="bonus-btn${bon?" on":""}" onclick="toggleBonus('${m.id}',this)"
             ${lk?"disabled":""} title="Bonus: duplica puntos">⭐</button>
+          <div class="match-card-action">
+            <span class="penalty-p">P</span>
+            <div class="red-card"></div>
+          </div>
         </div>
       </div>
       <div class="match-meta">
