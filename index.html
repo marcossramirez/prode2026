@@ -459,13 +459,6 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
   display:inline-block;
   box-shadow:0 1px 4px rgba(0,0,0,.6);
 }
-.penalty-p{
-  font-size:18px;font-weight:900;
-  color:rgba(255,255,255,.4);
-  font-family:"Barlow Condensed",sans-serif;
-  letter-spacing:0;
-  line-height:1;
-  text-transform:uppercase;
 }.match-flag-l{
   position:absolute;top:0;left:0;bottom:0;width:50%;
   background-size:100% 100%;background-position:left center;
@@ -523,7 +516,7 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
   transition:all .25s;padding:2px;filter:grayscale(1) opacity(.25);
 }
 .bonus-btn.on{filter:none;transform:scale(1.2);}
-.penalty-p{font-size:22px;font-weight:900;color:rgba(255,255,255,.25);font-family:"Barlow Condensed",sans-serif;line-height:1;text-transform:uppercase;background:none;border:none;cursor:pointer;padding:0;transition:all .25s;}
+.penalty-p{font-size:26px;font-weight:900;color:rgba(255,255,255,.25);font-family:"Barlow Condensed",sans-serif;line-height:1;text-transform:uppercase;background:none;border:none;cursor:pointer;padding:0;transition:all .25s;}
 .penalty-p.on-penal{color:#3a86ff;transform:scale(1.1);}
 .penalty-p:disabled{cursor:not-allowed;opacity:.3;}
 .red-card-btn{width:14px;height:20px;background:rgba(255,255,255,.2);border-radius:3px;display:inline-block;border:none;cursor:pointer;transition:all .25s;box-shadow:0 1px 4px rgba(0,0,0,.4);padding:0;}
@@ -652,7 +645,7 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
 
 /* TOAST */
 .toast{
-  position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+  position:fixed;bottom:28px;left:50%;transform:translateX(-50%);
   background:var(--green);color:var(--black);
   padding:12px 28px;border-radius:40px;
   font-family:"Barlow Condensed",sans-serif;font-weight:900;font-size:15px;letter-spacing:2px;
