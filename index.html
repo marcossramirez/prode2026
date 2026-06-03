@@ -513,13 +513,13 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
 .bonus-row{display:flex;justify-content:center;margin-top:5px;}
 .bonus-btn{
   background:none;border:none;cursor:pointer;font-size:20px;
-  transition:all .25s;padding:2px;filter:grayscale(1) opacity(.25);
+  transition:all .25s;padding:2px;filter:grayscale(1) opacity(.45);
 }
 .bonus-btn.on{filter:none;transform:scale(1.2);}
-.penalty-p{font-size:26px;font-weight:900;color:rgba(255,255,255,.25);font-family:"Barlow Condensed",sans-serif;line-height:1;text-transform:uppercase;background:none;border:none;cursor:pointer;padding:0;transition:all .25s;text-shadow:0 1px 4px rgba(0,0,0,.8),0 2px 8px rgba(0,0,0,.6);}
+.penalty-p{font-size:26px;font-weight:900;color:rgba(255,255,255,.45);font-family:"Barlow Condensed",sans-serif;line-height:1;text-transform:uppercase;background:none;border:none;cursor:pointer;padding:0;transition:all .25s;text-shadow:0 1px 4px rgba(0,0,0,.8),0 2px 8px rgba(0,0,0,.6);font-size:28px;}
 .penalty-p.on-penal{color:#3a86ff;transform:scale(1.1);}
 .penalty-p:disabled{cursor:not-allowed;opacity:.3;}
-.red-card-btn{width:14px;height:20px;background:rgba(255,255,255,.2);border-radius:3px;display:inline-block;border:none;cursor:pointer;transition:all .25s;box-shadow:0 1px 4px rgba(0,0,0,.4);padding:0;}
+.red-card-btn{width:14px;height:20px;background:rgba(255,255,255,.35);border-radius:3px;display:inline-block;border:none;cursor:pointer;transition:all .25s;box-shadow:0 1px 4px rgba(0,0,0,.4);padding:0;}
 .red-card-btn.on-tarjeta{background:#e63946;box-shadow:0 1px 6px rgba(230,57,70,.7);transform:scale(1.1);}
 .red-card-btn:disabled{cursor:not-allowed;opacity:.3;}
 .bonus-btn:hover:not([disabled]){filter:grayscale(.3) opacity(.6);}
@@ -802,17 +802,26 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
         <div class="pts-head">Sistema de Puntos</div>
         <div class="pts-grid">
           <div class="pts-row"><span>Acertar ganador o empate</span><span class="pts-v">2 PTS</span></div>
-          <div class="pts-row"><span>Goles exactos de ambos equipos</span><span class="pts-v">4 PTS</span></div>
-          <div class="pts-row"><span>Bonus ⭐ + goles exactos</span><span class="pts-v">+2 PTS</span></div>
-          <div class="pts-row"><span>Bonus <span style="color:#3a86ff;font-weight:900">P</span> + al menos 1 penal cobrado a favor</span><span class="pts-v">+1 PT</span></div>
-          <div class="pts-row"><span>Bonus <span style="display:inline-block;width:9px;height:13px;background:#e63946;border-radius:2px;vertical-align:middle"></span> + al menos 1 tarjeta roja directa o doble amarilla</span><span class="pts-v">+1 PT</span></div>
+          <div class="pts-row"><span>Resultado perfecto (goles exactos)</span><span class="pts-v">4 PTS</span></div>
+          <div class="pts-row"><span>Bonus ⭐ + resultado perfecto</span><span class="pts-v">+2 PTS</span></div>
+          <div class="pts-row"><span>Bonus <span style="color:#3a86ff;font-weight:900;font-size:14px;font-family:'Barlow Condensed',sans-serif">P</span> + al menos 1 penal cobrado a favor</span><span class="pts-v">+1 PT</span></div>
+          <div class="pts-row"><span>Bonus <span style="display:inline-block;width:9px;height:13px;background:#e63946;border-radius:2px;vertical-align:middle"></span> + al menos 1 tarjeta roja directa o 2 amarillas a un jugador del equipo</span><span class="pts-v">+1 PT</span></div>
           <div class="pts-sec">Bonus disponibles por jugador</div>
-          <div class="pts-row"><span>⭐ Grupos / Eliminatoria</span><span class="pts-v">15 / 5</span></div>
-          <div class="pts-row"><span><span style="color:#3a86ff;font-weight:900">P</span> Grupos / Eliminatoria</span><span class="pts-v">15 / 5</span></div>
-          <div class="pts-row"><span><span style="display:inline-block;width:9px;height:13px;background:#e63946;border-radius:2px;vertical-align:middle"></span> Grupos / Eliminatoria</span><span class="pts-v">15 / 5</span></div>
+          <div class="pts-row" style="grid-column:1/-1;display:flex;align-items:center;gap:10px;">
+            <span style="width:20px;text-align:center">⭐</span>
+            <span style="flex:1">Fase de Grupos: 15 &nbsp;·&nbsp; Fase Eliminatoria: 5</span>
+          </div>
+          <div class="pts-row" style="grid-column:1/-1;display:flex;align-items:center;gap:10px;">
+            <span style="width:20px;text-align:center;color:#3a86ff;font-weight:900;font-size:16px;font-family:'Barlow Condensed',sans-serif">P</span>
+            <span style="flex:1">Fase de Grupos: 15 &nbsp;·&nbsp; Fase Eliminatoria: 5</span>
+          </div>
+          <div class="pts-row" style="grid-column:1/-1;display:flex;align-items:center;gap:10px;">
+            <span style="width:20px;display:flex;align-items:center;justify-content:center"><span style="display:inline-block;width:9px;height:13px;background:#e63946;border-radius:2px"></span></span>
+            <span style="flex:1">Fase de Grupos: 15 &nbsp;·&nbsp; Fase Eliminatoria: 5</span>
+          </div>
           <div class="pts-sec">Definición por Penales</div>
-          <div class="pts-row"><span>Acertás que va a penales y quién gana</span><span class="pts-v">+1 PT</span></div>
-          <div class="pts-row"><span>Acertás resultado exacto de la tanda</span><span class="pts-v">+3 PTS</span></div>
+          <div class="pts-row"><span>Acertar ganador por penales</span><span class="pts-v">+1 PT</span></div>
+          <div class="pts-row"><span>Acertar goles exactos de penales</span><span class="pts-v">+3 PTS</span></div>
           <div class="pts-sec">Podio Final</div>
           <div class="pts-row"><span>Campeón</span><span class="pts-v">10 PTS</span></div>
           <div class="pts-row"><span>Subcampeón</span><span class="pts-v">8 PTS</span></div>
