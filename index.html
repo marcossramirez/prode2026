@@ -417,7 +417,7 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
 .match-card{
   background:var(--surface);
   border:1px solid var(--border);
-  border-radius:16px;margin-bottom:10px;
+  border-radius:16px;margin-bottom:16px;
   transition:all .2s;overflow:hidden;
   position:relative;
 }
@@ -509,10 +509,11 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
 .bonus-btn:disabled{cursor:not-allowed;}
 .match-meta{
   display:flex;justify-content:space-between;align-items:center;
-  padding:7px 12px;
+  padding:8px 14px;
   border-top:1px solid var(--border);font-size:10px;color:var(--dim);
   white-space:nowrap;overflow:hidden;line-height:1;
-  position:relative;z-index:3;background:var(--surface);}
+  position:relative;z-index:3;background:var(--surface);
+  border-radius:0 0 16px 16px;}
 .match-meta .mr{text-align:right;}
 
 /* ── Elim match card ── */
