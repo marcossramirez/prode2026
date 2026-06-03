@@ -420,13 +420,15 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
   border-radius:16px;margin-bottom:16px;
   transition:all .2s;overflow:hidden;
   position:relative;
+  display:flex;flex-direction:column;
 }
 .match-flag-area{
   position:relative;
   width:100%;
   border-radius:0;
   overflow:hidden;
-  height:150px;
+  height:120px;
+  flex-shrink:0;
 }
 .match-flag-l{
   position:absolute;top:0;left:0;width:100%;height:100%;
@@ -508,13 +510,13 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
 .bonus-btn:hover:not([disabled]){filter:grayscale(.3) opacity(.6);}
 .bonus-btn:disabled{cursor:not-allowed;}
 .match-meta{
-  position:absolute;bottom:0;left:0;right:0;
   display:flex;justify-content:space-between;align-items:center;
-  padding:7px 14px 10px;
-  font-size:10px;color:rgba(255,255,255,.85);
+  padding:7px 14px;
+  font-size:10px;color:var(--dim);
   white-space:nowrap;overflow:hidden;line-height:1;
-  z-index:4;background:linear-gradient(transparent,rgba(0,0,0,.8));
-  border-radius:0 0 16px 16px;}
+  background:var(--surface2);
+  border-radius:0 0 16px 16px;
+  flex-shrink:0;}
 .match-meta .mr{text-align:right;}
 
 /* ── Elim match card ── */
@@ -1672,7 +1674,6 @@ function renderGrupoMatches(g){
             ${fRurl?`<div class="team-flag-bg" style="background-image:url('${fRurl}')"></div>`:""}
             <div class="t-name">${m.away}</div>
           </div>
-        </div>
         </div>
       </div>
       <div class="match-meta">
