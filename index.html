@@ -928,6 +928,7 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
 <div class="toast" id="toastEl"></div>
 
 <script>
+
 /* ═══════════════════════════════════════════
    CONFIGURACIÓN
 ═══════════════════════════════════════════ */
@@ -1199,9 +1200,13 @@ async function loadResultadosFromSheet(){
     data.forEach(r=>{
       resultadosDB[r.match_id]={
         home:r.home,away:r.away,
-        home_score:parseInt(r.home_score),
-        away_score:parseInt(r.away_score),
-        played:r.played==="TRUE"||r.played===true
+        home_score:parseInt(r.home_score)||0,
+        away_score:parseInt(r.away_score)||0,
+        played:r.played==="TRUE"||r.played===true,
+        penal_home:r.penal_home==="TRUE"||r.penal_home===true,
+        penal_away:r.penal_away==="TRUE"||r.penal_away===true,
+        tarjeta_home:r.tarjeta_home==="TRUE"||r.tarjeta_home===true,
+        tarjeta_away:r.tarjeta_away==="TRUE"||r.tarjeta_away===true
       };
     });
     renderResultados();
@@ -1312,19 +1317,33 @@ async function savePronosticoSheet(mail,alias,match_id,home_score,away_score,bon
 /* ═══════════════════════════════════════════
    PUNTOS — cálculo automático
 ═══════════════════════════════════════════ */
-function calcPuntos(pron,result,bonus){
+function calcPuntos(pron,result,bonus,penalHome,penalAway,tarjetaHome,tarjetaAway){
   if(!result||!result.played)return 0;
-  if(pron.home===undefined||pron.away===undefined)return 0;
+  if(pron.home===null||pron.away===null||pron.home===undefined||pron.away===undefined)return 0;
   let pts=0;
   const rH=result.home_score,rA=result.away_score;
   const pH=pron.home,pA=pron.away;
-  // Ganador/empate
+
+  // Ganador/empate → 2 pts
   const rRes=rH>rA?1:rH<rA?-1:0;
   const pRes=pH>pA?1:pH<pA?-1:0;
   if(rRes===pRes)pts+=2;
-  // Exacto
-  if(rH===pH&&rA===pA)pts+=2;
-  if(bonus)pts*=2;
+
+  // Resultado perfecto (goles exactos) → 4 pts total (+2 extra)
+  const perfecto=(rH===pH&&rA===pA);
+  if(perfecto)pts+=2;
+
+  // Bonus ⭐ solo si resultado perfecto → +2
+  if(bonus&&perfecto)pts+=2;
+
+  // Bonus penal → +1 cada uno si se registró penal
+  if(penalHome&&result.penal_home)pts+=1;
+  if(penalAway&&result.penal_away)pts+=1;
+
+  // Bonus tarjeta → +1 cada uno si se registró tarjeta roja
+  if(tarjetaHome&&result.tarjeta_home)pts+=1;
+  if(tarjetaAway&&result.tarjeta_away)pts+=1;
+
   return pts;
 }
 
@@ -1339,10 +1358,14 @@ function recalcularPuntos(){
       jugados++;
       const pH=parseInt(pr.home_score),pA=parseInt(pr.away_score);
       const rH=res.home_score,rA=res.away_score;
-      const pts=calcPuntos({home:pH,away:pA},res,pr.bonus==="TRUE"||pr.bonus===true);
+      const bonus=pr.bonus==="TRUE"||pr.bonus===true;
+      const penalH=pr.penal_home==="TRUE"||pr.penal_home===true;
+      const penalA=pr.penal_away==="TRUE"||pr.penal_away===true;
+      const tarjH=pr.tarjeta_home==="TRUE"||pr.tarjeta_home===true;
+      const tarjA=pr.tarjeta_away==="TRUE"||pr.tarjeta_away===true;
+      const pts=calcPuntos({home:pH,away:pA},res,bonus,penalH,penalA,tarjH,tarjA);
       total+=pts;
       if(pts>0)aciertos++;
-      // Goles
       if(pH===rH)gAci++;else gErr++;
       if(pA===rA)gAci++;else gErr++;
     });
@@ -1354,14 +1377,520 @@ function recalcularPuntos(){
   if(currentPlayer)renderRanking(currentPlayer);
 }
 
+
+/* ═══════════════════════════════════════════════════════════
+   ARQUITECTURA DE DATOS — Adapter / Provider Pattern
+   
+   MatchModel (modelo interno):
+   { match_id, home_score, away_score, status, minute, source, fetched_at }
+   
+   status: "scheduled" | "live" | "halftime" | "final"
+   
+   El prode NUNCA conoce ESPN directamente.
+   Solo usa MatchModel a través de DataService.
+═══════════════════════════════════════════════════════════ */
+
+// ── Configuración centralizada (único lugar para cambiar) ──
+const DATA_CONFIG={
+  ACTIVE_PROVIDER:"apifootball",
+  OPENFOOTBALL_URL:"https://raw.githubusercontent.com/openfootball/worldcup.json/master/2026/worldcup.json",
+  ESPN_URL:"https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard",
+  ESPN_PARAMS:"?limit=200",
+  SYNC_INTERVAL_NORMAL:3*60*1000,  // 3 min
+  SYNC_INTERVAL_LIVE:60*1000,      // 1 min si hay partido en vivo
+  MAX_RETRIES:3,
+  RETRY_BACKOFF_MS:5000,           // base para backoff exponencial
+  LOG_MAX_ENTRIES:100,
+  PROVIDER_CHAIN:["apifootball","footballdata","espn","openfootball","manual"]
+};
+
+// ── Logger estructurado ──
+const SyncLogger={
+  entries:[],
+  metrics:{fetches:0,errors:0,updates:0,lastFetch:null,lastError:null},
+  log(level,msg,data){
+    const entry={ts:new Date().toISOString(),level,msg,data:data||null};
+    this.entries.unshift(entry);
+    if(this.entries.length>DATA_CONFIG.LOG_MAX_ENTRIES)this.entries.pop();
+    if(level==="error"){console.error("[DataService]",msg,data||"");this.metrics.errors++;}
+    else{console.log("[DataService]",msg,data||"");}
+  },
+  info(msg,data){this.log("info",msg,data);},
+  warn(msg,data){this.log("warn",msg,data);},
+  error(msg,data){this.log("error",msg,data);},
+  trackFetch(){this.metrics.fetches++;this.metrics.lastFetch=new Date().toISOString();},
+  trackUpdate(){this.metrics.updates++;},
+  trackError(e){this.metrics.lastError={ts:new Date().toISOString(),msg:e?.message||String(e)};},
+  getReport(){return{metrics:this.metrics,lastEntries:this.entries.slice(0,10)};}
+};
+
+// ── Modelo interno ──
+function makeMatchModel(match_id,home_score,away_score,status,minute,source){
+  return{match_id,home_score:parseInt(home_score)||0,away_score:parseInt(away_score)||0,
+    status,minute:minute||null,source,fetched_at:new Date().toISOString()};
+}
+
+// ── Validación de integridad ──
+function validateMatchModel(m){
+  if(!m||typeof m!=="object")return false;
+  if(!m.match_id||typeof m.match_id!=="string")return false;
+  if(typeof m.home_score!=="number"||typeof m.away_score!=="number")return false;
+  if(m.home_score<0||m.away_score<0)return false;
+  if(!["scheduled","live","halftime","final"].includes(m.status))return false;
+  return true;
+}
+
+// ── Mapa de nombres ESPN → prode (solo el adapter sabe esto) ──
+const ESPN_NAME_MAP={
+  "Mexico":"México","South Africa":"Sudáfrica","Korea Republic":"Corea del Sur",
+  "Czech Republic":"Rep. Checa","Czechia":"Rep. Checa","Canada":"Canadá",
+  "Bosnia and Herzegovina":"Bosnia y Herz.","Qatar":"Qatar","Switzerland":"Suiza",
+  "Brazil":"Brasil","Morocco":"Marruecos","Haiti":"Haití","Scotland":"Escocia",
+  "United States":"EE.UU.","Paraguay":"Paraguay","Australia":"Australia","Turkey":"Turquía",
+  "Germany":"Alemania","Curacao":"Curazao","Ivory Coast":"C. de Marfil","Ecuador":"Ecuador",
+  "Netherlands":"Países Bajos","Japan":"Japón","Sweden":"Suecia","Tunisia":"Túnez",
+  "Belgium":"Bélgica","Egypt":"Egipto","Iran":"Irán","New Zealand":"Nueva Zelanda",
+  "Spain":"España","Cape Verde":"Cabo Verde","Saudi Arabia":"Arabia Saudita","Uruguay":"Uruguay",
+  "France":"Francia","Senegal":"Senegal","Iraq":"Irak","Norway":"Noruega",
+  "Argentina":"Argentina","Algeria":"Argelia","Austria":"Austria","Jordan":"Jordania",
+  "Portugal":"Portugal","DR Congo":"Rep. D. Congo","Congo DR":"Rep. D. Congo",
+  "Uzbekistan":"Uzbekistán","Colombia":"Colombia",
+  "England":"Inglaterra","Croatia":"Croacia","Ghana":"Ghana","Panama":"Panamá"
+};
+
+
+function modelIsComplete(m){
+  if(!m)return false;
+  if(m.status!=="final")return true;
+  return m.penal_home!==null&&m.penal_away!==null&&
+         m.tarjeta_home!==null&&m.tarjeta_away!==null;
+}
+let _matchIndex=null;
+function getMatchIndex(){
+  if(_matchIndex)return _matchIndex;
+  _matchIndex={};
+  Object.keys(FIXTURE_GRUPOS).forEach(g=>{
+    FIXTURE_GRUPOS[g].forEach((m,i)=>{_matchIndex[m.home+"|||"+m.away]=g+i;});
+  });
+  return _matchIndex;
+}
+
+// ── APIFootballAdapter (vía proxy Apps Script) ──
+const APIFootballAdapter={
+  _mapStatus(s){
+    if(!s)return"scheduled";
+    const sh=s.short||"";
+    if(sh==="FT"||sh==="AET"||sh==="PEN")return"final";
+    if(sh==="HT")return"halftime";
+    if(["1H","2H","ET","P"].includes(sh))return"live";
+    return"scheduled";
+  },
+  async fetch(){
+    const url=`${SHEET_URL}?type=proxy_apifootball&endpoint=fixtures&params=league%3D1%26season%3D2026`;
+    const res=await fetch(url);
+    if(!res.ok)throw new Error("proxy_apifootball HTTP "+res.status);
+    const json=await res.json();
+    if(!json.ok)throw new Error("API-Football: "+(json.error||"error"));
+    const fixtures=json.data?.response||[];
+    // Eventos del día (tarjetas y penales)
+    let evMap={};
+    try{
+      const today=new Date().toISOString().split("T")[0];
+      const evRes=await fetch(`${SHEET_URL}?type=proxy_apifootball&endpoint=fixtures%2Fevents&params=league%3D1%26season%3D2026%26date%3D${today}`);
+      if(evRes.ok){
+        const evJson=await evRes.json();
+        (evJson.data?.response||[]).forEach(ev=>{
+          const fid=ev.fixture?.id;
+          if(!evMap[fid])evMap[fid]={penal_home:false,penal_away:false,tarjeta_home:false,tarjeta_away:false};
+          const type=ev.type||"",detail=ev.detail||"";
+          if(type==="Goal"&&detail==="Penalty"){if(ev.homeAway==="home")evMap[fid].penal_home=true;else evMap[fid].penal_away=true;}
+          if(type==="Card"&&(detail==="Red Card"||detail==="Yellow Red Card")){if(ev.homeAway==="home")evMap[fid].tarjeta_home=true;else evMap[fid].tarjeta_away=true;}
+        });
+      }
+    }catch(e){SyncLogger.warn("APIFootball events",e.message);}
+    const idx=getMatchIndex();
+    const results=[];
+    fixtures.forEach(f=>{
+      try{
+        const home=TEAM_NAME_MAP[f.teams?.home?.name]||f.teams?.home?.name;
+        const away=TEAM_NAME_MAP[f.teams?.away?.name]||f.teams?.away?.name;
+        const mid=idx[home+"|||"+away];
+        if(!mid)return;
+        const status=this._mapStatus(f.fixture?.status);
+        const ev=evMap[f.fixture?.id]||{penal_home:null,penal_away:null,tarjeta_home:null,tarjeta_away:null};
+        const model=makeMatchModel(mid,f.goals?.home,f.goals?.away,status,{minute:f.fixture?.status?.elapsed,...ev},"apifootball");
+        if(validateMatchModel(model))results.push(model);
+      }catch(e){SyncLogger.error("APIFootball parse",e.message);}
+    });
+    SyncLogger.info("APIFootball OK",{total:fixtures.length,mapped:results.length});
+    return results;
+  }
+};
+
+// ── FootballDataAdapter (vía proxy Apps Script) ──
+const FootballDataAdapter={
+  _mapStatus(s){
+    if(s==="FINISHED")return"final";
+    if(s==="IN_PLAY"||s==="PAUSED")return"live";
+    if(s==="HALFTIME")return"halftime";
+    return"scheduled";
+  },
+  async fetch(){
+    const url=`${SHEET_URL}?type=proxy_footballdata&endpoint=competitions%2FWC%2Fmatches&params=season%3D2026`;
+    const res=await fetch(url);
+    if(!res.ok)throw new Error("proxy_footballdata HTTP "+res.status);
+    const json=await res.json();
+    if(!json.ok)throw new Error("football-data: "+(json.error||"error"));
+    const matches=json.data?.matches||[];
+    const idx=getMatchIndex();
+    const results=[];
+    matches.forEach(m=>{
+      try{
+        const home=TEAM_NAME_MAP[m.homeTeam?.name]||m.homeTeam?.name;
+        const away=TEAM_NAME_MAP[m.awayTeam?.name]||m.awayTeam?.name;
+        const mid=idx[home+"|||"+away];
+        if(!mid)return;
+        const status=this._mapStatus(m.status);
+        const model=makeMatchModel(mid,m.score?.fullTime?.home,m.score?.fullTime?.away,status,
+          {minute:m.minute,penal_home:null,penal_away:null,tarjeta_home:null,tarjeta_away:null},"footballdata");
+        if(validateMatchModel(model))results.push(model);
+      }catch(e){SyncLogger.error("FootballData parse",e.message);}
+    });
+    SyncLogger.info("FootballData OK",{total:matches.length,mapped:results.length});
+    return results;
+  }
+};
+
+// ── OpenFootballAdapter (JSON estático GitHub) ──
+const OpenFootballAdapter={
+  async fetch(){
+    const res=await fetch("https://raw.githubusercontent.com/openfootball/worldcup.json/master/2026/worldcup.json",{cache:"no-store"});
+    if(!res.ok)throw new Error("openfootball HTTP "+res.status);
+    const data=await res.json();
+    const idx=getMatchIndex();
+    const results=[];
+    (data.matches||[]).forEach(m=>{
+      try{
+        if(m.score1===undefined&&m.score1!==0)return;
+        const home=TEAM_NAME_MAP[m.team1]||m.team1;
+        const away=TEAM_NAME_MAP[m.team2]||m.team2;
+        const mid=idx[home+"|||"+away];
+        if(!mid)return;
+        const model=makeMatchModel(mid,m.score1,m.score2,"final",
+          {penal_home:null,penal_away:null,tarjeta_home:null,tarjeta_away:null},"openfootball");
+        if(validateMatchModel(model))results.push(model);
+      }catch(e){SyncLogger.error("OpenFootball parse",e.message);}
+    });
+    SyncLogger.info("OpenFootball OK",{mapped:results.length});
+    return results;
+  }
+};
+
+// ── ESPNAdapter: única clase que conoce ESPN ──
+const ESPNAdapter={
+  _buildMatchIndex(){
+    const idx={};
+    Object.keys(FIXTURE_GRUPOS).forEach(g=>{
+      FIXTURE_GRUPOS[g].forEach((m,i)=>{
+        idx[m.home+"|||"+m.away]=g+i;
+      });
+    });
+    return idx;
+  },
+  _mapStatus(espnStatus){
+    const n=espnStatus?.type?.name||"";
+    if(n==="STATUS_FINAL"||n==="STATUS_FULL_TIME")return"final";
+    if(n==="STATUS_IN_PROGRESS")return"live";
+    if(n==="STATUS_HALFTIME")return"halftime";
+    return"scheduled";
+  },
+  async fetch(){
+    const url=DATA_CONFIG.ESPN_URL+DATA_CONFIG.ESPN_PARAMS;
+    const res=await fetch(url,{cache:"no-store"});
+    if(!res.ok)throw new Error("ESPN HTTP "+res.status);
+    const data=await res.json();
+    const events=data.events||[];
+    const matchIdx=this._buildMatchIndex();
+    const results=[];
+    events.forEach(ev=>{
+      try{
+        const comp=ev.competitions?.[0];
+        if(!comp)return;
+        const home=comp.competitors?.find(c=>c.homeAway==="home");
+        const away=comp.competitors?.find(c=>c.homeAway==="away");
+        if(!home||!away)return;
+        const proHome=ESPN_NAME_MAP[home.team?.displayName];
+        const proAway=ESPN_NAME_MAP[away.team?.displayName];
+        if(!proHome||!proAway){
+          SyncLogger.warn("Sin mapeo ESPN",{h:home.team?.displayName,a:away.team?.displayName});
+          return;
+        }
+        const mid=matchIdx[proHome+"|||"+proAway];
+        if(!mid){SyncLogger.warn("Sin match_id",{proHome,proAway});return;}
+        const status=this._mapStatus(comp.status);
+        const minute=comp.status?.clock||null;
+        const model=makeMatchModel(mid,home.score,away.score,status,minute,"espn");
+        if(validateMatchModel(model))results.push(model);
+        else SyncLogger.warn("Modelo inválido",model);
+      }catch(e){SyncLogger.error("Error procesando evento ESPN",e.message);}
+    });
+    return results;
+  }
+};
+
+// ── ManualAdapter: fallback desde Google Sheet ──
+const ManualAdapter={
+  async fetch(){
+    const res=await fetch(`${SHEET_URL}?type=resultados`);
+    if(!res.ok)throw new Error("Sheet HTTP "+res.status);
+    const data=await res.json();
+    return data.map(r=>{
+      const status=(r.played==="TRUE"||r.played===true)?"final":"scheduled";
+      return makeMatchModel(r.match_id,r.home_score,r.away_score,status,null,"manual");
+    }).filter(validateMatchModel);
+  }
+};
+
+// ── Provider registry: agregar futuros providers acá ──
+const PROVIDERS={apifootball:APIFootballAdapter,footballdata:FootballDataAdapter,espn:ESPNAdapter,openfootball:OpenFootballAdapter,manual:ManualAdapter};
+
+// ── DataService: única interfaz que usa el prode ──
+const DataService={
+  _lastHash:{},
+  async fetchResults(){
+    const provider=PROVIDERS[DATA_CONFIG.ACTIVE_PROVIDER]||ManualAdapter;
+    return await provider.fetch();
+  },
+  hasChanged(model){
+    const key=model.match_id;
+    const hash=model.home_score+"-"+model.away_score+":"+model.status;
+    if(this._lastHash[key]===hash)return false;
+    this._lastHash[key]=hash;
+    return true;
+  },
+  applyResult(model){
+    // No sobreescribir un partido ya finalizado con datos "en vivo"
+    const existing=resultadosDB[model.match_id];
+    if(existing?.played&&model.status!=="final"){
+      SyncLogger.warn("Ignorando update: partido ya finalizado",model.match_id);
+      return false;
+    }
+    resultadosDB[model.match_id]={
+      home_score:model.home_score,
+      away_score:model.away_score,
+      played:model.status==="final",
+      in_progress:model.status==="live"||model.status==="halftime",
+      source:model.source,
+      updated:model.fetched_at
+    };
+    return true;
+  }
+};
+
+// ── SyncManager: reintentos, backoff, métricas ──
+const SyncManager={
+  _interval:null,
+  _retryCount:0,
+  async run(){
+    SyncLogger.trackFetch();
+    try{
+      const results=await DataService.fetchResults();
+      const changed=[];
+      const newFinal=[];
+      results.forEach(m=>{
+        if(!DataService.hasChanged(m))return;
+        const wasPlayed=resultadosDB[m.match_id]?.played;
+        const applied=DataService.applyResult(m);
+        if(applied){
+          changed.push(m);
+          SyncLogger.trackUpdate();
+          if(m.status==="final"&&!wasPlayed)newFinal.push(m);
+        }
+      });
+      if(changed.length>0){
+        recalcularPuntos();
+        renderGrupoMatches(curGrupo);
+        if(newFinal.length>0&&isAdmin){
+          await saveResultadosToSheet();
+          newFinal.forEach(m=>{
+            showToast("✅ "+m.match_id+": "+m.home_score+"-"+m.away_score+" FINAL");
+          });
+        }
+      }
+      this._retryCount=0;
+      const hasLive=results.some(m=>m.status==="live"||m.status==="halftime");
+      this._scheduleNext(hasLive?DATA_CONFIG.SYNC_INTERVAL_LIVE:DATA_CONFIG.SYNC_INTERVAL_NORMAL);
+      SyncLogger.info("Sync OK",{total:results.length,changed:changed.length,newFinal:newFinal.length});
+    }catch(e){
+      SyncLogger.error("Sync error",e.message);
+      SyncLogger.trackError(e);
+      this._retryCount++;
+      if(this._retryCount<=DATA_CONFIG.MAX_RETRIES){
+        const backoff=DATA_CONFIG.RETRY_BACKOFF_MS*Math.pow(2,this._retryCount-1);
+        SyncLogger.warn("Reintentando en "+(backoff/1000)+"s",{intento:this._retryCount});
+        setTimeout(()=>this.run(),backoff);
+      }else{
+        SyncLogger.error("Max reintentos alcanzado. Fallback a ManualAdapter.");
+        this._retryCount=0;
+        const prev=DATA_CONFIG.ACTIVE_PROVIDER;
+        DATA_CONFIG.ACTIVE_PROVIDER="manual";
+        await this.run();
+        DATA_CONFIG.ACTIVE_PROVIDER=prev;
+      }
+    }
+  },
+  _scheduleNext(ms){
+    if(this._interval)clearInterval(this._interval);
+    this._interval=setTimeout(()=>this.run(),ms);
+  },
+  start(){SyncLogger.info("SyncManager iniciado",{provider:DATA_CONFIG.ACTIVE_PROVIDER});this.run();},
+  stop(){if(this._interval){clearInterval(this._interval);this._interval=null;}}
+};
+
+function startSync(){SyncManager.start();}
+function stopSync(){SyncManager.stop();}
+
+// Exponer para debugging en consola
+window.ProdeDebug={
+  getLog:()=>SyncLogger.getReport(),
+  getMetrics:()=>SyncLogger.metrics,
+  getResultados:()=>resultadosDB,
+  switchProvider:(p)=>{DATA_CONFIG.ACTIVE_PROVIDER=p;SyncLogger.info("Provider cambiado a",p);},
+  forceSync:()=>SyncManager.run()
+};
+
+
 /* ═══════════════════════════════════════════
-   SINCRONIZACIÓN AUTOMÁTICA
+   ESPN API — resultados en tiempo real
 ═══════════════════════════════════════════ */
+const ESPN_URL="https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard";
+let lastScores={}; // para detectar cambios
+let espnLog=[]; // log de auditoría
+
+function logESPN(msg,data){
+  const entry={ts:new Date().toISOString(),msg,data};
+  espnLog.unshift(entry);
+  if(espnLog.length>100)espnLog.pop();
+  console.log("[ESPN]",msg,data||"");
+}
+
+async function fetchESPN(){
+  if(!isAdmin){
+    // Usuarios normales solo cargan desde Sheet
+    await loadResultadosFromSheet();
+    return;
+  }
+  try{
+    logESPN("Fetching ESPN...");
+    const res=await fetch(ESPN_URL+"?limit=200");
+    if(!res.ok)throw new Error("HTTP "+res.status);
+    const data=await res.json();
+    const events=data.events||[];
+    logESPN("Eventos recibidos",events.length);
+    
+    const matchIdx=buildMatchIndex();
+    let changed=false;
+    let newFinished=[];
+
+    events.forEach(ev=>{
+      try{
+        const comp=ev.competitions?.[0];
+        if(!comp)return;
+        
+        // Equipos
+        const homeComp=comp.competitors?.find(c=>c.homeAway==="home");
+        const awayComp=comp.competitors?.find(c=>c.homeAway==="away");
+        if(!homeComp||!awayComp)return;
+        
+        const espnHome=homeComp.team?.displayName||homeComp.team?.name||"";
+        const espnAway=awayComp.team?.displayName||awayComp.team?.name||"";
+        const proHome=ESPN_NAMES[espnHome];
+        const proAway=ESPN_NAMES[espnAway];
+        
+        if(!proHome||!proAway){
+          logESPN("Sin mapeo",{espnHome,espnAway});
+          return;
+        }
+        
+        const mid=matchIdx[proHome+"|||"+proAway];
+        if(!mid){
+          logESPN("Sin match_id",{proHome,proAway});
+          return;
+        }
+        
+        // Estado
+        const status=comp.status?.type?.name||"";
+        const finished=status==="STATUS_FINAL"||status==="STATUS_FULL_TIME";
+        const inProgress=status==="STATUS_IN_PROGRESS"||status==="STATUS_HALFTIME";
+        
+        // Marcador
+        const hScore=parseInt(homeComp.score)||0;
+        const aScore=parseInt(awayComp.score)||0;
+        
+        // Detectar cambio
+        const scoreKey=mid+":"+hScore+"-"+aScore+":"+finished;
+        if(lastScores[mid]===scoreKey)return; // sin cambio
+        
+        // Si ya está marcado como jugado en DB, no sobreescribir
+        if(resultadosDB[mid]?.played&&!finished){
+          logESPN("Partido ya finalizado, ignorando update",mid);
+          return;
+        }
+        
+        const prev=resultadosDB[mid];
+        resultadosDB[mid]={
+          home_score:hScore,
+          away_score:aScore,
+          played:finished,
+          in_progress:inProgress,
+          espn_id:ev.id,
+          updated:new Date().toISOString()
+        };
+        
+        lastScores[mid]=scoreKey;
+        changed=true;
+        
+        if(finished&&(!prev||!prev.played)){
+          newFinished.push({mid,proHome,proAway,hScore,aScore});
+          logESPN("Partido finalizado",{mid,proHome,proAway,hScore,aScore});
+        } else if(inProgress){
+          logESPN("En curso",{mid,proHome,proAway,hScore,aScore});
+        }
+      }catch(e){
+        logESPN("Error procesando evento",e.message);
+      }
+    });
+
+    if(changed){
+      recalcularPuntos();
+      renderGrupoMatches(curGrupo);
+      if(newFinished.length>0){
+        await saveResultadosToSheet();
+        newFinished.forEach(m=>{
+          showToast("✅ "+m.proHome+" "+m.hScore+"-"+m.aScore+" "+m.proAway);
+        });
+      }
+    }
+    logESPN("Sync OK",{changed,newFinished:newFinished.length});
+  }catch(e){
+    logESPN("Error ESPN",e.message);
+    // Fallback: cargar desde Sheet
+    await loadResultadosFromSheet();
+  }
+}
+
 function startSync(){
-  // Cargar resultados inmediatamente
-  fetchResultadosAPI();
-  // Luego cada 3 minutos
-  syncInterval=setInterval(fetchResultadosAPI,3*60*1000);
+  fetchESPN();
+  // Admin: cada 60s durante partidos, cada 3min en reposo
+  syncInterval=setInterval(()=>{
+    const hasLive=Object.values(resultadosDB).some(r=>r.in_progress);
+    fetchESPN();
+    if(hasLive){
+      // re-schedule más frecuente si hay partidos en vivo
+      clearInterval(syncInterval);
+      syncInterval=setInterval(fetchESPN,60*1000);
+    }
+  },3*60*1000);
 }
 function stopSync(){
   if(syncInterval)clearInterval(syncInterval);
@@ -1950,6 +2479,7 @@ function showToast(msg){
   t.classList.add("show");
   setTimeout(()=>t.classList.remove("show"),2500);
 }
+
 </script>
 
 </body>
