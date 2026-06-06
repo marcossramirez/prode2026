@@ -1112,7 +1112,7 @@ let syncInterval=null;
    UTILS
 ═══════════════════════════════════════════ */
 function torneoStarted(){return new Date()>=TORNEO_START;}
-function isGrupoMatch(id){return typeof id==="string"&&/^[A-L]\d$/.test(id);}
+function isGrupoMatch(id){return typeof id==="string"&&/^[A-L]\d+$/.test(id);}
 function countBonus(){return Object.values(userBonus).filter(v=>v===true).length;}
 function countPenal(side){return Object.values(userPenal).filter(v=>v&&v[side]).length;}
 function countTarjeta(side){return Object.values(userTarjeta).filter(v=>v&&v[side]).length;}
@@ -1425,9 +1425,20 @@ const SyncLogger={
 };
 
 // ── Modelo interno ──
-function makeMatchModel(match_id,home_score,away_score,status,minute,source){
-  return{match_id,home_score:parseInt(home_score)||0,away_score:parseInt(away_score)||0,
-    status,minute:minute||null,source,fetched_at:new Date().toISOString()};
+function makeMatchModel(match_id,home_score,away_score,status,extras,source){
+  return{
+    match_id,
+    home_score:parseInt(home_score)||0,
+    away_score:parseInt(away_score)||0,
+    status,
+    minute:extras?.minute||null,
+    penal_home:extras?.penal_home??null,
+    penal_away:extras?.penal_away??null,
+    tarjeta_home:extras?.tarjeta_home??null,
+    tarjeta_away:extras?.tarjeta_away??null,
+    source,
+    fetched_at:new Date().toISOString()
+  };
 }
 
 // ── Validación de integridad ──
