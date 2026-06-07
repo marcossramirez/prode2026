@@ -2998,45 +2998,65 @@ function renderGrupoMatches(g){
 
 // ── Resolver nombre real de equipo en bracket eliminatorio ──
 function resolveElimTeam(label){
-  // Si ya es un nombre real de equipo, devolverlo
+  // Si ya es un nombre real de equipo conocido, devolverlo
   if(FLAGS[label])return label;
   
-  try{
-    const classified=getClassified();
-    const bracket=resolveR32Bracket();
+  // Solo resolver si es un placeholder de posición
+  const m1=label.match(/^1ro Grupo ([A-L])$/);
+  const m2=label.match(/^2do Grupo ([A-L])$/);
+  const m3=label.match(/^3ro /);
+  
+  if(!m1&&!m2&&!m3)return label; // Gan. MXX, Perd. Semi, etc.
+  
+  // Verificar que el grupo correspondiente terminó completamente
+  const grupo=m1?m1[1]:m2?m2[1]:null;
+  if(grupo){
+    const matches=FIXTURE_GRUPOS[grupo]||[];
+    const idx=getMatchIndex();
+    const allPlayed=matches.every(m=>{
+      const mid=idx[m.home+"|||"+m.away];
+      return resultadosDB[mid]?.played===true;
+    });
+    if(!allPlayed)return label; // Grupo no terminó, mostrar placeholder
     
-    // Resolver 1ros y 2dos directos
-    const m1=label.match(/^1ro Grupo ([A-L])$/);
-    if(m1)return classified.firsts[m1[1]]?.name||label;
+    const table=calcGroupTable(grupo);
+    if(m1)return table[0]?.name||label;
+    if(m2)return table[1]?.name||label;
+  }
+  
+  // Para 3ros: solo resolver cuando TODOS los grupos terminaron (28 jun)
+  if(m3){
+    const allGroupsDone=Object.keys(FIXTURE_GRUPOS).every(g=>{
+      const matches=FIXTURE_GRUPOS[g]||[];
+      const idx=getMatchIndex();
+      return matches.every(m=>{
+        const mid=idx[m.home+"|||"+m.away];
+        return resultadosDB[mid]?.played===true;
+      });
+    });
+    if(!allGroupsDone)return label;
     
-    const m2=label.match(/^2do Grupo ([A-L])$/);
-    if(m2)return classified.seconds[m2[1]]?.name||label;
-    
-    // 3ros: resolver via Annexo C
-    const m3=label.match(/^3ro ([A-L\/]+)$/);
-    if(m3&&bracket){
-      // Buscar en el bracket resuelto qué equipo va en este slot
-      for(const [id,match] of Object.entries(bracket)){
-        if(match.awayTeam&&match.away?.type==="3rd"){
-          return match.awayTeam?.name||label;
+    try{
+      const classified=getClassified();
+      const bracket=resolveR32Bracket();
+      if(bracket){
+        for(const match of Object.values(bracket)){
+          if(match.away?.type==="3rd"&&match.awayTeam){
+            // Buscar qué slot corresponde a este label
+          }
         }
       }
-    }
-    
-    // Ganadores de rondas anteriores
-    if(label.startsWith("Gan. M")){
-      const matchNum=parseInt(label.replace("Gan. M",""));
-      const res=Object.values(resultadosDB).find(r=>r.match_num===matchNum);
-      if(res?.winner)return res.winner;
-    }
-  }catch(e){}
+    }catch(e){}
+  }
   
-  return label; // fallback al texto descriptivo
+  return label; // fallback al placeholder
 }
 
 // ── Resolver flag URL para bracket (acepta nombre real o placeholder) ──
 function resolveElimFlag(label){
   const resolved=resolveElimTeam(label);
+  // Solo mostrar bandera si se resolvió a un equipo real (distinto del placeholder)
+  if(resolved===label)return null;
   return FLAGS[resolved]?flagUrl(resolved):null;
 }
 
