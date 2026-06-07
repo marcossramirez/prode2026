@@ -519,7 +519,7 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
 .pen-inp:not(:disabled):focus{border-color:#3a86ff;box-shadow:0 0 0 3px rgba(58,134,255,.2);}
 .pen-inp:disabled{cursor:not-allowed;}
 .pen-label{font-size:9px;color:rgba(255,255,255,.3);text-align:center;letter-spacing:1px;font-family:"Barlow Condensed",sans-serif;display:block;margin-top:2px;}
-.pen-wrap{display:flex;flex-direction:column;align-items:center;gap:2px;}
+.pen-wrap{display:flex;flex-direction:column;align-items:center;gap:2px;justify-content:center;}
 .elim-mid{display:flex;flex-direction:column;align-items:center;gap:4px;}
 .s-vs{
   font-family:"Barlow Condensed",sans-serif;font-weight:900;font-size:13px;
@@ -949,6 +949,7 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
    CONFIGURACIÓN
 ═══════════════════════════════════════════ */
 const SHEET_URL="https://script.google.com/macros/s/AKfycbweIK2lRu8H1SoZv4xOxSZmGLbjkRXAi8h3m_X7ioke2VGemr0lb3nj76gBqMsASR3H/exec";
+const SYNC_SECRET="f2d62ae2a83581813bc2d9529f80e410";
 const API_FOOTBALL_KEY="0dc2cb88b0952d45c1c2f11e7f4fcb84";
 const WC2026_ID=1; // ID del Mundial 2026 en API-Football
 
@@ -1106,7 +1107,33 @@ const REGISTRY=[
   {mail:"admin@prode.com",alias:"Admin",foto_perfil:null,banner:null,pts:0,trend:0,pct:0,gAci:0,gErr:0,isAdmin:true}
 ];
 const PLAYERS=REGISTRY.filter(p=>!p.isAdmin);
-const TORNEO_START=new Date("2026-06-11T18:00:00");
+const TORNEO_START=new Date("2026-06-11T19:00:00Z"); // 16:00 ARG = 19:00 UTC
+const LOCK_MINUTES=5; // minutos antes del partido para bloquear
+
+// Parsear fecha/hora ARG de un partido → Date UTC
+function parseMatchTime(date, time){
+  // date ej: "jue, 11 jun"  time ej: "16:00"
+  const months={"ene":0,"feb":1,"mar":2,"abr":3,"may":4,"jun":5,"jul":6,"ago":7,"sep":8,"oct":9,"nov":10,"dic":11};
+  const parts=date.split(", ");
+  if(parts.length<2)return null;
+  const dateParts=parts[1].split(" ");
+  const day=parseInt(dateParts[0]);
+  const month=months[dateParts[1]];
+  const timeParts=time.replace(" ARG","").split(":");
+  const hour=parseInt(timeParts[0]);
+  const min=parseInt(timeParts[1]||"0");
+  // ARG es UTC-3
+  return new Date(Date.UTC(2026, month, day, hour+3, min));
+}
+
+// Verificar si un partido debe bloquearse (5 min antes del horario)
+function isMatchLocked(date, time, played){
+  if(played)return true;
+  const matchTime=parseMatchTime(date, time);
+  if(!matchTime)return false;
+  const lockTime=new Date(matchTime.getTime() - LOCK_MINUTES*60*1000);
+  return new Date() >= lockTime;
+}
 
 /* ═══════════════════════════════════════════
    ESTADO GLOBAL
@@ -1198,13 +1225,12 @@ async function fetchResultadosAPI(){
 }
 
 async function saveResultadosToSheet(){
-  // Solo el admin puede guardar resultados en el sheet
-  if(!isAdmin)return;
+  // Cualquier cliente puede guardar usando la clave secreta
   try{
     await fetch(SHEET_URL,{
       method:"POST",
       headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({type:"resultados_bulk",data:resultadosDB})
+      body:JSON.stringify({type:"resultados_bulk_grupos",secret:SYNC_SECRET,data:resultadosDB})
     });
   }catch(e){console.warn("Error guardando resultados:",e);}
 }
@@ -2957,7 +2983,7 @@ function getMatches(g){
       date:f.date,time:f.time,stadium:f.stadium,city:f.city,
       played:!!(res&&res.played),
       result:res&&res.played?{home:res.home_score,away:res.away_score}:null,
-      locked:!!(res&&res.played),
+      locked:isMatchLocked(f.date, f.time, !!(res&&res.played)),
       ts:0
     };
   });
@@ -3106,7 +3132,7 @@ function renderElimMatches(phId){
             <div class="t-name">${homeDisplay}</div>
           </div>
           <div class="match-mid elim-mid">
-            <div class="score-row" style="align-items:flex-start;gap:4px;">
+            <div class="score-row" style="align-items:center;gap:4px;">
               <div class="pen-wrap">
                 <input class="pen-inp" type="number" min="0" max="20"
                   value="${pr.pen_home??''}" placeholder="–"
@@ -3184,7 +3210,7 @@ async function toggleBonus(id,btn){
 }
 
 function initEsp(){
-  const locked=torneoStarted();
+  const locked=torneoStarted(); // Se bloquea al inicio del torneo (11 jun 16:00 ARG)
   document.getElementById("espLockedNotice").style.display=locked?"flex":"none";
   const espBtn=document.getElementById("espSaveBtn");if(espBtn)espBtn.style.display=locked?"none":"block";
   ["esp1","esp2","esp3","esp4","esp5","esp6","esp7"].forEach(id=>{
