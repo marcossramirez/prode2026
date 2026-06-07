@@ -3096,8 +3096,16 @@ function renderElimMatches(phId){
                 ${lk?"disabled":""} onchange="savePronostico('${mid}','away',this.value)">
             </div>
             <div class="bonus-row">
+              <div class="match-card-action">
+                <button class="red-card-btn${userTarjeta[mid]?.home?" on-tarjeta":""}" onclick="toggleTarjeta('${mid}','home',this)" ${lk?"disabled":""} title="Bonus tarjeta roja local"></button>
+                <button class="penalty-p${userPenal[mid]?.home?" on-penal":""}" onclick="togglePenal('${mid}','home',this)" ${lk?"disabled":""} title="Bonus penal local">P</button>
+              </div>
               <button class="bonus-btn${bon?" on":""}" onclick="toggleBonus('${mid}',this)"
-                ${lk?"disabled":""} title="Bonus: duplica puntos">⭐</button>
+                ${lk?"disabled":""} title="Bonus por partido">⭐</button>
+              <div class="match-card-action">
+                <button class="penalty-p${userPenal[mid]?.away?" on-penal":""}" onclick="togglePenal('${mid}','away',this)" ${lk?"disabled":""} title="Bonus penal visitante">P</button>
+                <button class="red-card-btn${userTarjeta[mid]?.away?" on-tarjeta":""}" onclick="toggleTarjeta('${mid}','away',this)" ${lk?"disabled":""} title="Bonus tarjeta roja visitante"></button>
+              </div>
             </div>
           </div>
           <div class="team-r"><div class="t-name">${awayDisplay}</div></div>
