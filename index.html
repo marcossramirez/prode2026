@@ -1477,6 +1477,699 @@ function modelIsComplete(m){
          m.tarjeta_home!==null&&m.tarjeta_away!==null;
 }
 let _matchIndex=null;
+
+/* ═══════════════════════════════════════════════════════════════
+   FASE ELIMINATORIA — Lógica completa
+   1. Ranking FIFA (noviembre 2025, oficial del sorteo)
+   2. Tabla de grupos → clasificados
+   3. Ranking mejores 3ros → 8 clasificados
+   4. Anexo C → cruces 16avos
+   5. Bracket completo con banderas
+═══════════════════════════════════════════════════════════════ */
+
+// ── Ranking FIFA noviembre 2025 (menor = mejor) ──
+const FIFA_RANKING={
+  "Francia":1,"España":2,"Argentina":3,"Inglaterra":4,"Portugal":5,
+  "Brasil":6,"Bélgica":7,"Países Bajos":8,"Alemania":9,"Croacia":10,
+  "Uruguay":11,"Colombia":12,"Japón":13,"Marruecos":14,"Senegal":15,
+  "EE.UU.":16,"México":17,"Suiza":18,"Australia":19,"Dinamarca":20,
+  "Corea del Sur":21,"Irán":22,"Austria":23,"Noruega":24,"Ecuador":25,
+  "Turquía":26,"Escocia":27,"Ucrania":28,"Suecia":29,"Túnez":30,
+  "Egipto":31,"Ghana":32,"C. de Marfil":33,"Argelia":34,"Qatar":35,
+  "Rep. Checa":36,"Canadá":37,"Panamá":38,"Jordania":39,"Arabia Saudita":40,
+  "Uzbekistán":41,"Bosnia y Herz.":42,"Irak":43,"Rep. D. Congo":44,
+  "Sudáfrica":45,"Cabo Verde":46,"Nueva Zelanda":47,"Curazao":48,
+  "Haití":49,"Escocia":27,"Paraguay":50
+};
+
+// ── 16 cruces fijos del bracket ──
+// Formato: {slot, homeSlot, awaySlot}
+// homeSlot/awaySlot: "1A" = 1ro Grupo A, "2B" = 2do Grupo B, "3best" = mejor 3ro
+const BRACKET_R32=[
+  {id:"R32_1",  home:{type:"1st",group:"E"}, away:{type:"3rd",groups:["A","B","C","D","F"]}},
+  {id:"R32_2",  home:{type:"1st",group:"I"}, away:{type:"3rd",groups:["C","D","F","G","H"]}},
+  {id:"R32_3",  home:{type:"2nd",group:"A"}, away:{type:"2nd",group:"B"}},
+  {id:"R32_4",  home:{type:"1st",group:"F"}, away:{type:"2nd",group:"C"}},
+  {id:"R32_5",  home:{type:"2nd",group:"K"}, away:{type:"2nd",group:"L"}},
+  {id:"R32_6",  home:{type:"1st",group:"H"}, away:{type:"2nd",group:"J"}},
+  {id:"R32_7",  home:{type:"1st",group:"D"}, away:{type:"3rd",groups:["B","E","F","I","J"]}},
+  {id:"R32_8",  home:{type:"1st",group:"G"}, away:{type:"3rd",groups:["A","E","H","I","J"]}},
+  {id:"R32_9",  home:{type:"1st",group:"C"}, away:{type:"2nd",group:"F"}},
+  {id:"R32_10", home:{type:"2nd",group:"E"}, away:{type:"2nd",group:"I"}},
+  {id:"R32_11", home:{type:"1st",group:"A"}, away:{type:"3rd",groups:["C","E","F","H","I"]}},
+  {id:"R32_12", home:{type:"1st",group:"L"}, away:{type:"3rd",groups:["E","H","I","J","K"]}},
+  {id:"R32_13", home:{type:"1st",group:"J"}, away:{type:"2nd",group:"H"}},
+  {id:"R32_14", home:{type:"2nd",group:"D"}, away:{type:"2nd",group:"G"}},
+  {id:"R32_15", home:{type:"1st",group:"B"}, away:{type:"3rd",groups:["E","F","G","I","J"]}},  // CORREGIDO: sin B
+  {id:"R32_16", home:{type:"1st",group:"K"}, away:{type:"3rd",groups:["D","E","I","J","L"]}}
+];
+
+// ── Anexo C completo: combo de 8 grupos → asignación de slots ──
+// Key: grupos clasificados ordenados ej "ABCDEFGH"
+// Value: {1A:grupo, 1B:grupo, 1D:grupo, 1E:grupo, 1G:grupo, 1I:grupo, 1K:grupo, 1L:grupo}
+// Los slots corresponden a los partidos donde el 1ro enfrenta un 3ro:
+// 1A=R32_11, 1B=R32_15, 1D=R32_7, 1E=R32_1, 1G=R32_8, 1I=R32_2, 1K=R32_16, 1L=R32_12
+
+
+
+// Para mayor practicidad, cargamos el Anexo C como lookup table
+// indexado por la clave de los 8 grupos clasificados (ordenados A-L)
+const ANNEX_C={
+"ABCDEFGH":{"1A":"H","1B":"G","1D":"B","1E":"C","1G":"A","1I":"F","1K":"D","1L":"E"},
+"ABCDEFGI":{"1A":"C","1B":"G","1D":"B","1E":"D","1G":"A","1I":"F","1K":"E","1L":"I"},
+"ABCDEFGJ":{"1A":"C","1B":"G","1D":"B","1E":"D","1G":"A","1I":"F","1K":"E","1L":"J"},
+"ABCDEFGK":{"1A":"C","1B":"G","1D":"B","1E":"D","1G":"A","1I":"F","1K":"E","1L":"K"},
+"ABCDEFGL":{"1A":"C","1B":"G","1D":"B","1E":"D","1G":"A","1I":"F","1K":"L","1L":"E"},
+"ABCDEFHI":{"1A":"H","1B":"E","1D":"B","1E":"C","1G":"A","1I":"F","1K":"D","1L":"I"},
+"ABCDEFHJ":{"1A":"H","1B":"J","1D":"B","1E":"C","1G":"A","1I":"F","1K":"D","1L":"E"},
+"ABCDEFHK":{"1A":"H","1B":"E","1D":"B","1E":"C","1G":"A","1I":"F","1K":"D","1L":"K"},
+"ABCDEFHL":{"1A":"H","1B":"F","1D":"B","1E":"C","1G":"A","1I":"D","1K":"L","1L":"E"},
+"ABCDEFIJ":{"1A":"C","1B":"J","1D":"B","1E":"D","1G":"A","1I":"F","1K":"E","1L":"I"},
+"ABCDEFIK":{"1A":"C","1B":"E","1D":"B","1E":"D","1G":"A","1I":"F","1K":"I","1L":"K"},
+"ABCDEFIL":{"1A":"C","1B":"E","1D":"B","1E":"D","1G":"A","1I":"F","1K":"L","1L":"I"},
+"ABCDEFJK":{"1A":"C","1B":"J","1D":"B","1E":"D","1G":"A","1I":"F","1K":"E","1L":"K"},
+"ABCDEFJL":{"1A":"C","1B":"J","1D":"B","1E":"D","1G":"A","1I":"F","1K":"L","1L":"E"},
+"ABCDEFKL":{"1A":"C","1B":"E","1D":"B","1E":"D","1G":"A","1I":"F","1K":"L","1L":"K"},
+"ABCDEGHI":{"1A":"H","1B":"G","1D":"B","1E":"C","1G":"A","1I":"D","1K":"E","1L":"I"},
+"ABCDEGHJ":{"1A":"H","1B":"G","1D":"B","1E":"C","1G":"A","1I":"D","1K":"E","1L":"J"},
+"ABCDEGHK":{"1A":"H","1B":"G","1D":"B","1E":"C","1G":"A","1I":"D","1K":"E","1L":"K"},
+"ABCDEGHL":{"1A":"H","1B":"G","1D":"B","1E":"C","1G":"A","1I":"D","1K":"L","1L":"E"},
+"ABCDEGIJ":{"1A":"E","1B":"G","1D":"B","1E":"C","1G":"A","1I":"D","1K":"I","1L":"J"},
+"ABCDEGIK":{"1A":"E","1B":"G","1D":"B","1E":"C","1G":"A","1I":"D","1K":"I","1L":"K"},
+"ABCDEGIL":{"1A":"E","1B":"G","1D":"B","1E":"C","1G":"A","1I":"D","1K":"L","1L":"I"},
+"ABCDEGJK":{"1A":"E","1B":"G","1D":"B","1E":"C","1G":"A","1I":"D","1K":"J","1L":"K"},
+"ABCDEGJL":{"1A":"E","1B":"G","1D":"B","1E":"C","1G":"A","1I":"D","1K":"L","1L":"J"},
+"ABCDEGKL":{"1A":"E","1B":"G","1D":"B","1E":"C","1G":"A","1I":"D","1K":"L","1L":"K"},
+"ABCDEHIJ":{"1A":"H","1B":"J","1D":"B","1E":"C","1G":"A","1I":"D","1K":"E","1L":"I"},
+"ABCDEHIK":{"1A":"H","1B":"E","1D":"B","1E":"C","1G":"A","1I":"D","1K":"I","1L":"K"},
+"ABCDEHIL":{"1A":"H","1B":"E","1D":"B","1E":"C","1G":"A","1I":"D","1K":"L","1L":"I"},
+"ABCDEHJK":{"1A":"H","1B":"J","1D":"B","1E":"C","1G":"A","1I":"D","1K":"E","1L":"K"},
+"ABCDEHJL":{"1A":"H","1B":"J","1D":"B","1E":"C","1G":"A","1I":"D","1K":"L","1L":"E"},
+"ABCDEHKL":{"1A":"H","1B":"E","1D":"B","1E":"C","1G":"A","1I":"D","1K":"L","1L":"K"},
+"ABCDEIJK":{"1A":"E","1B":"J","1D":"B","1E":"C","1G":"A","1I":"D","1K":"I","1L":"K"},
+"ABCDEIJL":{"1A":"E","1B":"J","1D":"B","1E":"C","1G":"A","1I":"D","1K":"L","1L":"I"},
+"ABCDEIKL":{"1A":"E","1B":"I","1D":"B","1E":"C","1G":"A","1I":"D","1K":"L","1L":"K"},
+"ABCDEJKL":{"1A":"E","1B":"J","1D":"B","1E":"C","1G":"A","1I":"D","1K":"L","1L":"K"},
+"ABCDFGHI":{"1A":"H","1B":"G","1D":"B","1E":"C","1G":"A","1I":"F","1K":"D","1L":"I"},
+"ABCDFGHJ":{"1A":"H","1B":"G","1D":"B","1E":"C","1G":"A","1I":"F","1K":"D","1L":"J"},
+"ABCDFGHK":{"1A":"H","1B":"G","1D":"B","1E":"C","1G":"A","1I":"F","1K":"D","1L":"K"},
+"ABCDFGHL":{"1A":"C","1B":"G","1D":"B","1E":"D","1G":"A","1I":"F","1K":"L","1L":"H"},
+"ABCDFGIJ":{"1A":"C","1B":"G","1D":"B","1E":"D","1G":"A","1I":"F","1K":"I","1L":"J"},
+"ABCDFGIK":{"1A":"C","1B":"G","1D":"B","1E":"D","1G":"A","1I":"F","1K":"I","1L":"K"},
+"ABCDFGIL":{"1A":"C","1B":"G","1D":"B","1E":"D","1G":"A","1I":"F","1K":"L","1L":"I"},
+"ABCDFGJK":{"1A":"C","1B":"G","1D":"B","1E":"D","1G":"A","1I":"F","1K":"J","1L":"K"},
+"ABCDFGJL":{"1A":"C","1B":"G","1D":"B","1E":"D","1G":"A","1I":"F","1K":"L","1L":"J"},
+"ABCDFGKL":{"1A":"C","1B":"G","1D":"B","1E":"D","1G":"A","1I":"F","1K":"L","1L":"K"},
+"ABCDFHIJ":{"1A":"H","1B":"J","1D":"B","1E":"C","1G":"A","1I":"F","1K":"D","1L":"I"},
+"ABCDFHIK":{"1A":"H","1B":"F","1D":"B","1E":"C","1G":"A","1I":"D","1K":"I","1L":"K"},
+"ABCDFHIL":{"1A":"H","1B":"F","1D":"B","1E":"C","1G":"A","1I":"D","1K":"L","1L":"I"},
+"ABCDFHJK":{"1A":"H","1B":"J","1D":"B","1E":"C","1G":"A","1I":"F","1K":"D","1L":"K"},
+"ABCDFHJL":{"1A":"C","1B":"J","1D":"B","1E":"D","1G":"A","1I":"F","1K":"L","1L":"H"},
+"ABCDFHKL":{"1A":"H","1B":"F","1D":"B","1E":"C","1G":"A","1I":"D","1K":"L","1L":"K"},
+"ABCDFIJK":{"1A":"C","1B":"J","1D":"B","1E":"D","1G":"A","1I":"F","1K":"I","1L":"K"},
+"ABCDFIJL":{"1A":"C","1B":"J","1D":"B","1E":"D","1G":"A","1I":"F","1K":"L","1L":"I"},
+"ABCDFIKL":{"1A":"C","1B":"I","1D":"B","1E":"D","1G":"A","1I":"F","1K":"L","1L":"K"},
+"ABCDFJKL":{"1A":"C","1B":"J","1D":"B","1E":"D","1G":"A","1I":"F","1K":"L","1L":"K"},
+"ABCDGHIJ":{"1A":"H","1B":"G","1D":"B","1E":"C","1G":"A","1I":"D","1K":"I","1L":"J"},
+"ABCDGHIK":{"1A":"H","1B":"G","1D":"B","1E":"C","1G":"A","1I":"D","1K":"I","1L":"K"},
+"ABCDGHIL":{"1A":"H","1B":"G","1D":"B","1E":"C","1G":"A","1I":"D","1K":"L","1L":"I"},
+"ABCDGHJK":{"1A":"H","1B":"G","1D":"B","1E":"C","1G":"A","1I":"D","1K":"J","1L":"K"},
+"ABCDGHJL":{"1A":"H","1B":"G","1D":"B","1E":"C","1G":"A","1I":"D","1K":"L","1L":"J"},
+"ABCDGHKL":{"1A":"H","1B":"G","1D":"B","1E":"C","1G":"A","1I":"D","1K":"L","1L":"K"},
+"ABCDGIJK":{"1A":"C","1B":"J","1D":"B","1E":"D","1G":"A","1I":"G","1K":"I","1L":"K"},
+"ABCDGIJL":{"1A":"C","1B":"J","1D":"B","1E":"D","1G":"A","1I":"G","1K":"L","1L":"I"},
+"ABCDGIKL":{"1A":"I","1B":"G","1D":"B","1E":"C","1G":"A","1I":"D","1K":"L","1L":"K"},
+"ABCDGJKL":{"1A":"C","1B":"J","1D":"B","1E":"D","1G":"A","1I":"G","1K":"L","1L":"K"},
+"ABCDHIJK":{"1A":"H","1B":"J","1D":"B","1E":"C","1G":"A","1I":"D","1K":"I","1L":"K"},
+"ABCDHIJL":{"1A":"H","1B":"J","1D":"B","1E":"C","1G":"A","1I":"D","1K":"L","1L":"I"},
+"ABCDHIKL":{"1A":"H","1B":"I","1D":"B","1E":"C","1G":"A","1I":"D","1K":"L","1L":"K"},
+"ABCDHJKL":{"1A":"H","1B":"J","1D":"B","1E":"C","1G":"A","1I":"D","1K":"L","1L":"K"},
+"ABCDIJKL":{"1A":"I","1B":"J","1D":"B","1E":"C","1G":"A","1I":"D","1K":"L","1L":"K"},
+"ABCEFGHI":{"1A":"H","1B":"G","1D":"B","1E":"C","1G":"A","1I":"F","1K":"E","1L":"I"},
+"ABCEFGHJ":{"1A":"H","1B":"G","1D":"B","1E":"C","1G":"A","1I":"F","1K":"E","1L":"J"},
+"ABCEFGHK":{"1A":"H","1B":"G","1D":"B","1E":"C","1G":"A","1I":"F","1K":"E","1L":"K"},
+"ABCEFGHL":{"1A":"H","1B":"G","1D":"B","1E":"C","1G":"A","1I":"F","1K":"L","1L":"E"},
+"ABCEFGIJ":{"1A":"E","1B":"G","1D":"B","1E":"C","1G":"A","1I":"F","1K":"I","1L":"J"},
+"ABCEFGIK":{"1A":"E","1B":"G","1D":"B","1E":"C","1G":"A","1I":"F","1K":"I","1L":"K"},
+"ABCEFGIL":{"1A":"E","1B":"G","1D":"B","1E":"C","1G":"A","1I":"F","1K":"L","1L":"I"},
+"ABCEFGJK":{"1A":"E","1B":"G","1D":"B","1E":"C","1G":"A","1I":"F","1K":"J","1L":"K"},
+"ABCEFGJL":{"1A":"E","1B":"G","1D":"B","1E":"C","1G":"A","1I":"F","1K":"L","1L":"J"},
+"ABCEFGKL":{"1A":"E","1B":"G","1D":"B","1E":"C","1G":"A","1I":"F","1K":"L","1L":"K"},
+"ABCEFHIJ":{"1A":"H","1B":"J","1D":"B","1E":"C","1G":"A","1I":"F","1K":"E","1L":"I"},
+"ABCEFHIK":{"1A":"H","1B":"E","1D":"B","1E":"C","1G":"A","1I":"F","1K":"I","1L":"K"},
+"ABCEFHIL":{"1A":"H","1B":"E","1D":"B","1E":"C","1G":"A","1I":"F","1K":"L","1L":"I"},
+"ABCEFHJK":{"1A":"H","1B":"J","1D":"B","1E":"C","1G":"A","1I":"F","1K":"E","1L":"K"},
+"ABCEFHJL":{"1A":"H","1B":"J","1D":"B","1E":"C","1G":"A","1I":"F","1K":"L","1L":"E"},
+"ABCEFHKL":{"1A":"H","1B":"E","1D":"B","1E":"C","1G":"A","1I":"F","1K":"L","1L":"K"},
+"ABCEFIJK":{"1A":"E","1B":"J","1D":"B","1E":"C","1G":"A","1I":"F","1K":"I","1L":"K"},
+"ABCEFIJL":{"1A":"E","1B":"J","1D":"B","1E":"C","1G":"A","1I":"F","1K":"L","1L":"I"},
+"ABCEFIKL":{"1A":"E","1B":"I","1D":"B","1E":"C","1G":"A","1I":"F","1K":"L","1L":"K"},
+"ABCEFJKL":{"1A":"E","1B":"J","1D":"B","1E":"C","1G":"A","1I":"F","1K":"L","1L":"K"},
+"ABCEGHIJ":{"1A":"H","1B":"J","1D":"B","1E":"C","1G":"A","1I":"G","1K":"E","1L":"I"},
+"ABCEGHIK":{"1A":"E","1B":"G","1D":"B","1E":"C","1G":"A","1I":"H","1K":"I","1L":"K"},
+"ABCEGHIL":{"1A":"E","1B":"G","1D":"B","1E":"C","1G":"A","1I":"H","1K":"L","1L":"I"},
+"ABCEGHJK":{"1A":"H","1B":"J","1D":"B","1E":"C","1G":"A","1I":"G","1K":"E","1L":"K"},
+"ABCEGHJL":{"1A":"H","1B":"J","1D":"B","1E":"C","1G":"A","1I":"G","1K":"L","1L":"E"},
+"ABCEGHKL":{"1A":"E","1B":"G","1D":"B","1E":"C","1G":"A","1I":"H","1K":"L","1L":"K"},
+"ABCEGIJK":{"1A":"E","1B":"J","1D":"B","1E":"C","1G":"A","1I":"G","1K":"I","1L":"K"},
+"ABCEGIJL":{"1A":"E","1B":"J","1D":"B","1E":"C","1G":"A","1I":"G","1K":"L","1L":"I"},
+"ABCEGIKL":{"1A":"E","1B":"G","1D":"B","1E":"A","1G":"I","1I":"C","1K":"L","1L":"K"},
+"ABCEGJKL":{"1A":"E","1B":"J","1D":"B","1E":"C","1G":"A","1I":"G","1K":"L","1L":"K"},
+"ABCEHIJK":{"1A":"E","1B":"J","1D":"B","1E":"C","1G":"A","1I":"H","1K":"I","1L":"K"},
+"ABCEHIJL":{"1A":"E","1B":"J","1D":"B","1E":"C","1G":"A","1I":"H","1K":"L","1L":"I"},
+"ABCEHIKL":{"1A":"E","1B":"I","1D":"B","1E":"C","1G":"A","1I":"H","1K":"L","1L":"K"},
+"ABCEHJKL":{"1A":"E","1B":"J","1D":"B","1E":"C","1G":"A","1I":"H","1K":"L","1L":"K"},
+"ABCEIJKL":{"1A":"E","1B":"J","1D":"B","1E":"A","1G":"I","1I":"C","1K":"L","1L":"K"},
+"ABCFGHIJ":{"1A":"H","1B":"G","1D":"B","1E":"C","1G":"A","1I":"F","1K":"I","1L":"J"},
+"ABCFGHIK":{"1A":"H","1B":"G","1D":"B","1E":"C","1G":"A","1I":"F","1K":"I","1L":"K"},
+"ABCFGHIL":{"1A":"H","1B":"G","1D":"B","1E":"C","1G":"A","1I":"F","1K":"L","1L":"I"},
+"ABCFGHJK":{"1A":"H","1B":"G","1D":"B","1E":"C","1G":"A","1I":"F","1K":"J","1L":"K"},
+"ABCFGHJL":{"1A":"H","1B":"G","1D":"B","1E":"C","1G":"A","1I":"F","1K":"L","1L":"J"},
+"ABCFGHKL":{"1A":"H","1B":"G","1D":"B","1E":"C","1G":"A","1I":"F","1K":"L","1L":"K"},
+"ABCFGIJK":{"1A":"C","1B":"J","1D":"B","1E":"F","1G":"A","1I":"G","1K":"I","1L":"K"},
+"ABCFGIJL":{"1A":"C","1B":"J","1D":"B","1E":"F","1G":"A","1I":"G","1K":"L","1L":"I"},
+"ABCFGIKL":{"1A":"I","1B":"G","1D":"B","1E":"C","1G":"A","1I":"F","1K":"L","1L":"K"},
+"ABCFGJKL":{"1A":"C","1B":"J","1D":"B","1E":"F","1G":"A","1I":"G","1K":"L","1L":"K"},
+"ABCFHIJK":{"1A":"H","1B":"J","1D":"B","1E":"C","1G":"A","1I":"F","1K":"I","1L":"K"},
+"ABCFHIJL":{"1A":"H","1B":"J","1D":"B","1E":"C","1G":"A","1I":"F","1K":"L","1L":"I"},
+"ABCFHIKL":{"1A":"H","1B":"I","1D":"B","1E":"C","1G":"A","1I":"F","1K":"L","1L":"K"},
+"ABCFHJKL":{"1A":"H","1B":"J","1D":"B","1E":"C","1G":"A","1I":"F","1K":"L","1L":"K"},
+"ABCFIJKL":{"1A":"I","1B":"J","1D":"B","1E":"C","1G":"A","1I":"F","1K":"L","1L":"K"},
+"ABCGHIJK":{"1A":"H","1B":"J","1D":"B","1E":"C","1G":"A","1I":"G","1K":"I","1L":"K"},
+"ABCGHIJL":{"1A":"H","1B":"J","1D":"B","1E":"C","1G":"A","1I":"G","1K":"L","1L":"I"},
+"ABCGHIKL":{"1A":"I","1B":"G","1D":"B","1E":"C","1G":"A","1I":"H","1K":"L","1L":"K"},
+"ABCGHJKL":{"1A":"H","1B":"J","1D":"B","1E":"C","1G":"A","1I":"G","1K":"L","1L":"K"},
+"ABCGIJKL":{"1A":"I","1B":"J","1D":"B","1E":"C","1G":"A","1I":"G","1K":"L","1L":"K"},
+"ABCHIJKL":{"1A":"I","1B":"J","1D":"B","1E":"C","1G":"A","1I":"H","1K":"L","1L":"K"},
+"ABDEFGHI":{"1A":"H","1B":"G","1D":"B","1E":"D","1G":"A","1I":"F","1K":"E","1L":"I"},
+"ABDEFGHJ":{"1A":"H","1B":"G","1D":"B","1E":"D","1G":"A","1I":"F","1K":"E","1L":"J"},
+"ABDEFGHK":{"1A":"H","1B":"G","1D":"B","1E":"D","1G":"A","1I":"F","1K":"E","1L":"K"},
+"ABDEFGHL":{"1A":"H","1B":"G","1D":"B","1E":"D","1G":"A","1I":"F","1K":"L","1L":"E"},
+"ABDEFGIJ":{"1A":"E","1B":"G","1D":"B","1E":"D","1G":"A","1I":"F","1K":"I","1L":"J"},
+"ABDEFGIK":{"1A":"E","1B":"G","1D":"B","1E":"D","1G":"A","1I":"F","1K":"I","1L":"K"},
+"ABDEFGIL":{"1A":"E","1B":"G","1D":"B","1E":"D","1G":"A","1I":"F","1K":"L","1L":"I"},
+"ABDEFGJK":{"1A":"E","1B":"G","1D":"B","1E":"D","1G":"A","1I":"F","1K":"J","1L":"K"},
+"ABDEFGJL":{"1A":"E","1B":"G","1D":"B","1E":"D","1G":"A","1I":"F","1K":"L","1L":"J"},
+"ABDEFGKL":{"1A":"E","1B":"G","1D":"B","1E":"D","1G":"A","1I":"F","1K":"L","1L":"K"},
+"ABDEFHIJ":{"1A":"H","1B":"J","1D":"B","1E":"D","1G":"A","1I":"F","1K":"E","1L":"I"},
+"ABDEFHIK":{"1A":"H","1B":"E","1D":"B","1E":"D","1G":"A","1I":"F","1K":"I","1L":"K"},
+"ABDEFHIL":{"1A":"H","1B":"E","1D":"B","1E":"D","1G":"A","1I":"F","1K":"L","1L":"I"},
+"ABDEFHJK":{"1A":"H","1B":"J","1D":"B","1E":"D","1G":"A","1I":"F","1K":"E","1L":"K"},
+"ABDEFHJL":{"1A":"H","1B":"J","1D":"B","1E":"D","1G":"A","1I":"F","1K":"L","1L":"E"},
+"ABDEFHKL":{"1A":"H","1B":"E","1D":"B","1E":"D","1G":"A","1I":"F","1K":"L","1L":"K"},
+"ABDEFIJK":{"1A":"E","1B":"J","1D":"B","1E":"D","1G":"A","1I":"F","1K":"I","1L":"K"},
+"ABDEFIJL":{"1A":"E","1B":"J","1D":"B","1E":"D","1G":"A","1I":"F","1K":"L","1L":"I"},
+"ABDEFIKL":{"1A":"E","1B":"I","1D":"B","1E":"D","1G":"A","1I":"F","1K":"L","1L":"K"},
+"ABDEFJKL":{"1A":"E","1B":"J","1D":"B","1E":"D","1G":"A","1I":"F","1K":"L","1L":"K"},
+"ABDEGHIJ":{"1A":"H","1B":"J","1D":"B","1E":"D","1G":"A","1I":"G","1K":"E","1L":"I"},
+"ABDEGHIK":{"1A":"E","1B":"G","1D":"B","1E":"D","1G":"A","1I":"H","1K":"I","1L":"K"},
+"ABDEGHIL":{"1A":"E","1B":"G","1D":"B","1E":"D","1G":"A","1I":"H","1K":"L","1L":"I"},
+"ABDEGHJK":{"1A":"H","1B":"J","1D":"B","1E":"D","1G":"A","1I":"G","1K":"E","1L":"K"},
+"ABDEGHJL":{"1A":"H","1B":"J","1D":"B","1E":"D","1G":"A","1I":"G","1K":"L","1L":"E"},
+"ABDEGHKL":{"1A":"E","1B":"G","1D":"B","1E":"D","1G":"A","1I":"H","1K":"L","1L":"K"},
+"ABDEGIJK":{"1A":"E","1B":"J","1D":"B","1E":"D","1G":"A","1I":"G","1K":"I","1L":"K"},
+"ABDEGIJL":{"1A":"E","1B":"J","1D":"B","1E":"D","1G":"A","1I":"G","1K":"L","1L":"I"},
+"ABDEGIKL":{"1A":"E","1B":"G","1D":"B","1E":"A","1G":"I","1I":"D","1K":"L","1L":"K"},
+"ABDEGJKL":{"1A":"E","1B":"J","1D":"B","1E":"D","1G":"A","1I":"G","1K":"L","1L":"K"},
+"ABDEHIJK":{"1A":"E","1B":"J","1D":"B","1E":"D","1G":"A","1I":"H","1K":"I","1L":"K"},
+"ABDEHIJL":{"1A":"E","1B":"J","1D":"B","1E":"D","1G":"A","1I":"H","1K":"L","1L":"I"},
+"ABDEHIKL":{"1A":"E","1B":"I","1D":"B","1E":"D","1G":"A","1I":"H","1K":"L","1L":"K"},
+"ABDEHJKL":{"1A":"E","1B":"J","1D":"B","1E":"D","1G":"A","1I":"H","1K":"L","1L":"K"},
+"ABDEIJKL":{"1A":"E","1B":"J","1D":"B","1E":"A","1G":"I","1I":"D","1K":"L","1L":"K"},
+"ABDFGHIJ":{"1A":"H","1B":"G","1D":"B","1E":"D","1G":"A","1I":"F","1K":"I","1L":"J"},
+"ABDFGHIK":{"1A":"H","1B":"G","1D":"B","1E":"D","1G":"A","1I":"F","1K":"I","1L":"K"},
+"ABDFGHIL":{"1A":"H","1B":"G","1D":"B","1E":"D","1G":"A","1I":"F","1K":"L","1L":"I"},
+"ABDFGHJK":{"1A":"H","1B":"G","1D":"B","1E":"D","1G":"A","1I":"F","1K":"J","1L":"K"},
+"ABDFGHJL":{"1A":"H","1B":"G","1D":"B","1E":"D","1G":"A","1I":"F","1K":"L","1L":"J"},
+"ABDFGHKL":{"1A":"H","1B":"G","1D":"B","1E":"D","1G":"A","1I":"F","1K":"L","1L":"K"},
+"ABDFGIJK":{"1A":"F","1B":"J","1D":"B","1E":"D","1G":"A","1I":"G","1K":"I","1L":"K"},
+"ABDFGIJL":{"1A":"F","1B":"J","1D":"B","1E":"D","1G":"A","1I":"G","1K":"L","1L":"I"},
+"ABDFGIKL":{"1A":"I","1B":"G","1D":"B","1E":"D","1G":"A","1I":"F","1K":"L","1L":"K"},
+"ABDFGJKL":{"1A":"F","1B":"J","1D":"B","1E":"D","1G":"A","1I":"G","1K":"L","1L":"K"},
+"ABDFHIJK":{"1A":"H","1B":"J","1D":"B","1E":"D","1G":"A","1I":"F","1K":"I","1L":"K"},
+"ABDFHIJL":{"1A":"H","1B":"J","1D":"B","1E":"D","1G":"A","1I":"F","1K":"L","1L":"I"},
+"ABDFHIKL":{"1A":"H","1B":"I","1D":"B","1E":"D","1G":"A","1I":"F","1K":"L","1L":"K"},
+"ABDFHJKL":{"1A":"H","1B":"J","1D":"B","1E":"D","1G":"A","1I":"F","1K":"L","1L":"K"},
+"ABDFIJKL":{"1A":"I","1B":"J","1D":"B","1E":"D","1G":"A","1I":"F","1K":"L","1L":"K"},
+"ABDGHIJK":{"1A":"H","1B":"J","1D":"B","1E":"D","1G":"A","1I":"G","1K":"I","1L":"K"},
+"ABDGHIJL":{"1A":"H","1B":"J","1D":"B","1E":"D","1G":"A","1I":"G","1K":"L","1L":"I"},
+"ABDGHIKL":{"1A":"I","1B":"G","1D":"B","1E":"D","1G":"A","1I":"H","1K":"L","1L":"K"},
+"ABDGHJKL":{"1A":"H","1B":"J","1D":"B","1E":"D","1G":"A","1I":"G","1K":"L","1L":"K"},
+"ABDGIJKL":{"1A":"I","1B":"J","1D":"B","1E":"D","1G":"A","1I":"G","1K":"L","1L":"K"},
+"ABDHIJKL":{"1A":"I","1B":"J","1D":"B","1E":"D","1G":"A","1I":"H","1K":"L","1L":"K"},
+"ABEFGHIJ":{"1A":"H","1B":"J","1D":"B","1E":"F","1G":"A","1I":"G","1K":"E","1L":"I"},
+"ABEFGHIK":{"1A":"E","1B":"G","1D":"B","1E":"F","1G":"A","1I":"H","1K":"I","1L":"K"},
+"ABEFGHIL":{"1A":"E","1B":"G","1D":"B","1E":"F","1G":"A","1I":"H","1K":"L","1L":"I"},
+"ABEFGHJK":{"1A":"H","1B":"J","1D":"B","1E":"F","1G":"A","1I":"G","1K":"E","1L":"K"},
+"ABEFGHJL":{"1A":"H","1B":"J","1D":"B","1E":"F","1G":"A","1I":"G","1K":"L","1L":"E"},
+"ABEFGHKL":{"1A":"E","1B":"G","1D":"B","1E":"F","1G":"A","1I":"H","1K":"L","1L":"K"},
+"ABEFGIJK":{"1A":"E","1B":"J","1D":"B","1E":"F","1G":"A","1I":"G","1K":"I","1L":"K"},
+"ABEFGIJL":{"1A":"E","1B":"J","1D":"B","1E":"F","1G":"A","1I":"G","1K":"L","1L":"I"},
+"ABEFGIKL":{"1A":"E","1B":"G","1D":"B","1E":"A","1G":"I","1I":"F","1K":"L","1L":"K"},
+"ABEFGJKL":{"1A":"E","1B":"J","1D":"B","1E":"F","1G":"A","1I":"G","1K":"L","1L":"K"},
+"ABEFHIJK":{"1A":"E","1B":"J","1D":"B","1E":"F","1G":"A","1I":"H","1K":"I","1L":"K"},
+"ABEFHIJL":{"1A":"E","1B":"J","1D":"B","1E":"F","1G":"A","1I":"H","1K":"L","1L":"I"},
+"ABEFHIKL":{"1A":"E","1B":"I","1D":"B","1E":"F","1G":"A","1I":"H","1K":"L","1L":"K"},
+"ABEFHJKL":{"1A":"E","1B":"J","1D":"B","1E":"F","1G":"A","1I":"H","1K":"L","1L":"K"},
+"ABEFIJKL":{"1A":"E","1B":"J","1D":"B","1E":"A","1G":"I","1I":"F","1K":"L","1L":"K"},
+"ABEGHIJK":{"1A":"E","1B":"J","1D":"B","1E":"A","1G":"H","1I":"G","1K":"I","1L":"K"},
+"ABEGHIJL":{"1A":"E","1B":"J","1D":"B","1E":"A","1G":"H","1I":"G","1K":"L","1L":"I"},
+"ABEGHIKL":{"1A":"E","1B":"G","1D":"B","1E":"A","1G":"I","1I":"H","1K":"L","1L":"K"},
+"ABEGHJKL":{"1A":"E","1B":"J","1D":"B","1E":"A","1G":"H","1I":"G","1K":"L","1L":"K"},
+"ABEGIJKL":{"1A":"E","1B":"J","1D":"B","1E":"A","1G":"I","1I":"G","1K":"L","1L":"K"},
+"ABEHIJKL":{"1A":"E","1B":"J","1D":"B","1E":"A","1G":"I","1I":"H","1K":"L","1L":"K"},
+"ABFGHIJK":{"1A":"H","1B":"J","1D":"B","1E":"F","1G":"A","1I":"G","1K":"I","1L":"K"},
+"ABFGHIJL":{"1A":"H","1B":"J","1D":"B","1E":"F","1G":"A","1I":"G","1K":"L","1L":"I"},
+"ABFGHIKL":{"1A":"H","1B":"G","1D":"B","1E":"A","1G":"I","1I":"F","1K":"L","1L":"K"},
+"ABFGHJKL":{"1A":"H","1B":"J","1D":"B","1E":"F","1G":"A","1I":"G","1K":"L","1L":"K"},
+"ABFGIJKL":{"1A":"I","1B":"J","1D":"B","1E":"F","1G":"A","1I":"G","1K":"L","1L":"K"},
+"ABFHIJKL":{"1A":"H","1B":"J","1D":"B","1E":"A","1G":"I","1I":"F","1K":"L","1L":"K"},
+"ABGHIJKL":{"1A":"H","1B":"J","1D":"B","1E":"A","1G":"I","1I":"G","1K":"L","1L":"K"},
+"ACDEFGHI":{"1A":"H","1B":"G","1D":"E","1E":"C","1G":"A","1I":"F","1K":"D","1L":"I"},
+"ACDEFGHJ":{"1A":"H","1B":"G","1D":"J","1E":"C","1G":"A","1I":"F","1K":"D","1L":"E"},
+"ACDEFGHK":{"1A":"H","1B":"G","1D":"E","1E":"C","1G":"A","1I":"F","1K":"D","1L":"K"},
+"ACDEFGHL":{"1A":"H","1B":"G","1D":"F","1E":"C","1G":"A","1I":"D","1K":"L","1L":"E"},
+"ACDEFGIJ":{"1A":"C","1B":"G","1D":"J","1E":"D","1G":"A","1I":"F","1K":"E","1L":"I"},
+"ACDEFGIK":{"1A":"C","1B":"G","1D":"E","1E":"D","1G":"A","1I":"F","1K":"I","1L":"K"},
+"ACDEFGIL":{"1A":"C","1B":"G","1D":"E","1E":"D","1G":"A","1I":"F","1K":"L","1L":"I"},
+"ACDEFGJK":{"1A":"C","1B":"G","1D":"J","1E":"D","1G":"A","1I":"F","1K":"E","1L":"K"},
+"ACDEFGJL":{"1A":"C","1B":"G","1D":"J","1E":"D","1G":"A","1I":"F","1K":"L","1L":"E"},
+"ACDEFGKL":{"1A":"C","1B":"G","1D":"E","1E":"D","1G":"A","1I":"F","1K":"L","1L":"K"},
+"ACDEFHIJ":{"1A":"H","1B":"J","1D":"E","1E":"C","1G":"A","1I":"F","1K":"D","1L":"I"},
+"ACDEFHIK":{"1A":"H","1B":"E","1D":"F","1E":"C","1G":"A","1I":"D","1K":"I","1L":"K"},
+"ACDEFHIL":{"1A":"H","1B":"E","1D":"F","1E":"C","1G":"A","1I":"D","1K":"L","1L":"I"},
+"ACDEFHJK":{"1A":"H","1B":"J","1D":"E","1E":"C","1G":"A","1I":"F","1K":"D","1L":"K"},
+"ACDEFHJL":{"1A":"H","1B":"J","1D":"F","1E":"C","1G":"A","1I":"D","1K":"L","1L":"E"},
+"ACDEFHKL":{"1A":"H","1B":"E","1D":"F","1E":"C","1G":"A","1I":"D","1K":"L","1L":"K"},
+"ACDEFIJK":{"1A":"C","1B":"J","1D":"E","1E":"D","1G":"A","1I":"F","1K":"I","1L":"K"},
+"ACDEFIJL":{"1A":"C","1B":"J","1D":"E","1E":"D","1G":"A","1I":"F","1K":"L","1L":"I"},
+"ACDEFIKL":{"1A":"C","1B":"E","1D":"I","1E":"D","1G":"A","1I":"F","1K":"L","1L":"K"},
+"ACDEFJKL":{"1A":"C","1B":"J","1D":"E","1E":"D","1G":"A","1I":"F","1K":"L","1L":"K"},
+"ACDEGHIJ":{"1A":"H","1B":"G","1D":"J","1E":"C","1G":"A","1I":"D","1K":"E","1L":"I"},
+"ACDEGHIK":{"1A":"H","1B":"G","1D":"E","1E":"C","1G":"A","1I":"D","1K":"I","1L":"K"},
+"ACDEGHIL":{"1A":"H","1B":"G","1D":"E","1E":"C","1G":"A","1I":"D","1K":"L","1L":"I"},
+"ACDEGHJK":{"1A":"H","1B":"G","1D":"J","1E":"C","1G":"A","1I":"D","1K":"E","1L":"K"},
+"ACDEGHJL":{"1A":"H","1B":"G","1D":"J","1E":"C","1G":"A","1I":"D","1K":"L","1L":"E"},
+"ACDEGHKL":{"1A":"H","1B":"G","1D":"E","1E":"C","1G":"A","1I":"D","1K":"L","1L":"K"},
+"ACDEGIJK":{"1A":"E","1B":"G","1D":"J","1E":"C","1G":"A","1I":"D","1K":"I","1L":"K"},
+"ACDEGIJL":{"1A":"E","1B":"G","1D":"J","1E":"C","1G":"A","1I":"D","1K":"L","1L":"I"},
+"ACDEGIKL":{"1A":"E","1B":"G","1D":"I","1E":"C","1G":"A","1I":"D","1K":"L","1L":"K"},
+"ACDEGJKL":{"1A":"E","1B":"G","1D":"J","1E":"C","1G":"A","1I":"D","1K":"L","1L":"K"},
+"ACDEHIJK":{"1A":"H","1B":"J","1D":"E","1E":"C","1G":"A","1I":"D","1K":"I","1L":"K"},
+"ACDEHIJL":{"1A":"H","1B":"J","1D":"E","1E":"C","1G":"A","1I":"D","1K":"L","1L":"I"},
+"ACDEHIKL":{"1A":"H","1B":"E","1D":"I","1E":"C","1G":"A","1I":"D","1K":"L","1L":"K"},
+"ACDEHJKL":{"1A":"H","1B":"J","1D":"E","1E":"C","1G":"A","1I":"D","1K":"L","1L":"K"},
+"ACDEIJKL":{"1A":"E","1B":"J","1D":"I","1E":"C","1G":"A","1I":"D","1K":"L","1L":"K"},
+"ACDFGHIJ":{"1A":"H","1B":"G","1D":"J","1E":"C","1G":"A","1I":"F","1K":"D","1L":"I"},
+"ACDFGHIK":{"1A":"H","1B":"G","1D":"F","1E":"C","1G":"A","1I":"D","1K":"I","1L":"K"},
+"ACDFGHIL":{"1A":"H","1B":"G","1D":"F","1E":"C","1G":"A","1I":"D","1K":"L","1L":"I"},
+"ACDFGHJK":{"1A":"H","1B":"G","1D":"J","1E":"C","1G":"A","1I":"F","1K":"D","1L":"K"},
+"ACDFGHJL":{"1A":"C","1B":"G","1D":"J","1E":"D","1G":"A","1I":"F","1K":"L","1L":"H"},
+"ACDFGHKL":{"1A":"H","1B":"G","1D":"F","1E":"C","1G":"A","1I":"D","1K":"L","1L":"K"},
+"ACDFGIJK":{"1A":"C","1B":"G","1D":"J","1E":"D","1G":"A","1I":"F","1K":"I","1L":"K"},
+"ACDFGIJL":{"1A":"C","1B":"G","1D":"J","1E":"D","1G":"A","1I":"F","1K":"L","1L":"I"},
+"ACDFGIKL":{"1A":"C","1B":"G","1D":"I","1E":"D","1G":"A","1I":"F","1K":"L","1L":"K"},
+"ACDFGJKL":{"1A":"C","1B":"G","1D":"J","1E":"D","1G":"A","1I":"F","1K":"L","1L":"K"},
+"ACDFHIJK":{"1A":"H","1B":"J","1D":"F","1E":"C","1G":"A","1I":"D","1K":"I","1L":"K"},
+"ACDFHIJL":{"1A":"H","1B":"J","1D":"F","1E":"C","1G":"A","1I":"D","1K":"L","1L":"I"},
+"ACDFHIKL":{"1A":"H","1B":"F","1D":"I","1E":"C","1G":"A","1I":"D","1K":"L","1L":"K"},
+"ACDFHJKL":{"1A":"H","1B":"J","1D":"F","1E":"C","1G":"A","1I":"D","1K":"L","1L":"K"},
+"ACDFIJKL":{"1A":"C","1B":"J","1D":"I","1E":"D","1G":"A","1I":"F","1K":"L","1L":"K"},
+"ACDGHIJK":{"1A":"H","1B":"G","1D":"J","1E":"C","1G":"A","1I":"D","1K":"I","1L":"K"},
+"ACDGHIJL":{"1A":"H","1B":"G","1D":"J","1E":"C","1G":"A","1I":"D","1K":"L","1L":"I"},
+"ACDGHIKL":{"1A":"H","1B":"G","1D":"I","1E":"C","1G":"A","1I":"D","1K":"L","1L":"K"},
+"ACDGHJKL":{"1A":"H","1B":"G","1D":"J","1E":"C","1G":"A","1I":"D","1K":"L","1L":"K"},
+"ACDGIJKL":{"1A":"I","1B":"G","1D":"J","1E":"C","1G":"A","1I":"D","1K":"L","1L":"K"},
+"ACDHIJKL":{"1A":"H","1B":"J","1D":"I","1E":"C","1G":"A","1I":"D","1K":"L","1L":"K"},
+"ACEFGHIJ":{"1A":"H","1B":"G","1D":"J","1E":"C","1G":"A","1I":"F","1K":"E","1L":"I"},
+"ACEFGHIK":{"1A":"H","1B":"G","1D":"E","1E":"C","1G":"A","1I":"F","1K":"I","1L":"K"},
+"ACEFGHIL":{"1A":"H","1B":"G","1D":"E","1E":"C","1G":"A","1I":"F","1K":"L","1L":"I"},
+"ACEFGHJK":{"1A":"H","1B":"G","1D":"J","1E":"C","1G":"A","1I":"F","1K":"E","1L":"K"},
+"ACEFGHJL":{"1A":"H","1B":"G","1D":"J","1E":"C","1G":"A","1I":"F","1K":"L","1L":"E"},
+"ACEFGHKL":{"1A":"H","1B":"G","1D":"E","1E":"C","1G":"A","1I":"F","1K":"L","1L":"K"},
+"ACEFGIJK":{"1A":"E","1B":"G","1D":"J","1E":"C","1G":"A","1I":"F","1K":"I","1L":"K"},
+"ACEFGIJL":{"1A":"E","1B":"G","1D":"J","1E":"C","1G":"A","1I":"F","1K":"L","1L":"I"},
+"ACEFGIKL":{"1A":"E","1B":"G","1D":"I","1E":"C","1G":"A","1I":"F","1K":"L","1L":"K"},
+"ACEFGJKL":{"1A":"E","1B":"G","1D":"J","1E":"C","1G":"A","1I":"F","1K":"L","1L":"K"},
+"ACEFHIJK":{"1A":"H","1B":"J","1D":"E","1E":"C","1G":"A","1I":"F","1K":"I","1L":"K"},
+"ACEFHIJL":{"1A":"H","1B":"J","1D":"E","1E":"C","1G":"A","1I":"F","1K":"L","1L":"I"},
+"ACEFHIKL":{"1A":"H","1B":"E","1D":"I","1E":"C","1G":"A","1I":"F","1K":"L","1L":"K"},
+"ACEFHJKL":{"1A":"H","1B":"J","1D":"E","1E":"C","1G":"A","1I":"F","1K":"L","1L":"K"},
+"ACEFIJKL":{"1A":"E","1B":"J","1D":"I","1E":"C","1G":"A","1I":"F","1K":"L","1L":"K"},
+"ACEGHIJK":{"1A":"E","1B":"G","1D":"J","1E":"C","1G":"A","1I":"H","1K":"I","1L":"K"},
+"ACEGHIJL":{"1A":"E","1B":"G","1D":"J","1E":"C","1G":"A","1I":"H","1K":"L","1L":"I"},
+"ACEGHIKL":{"1A":"E","1B":"G","1D":"I","1E":"C","1G":"A","1I":"H","1K":"L","1L":"K"},
+"ACEGHJKL":{"1A":"E","1B":"G","1D":"J","1E":"C","1G":"A","1I":"H","1K":"L","1L":"K"},
+"ACEGIJKL":{"1A":"E","1B":"J","1D":"I","1E":"C","1G":"A","1I":"G","1K":"L","1L":"K"},
+"ACEHIJKL":{"1A":"E","1B":"J","1D":"I","1E":"C","1G":"A","1I":"H","1K":"L","1L":"K"},
+"ACFGHIJK":{"1A":"H","1B":"G","1D":"J","1E":"C","1G":"A","1I":"F","1K":"I","1L":"K"},
+"ACFGHIJL":{"1A":"H","1B":"G","1D":"J","1E":"C","1G":"A","1I":"F","1K":"L","1L":"I"},
+"ACFGHIKL":{"1A":"H","1B":"G","1D":"I","1E":"C","1G":"A","1I":"F","1K":"L","1L":"K"},
+"ACFGHJKL":{"1A":"H","1B":"G","1D":"J","1E":"C","1G":"A","1I":"F","1K":"L","1L":"K"},
+"ACFGIJKL":{"1A":"I","1B":"G","1D":"J","1E":"C","1G":"A","1I":"F","1K":"L","1L":"K"},
+"ACFHIJKL":{"1A":"H","1B":"J","1D":"I","1E":"C","1G":"A","1I":"F","1K":"L","1L":"K"},
+"ACGHIJKL":{"1A":"H","1B":"J","1D":"I","1E":"C","1G":"A","1I":"G","1K":"L","1L":"K"},
+"ADEFGHIJ":{"1A":"H","1B":"G","1D":"J","1E":"D","1G":"A","1I":"F","1K":"E","1L":"I"},
+"ADEFGHIK":{"1A":"H","1B":"G","1D":"E","1E":"D","1G":"A","1I":"F","1K":"I","1L":"K"},
+"ADEFGHIL":{"1A":"H","1B":"G","1D":"E","1E":"D","1G":"A","1I":"F","1K":"L","1L":"I"},
+"ADEFGHJK":{"1A":"H","1B":"G","1D":"J","1E":"D","1G":"A","1I":"F","1K":"E","1L":"K"},
+"ADEFGHJL":{"1A":"H","1B":"G","1D":"J","1E":"D","1G":"A","1I":"F","1K":"L","1L":"E"},
+"ADEFGHKL":{"1A":"H","1B":"G","1D":"E","1E":"D","1G":"A","1I":"F","1K":"L","1L":"K"},
+"ADEFGIJK":{"1A":"E","1B":"G","1D":"J","1E":"D","1G":"A","1I":"F","1K":"I","1L":"K"},
+"ADEFGIJL":{"1A":"E","1B":"G","1D":"J","1E":"D","1G":"A","1I":"F","1K":"L","1L":"I"},
+"ADEFGIKL":{"1A":"E","1B":"G","1D":"I","1E":"D","1G":"A","1I":"F","1K":"L","1L":"K"},
+"ADEFGJKL":{"1A":"E","1B":"G","1D":"J","1E":"D","1G":"A","1I":"F","1K":"L","1L":"K"},
+"ADEFHIJK":{"1A":"H","1B":"J","1D":"E","1E":"D","1G":"A","1I":"F","1K":"I","1L":"K"},
+"ADEFHIJL":{"1A":"H","1B":"J","1D":"E","1E":"D","1G":"A","1I":"F","1K":"L","1L":"I"},
+"ADEFHIKL":{"1A":"H","1B":"E","1D":"I","1E":"D","1G":"A","1I":"F","1K":"L","1L":"K"},
+"ADEFHJKL":{"1A":"H","1B":"J","1D":"E","1E":"D","1G":"A","1I":"F","1K":"L","1L":"K"},
+"ADEFIJKL":{"1A":"E","1B":"J","1D":"I","1E":"D","1G":"A","1I":"F","1K":"L","1L":"K"},
+"ADEGHIJK":{"1A":"E","1B":"G","1D":"J","1E":"D","1G":"A","1I":"H","1K":"I","1L":"K"},
+"ADEGHIJL":{"1A":"E","1B":"G","1D":"J","1E":"D","1G":"A","1I":"H","1K":"L","1L":"I"},
+"ADEGHIKL":{"1A":"E","1B":"G","1D":"I","1E":"D","1G":"A","1I":"H","1K":"L","1L":"K"},
+"ADEGHJKL":{"1A":"E","1B":"G","1D":"J","1E":"D","1G":"A","1I":"H","1K":"L","1L":"K"},
+"ADEGIJKL":{"1A":"E","1B":"J","1D":"I","1E":"D","1G":"A","1I":"G","1K":"L","1L":"K"},
+"ADEHIJKL":{"1A":"E","1B":"J","1D":"I","1E":"D","1G":"A","1I":"H","1K":"L","1L":"K"},
+"ADFGHIJK":{"1A":"H","1B":"G","1D":"J","1E":"D","1G":"A","1I":"F","1K":"I","1L":"K"},
+"ADFGHIJL":{"1A":"H","1B":"G","1D":"J","1E":"D","1G":"A","1I":"F","1K":"L","1L":"I"},
+"ADFGHIKL":{"1A":"H","1B":"G","1D":"I","1E":"D","1G":"A","1I":"F","1K":"L","1L":"K"},
+"ADFGHJKL":{"1A":"H","1B":"G","1D":"J","1E":"D","1G":"A","1I":"F","1K":"L","1L":"K"},
+"ADFGIJKL":{"1A":"I","1B":"G","1D":"J","1E":"D","1G":"A","1I":"F","1K":"L","1L":"K"},
+"ADFHIJKL":{"1A":"H","1B":"J","1D":"I","1E":"D","1G":"A","1I":"F","1K":"L","1L":"K"},
+"ADGHIJKL":{"1A":"H","1B":"J","1D":"I","1E":"D","1G":"A","1I":"G","1K":"L","1L":"K"},
+"AEFGHIJK":{"1A":"E","1B":"G","1D":"J","1E":"F","1G":"A","1I":"H","1K":"I","1L":"K"},
+"AEFGHIJL":{"1A":"E","1B":"G","1D":"J","1E":"F","1G":"A","1I":"H","1K":"L","1L":"I"},
+"AEFGHIKL":{"1A":"E","1B":"G","1D":"I","1E":"F","1G":"A","1I":"H","1K":"L","1L":"K"},
+"AEFGHJKL":{"1A":"E","1B":"G","1D":"J","1E":"F","1G":"A","1I":"H","1K":"L","1L":"K"},
+"AEFGIJKL":{"1A":"E","1B":"J","1D":"I","1E":"F","1G":"A","1I":"G","1K":"L","1L":"K"},
+"AEFHIJKL":{"1A":"E","1B":"J","1D":"I","1E":"F","1G":"A","1I":"H","1K":"L","1L":"K"},
+"AEGHIJKL":{"1A":"E","1B":"J","1D":"I","1E":"A","1G":"H","1I":"G","1K":"L","1L":"K"},
+"AFGHIJKL":{"1A":"H","1B":"J","1D":"I","1E":"F","1G":"A","1I":"G","1K":"L","1L":"K"},
+"BCDEFGHI":{"1A":"C","1B":"G","1D":"B","1E":"D","1G":"H","1I":"F","1K":"E","1L":"I"},
+"BCDEFGHJ":{"1A":"H","1B":"G","1D":"B","1E":"C","1G":"J","1I":"F","1K":"D","1L":"E"},
+"BCDEFGHK":{"1A":"C","1B":"G","1D":"B","1E":"D","1G":"H","1I":"F","1K":"E","1L":"K"},
+"BCDEFGHL":{"1A":"C","1B":"G","1D":"B","1E":"D","1G":"H","1I":"F","1K":"L","1L":"E"},
+"BCDEFGIJ":{"1A":"C","1B":"G","1D":"B","1E":"D","1G":"J","1I":"F","1K":"E","1L":"I"},
+"BCDEFGIK":{"1A":"C","1B":"G","1D":"B","1E":"D","1G":"E","1I":"F","1K":"I","1L":"K"},
+"BCDEFGIL":{"1A":"C","1B":"G","1D":"B","1E":"D","1G":"E","1I":"F","1K":"L","1L":"I"},
+"BCDEFGJK":{"1A":"C","1B":"G","1D":"B","1E":"D","1G":"J","1I":"F","1K":"E","1L":"K"},
+"BCDEFGJL":{"1A":"C","1B":"G","1D":"B","1E":"D","1G":"J","1I":"F","1K":"L","1L":"E"},
+"BCDEFGKL":{"1A":"C","1B":"G","1D":"B","1E":"D","1G":"E","1I":"F","1K":"L","1L":"K"},
+"BCDEFHIJ":{"1A":"C","1B":"J","1D":"B","1E":"D","1G":"H","1I":"F","1K":"E","1L":"I"},
+"BCDEFHIK":{"1A":"C","1B":"E","1D":"B","1E":"D","1G":"H","1I":"F","1K":"I","1L":"K"},
+"BCDEFHIL":{"1A":"C","1B":"E","1D":"B","1E":"D","1G":"H","1I":"F","1K":"L","1L":"I"},
+"BCDEFHJK":{"1A":"C","1B":"J","1D":"B","1E":"D","1G":"H","1I":"F","1K":"E","1L":"K"},
+"BCDEFHJL":{"1A":"C","1B":"J","1D":"B","1E":"D","1G":"H","1I":"F","1K":"L","1L":"E"},
+"BCDEFHKL":{"1A":"C","1B":"E","1D":"B","1E":"D","1G":"H","1I":"F","1K":"L","1L":"K"},
+"BCDEFIJK":{"1A":"C","1B":"J","1D":"B","1E":"D","1G":"E","1I":"F","1K":"I","1L":"K"},
+"BCDEFIJL":{"1A":"C","1B":"J","1D":"B","1E":"D","1G":"E","1I":"F","1K":"L","1L":"I"},
+"BCDEFIKL":{"1A":"C","1B":"E","1D":"B","1E":"D","1G":"I","1I":"F","1K":"L","1L":"K"},
+"BCDEFJKL":{"1A":"C","1B":"J","1D":"B","1E":"D","1G":"E","1I":"F","1K":"L","1L":"K"},
+"BCDEGHIJ":{"1A":"H","1B":"G","1D":"B","1E":"C","1G":"J","1I":"D","1K":"E","1L":"I"},
+"BCDEGHIK":{"1A":"E","1B":"G","1D":"B","1E":"C","1G":"H","1I":"D","1K":"I","1L":"K"},
+"BCDEGHIL":{"1A":"E","1B":"G","1D":"B","1E":"C","1G":"H","1I":"D","1K":"L","1L":"I"},
+"BCDEGHJK":{"1A":"H","1B":"G","1D":"B","1E":"C","1G":"J","1I":"D","1K":"E","1L":"K"},
+"BCDEGHJL":{"1A":"H","1B":"G","1D":"B","1E":"C","1G":"J","1I":"D","1K":"L","1L":"E"},
+"BCDEGHKL":{"1A":"E","1B":"G","1D":"B","1E":"C","1G":"H","1I":"D","1K":"L","1L":"K"},
+"BCDEGIJK":{"1A":"E","1B":"G","1D":"B","1E":"C","1G":"J","1I":"D","1K":"I","1L":"K"},
+"BCDEGIJL":{"1A":"E","1B":"G","1D":"B","1E":"C","1G":"J","1I":"D","1K":"L","1L":"I"},
+"BCDEGIKL":{"1A":"E","1B":"G","1D":"B","1E":"C","1G":"I","1I":"D","1K":"L","1L":"K"},
+"BCDEGJKL":{"1A":"E","1B":"G","1D":"B","1E":"C","1G":"J","1I":"D","1K":"L","1L":"K"},
+"BCDEHIJK":{"1A":"E","1B":"J","1D":"B","1E":"C","1G":"H","1I":"D","1K":"I","1L":"K"},
+"BCDEHIJL":{"1A":"E","1B":"J","1D":"B","1E":"C","1G":"H","1I":"D","1K":"L","1L":"I"},
+"BCDEHIKL":{"1A":"E","1B":"I","1D":"B","1E":"C","1G":"H","1I":"D","1K":"L","1L":"K"},
+"BCDEHJKL":{"1A":"E","1B":"J","1D":"B","1E":"C","1G":"H","1I":"D","1K":"L","1L":"K"},
+"BCDEIJKL":{"1A":"E","1B":"J","1D":"B","1E":"C","1G":"I","1I":"D","1K":"L","1L":"K"},
+"BCDFGHIJ":{"1A":"H","1B":"G","1D":"B","1E":"C","1G":"J","1I":"F","1K":"D","1L":"I"},
+"BCDFGHIK":{"1A":"C","1B":"G","1D":"B","1E":"D","1G":"H","1I":"F","1K":"I","1L":"K"},
+"BCDFGHIL":{"1A":"C","1B":"G","1D":"B","1E":"D","1G":"H","1I":"F","1K":"L","1L":"I"},
+"BCDFGHJK":{"1A":"H","1B":"G","1D":"B","1E":"C","1G":"J","1I":"F","1K":"D","1L":"K"},
+"BCDFGHJL":{"1A":"C","1B":"G","1D":"B","1E":"D","1G":"H","1I":"F","1K":"L","1L":"J"},
+"BCDFGHKL":{"1A":"C","1B":"G","1D":"B","1E":"D","1G":"H","1I":"F","1K":"L","1L":"K"},
+"BCDFGIJK":{"1A":"C","1B":"G","1D":"B","1E":"D","1G":"J","1I":"F","1K":"I","1L":"K"},
+"BCDFGIJL":{"1A":"C","1B":"G","1D":"B","1E":"D","1G":"J","1I":"F","1K":"L","1L":"I"},
+"BCDFGIKL":{"1A":"C","1B":"G","1D":"B","1E":"D","1G":"I","1I":"F","1K":"L","1L":"K"},
+"BCDFGJKL":{"1A":"C","1B":"G","1D":"B","1E":"D","1G":"J","1I":"F","1K":"L","1L":"K"},
+"BCDFHIJK":{"1A":"C","1B":"J","1D":"B","1E":"D","1G":"H","1I":"F","1K":"I","1L":"K"},
+"BCDFHIJL":{"1A":"C","1B":"J","1D":"B","1E":"D","1G":"H","1I":"F","1K":"L","1L":"I"},
+"BCDFHIKL":{"1A":"C","1B":"I","1D":"B","1E":"D","1G":"H","1I":"F","1K":"L","1L":"K"},
+"BCDFHJKL":{"1A":"C","1B":"J","1D":"B","1E":"D","1G":"H","1I":"F","1K":"L","1L":"K"},
+"BCDFIJKL":{"1A":"C","1B":"J","1D":"B","1E":"D","1G":"I","1I":"F","1K":"L","1L":"K"},
+"BCDGHIJK":{"1A":"H","1B":"G","1D":"B","1E":"C","1G":"J","1I":"D","1K":"I","1L":"K"},
+"BCDGHIJL":{"1A":"H","1B":"G","1D":"B","1E":"C","1G":"J","1I":"D","1K":"L","1L":"I"},
+"BCDGHIKL":{"1A":"H","1B":"G","1D":"B","1E":"C","1G":"I","1I":"D","1K":"L","1L":"K"},
+"BCDGHJKL":{"1A":"H","1B":"G","1D":"B","1E":"C","1G":"J","1I":"D","1K":"L","1L":"K"},
+"BCDGIJKL":{"1A":"I","1B":"G","1D":"B","1E":"C","1G":"J","1I":"D","1K":"L","1L":"K"},
+"BCDHIJKL":{"1A":"H","1B":"J","1D":"B","1E":"C","1G":"I","1I":"D","1K":"L","1L":"K"},
+"BCEFGHIJ":{"1A":"H","1B":"G","1D":"B","1E":"C","1G":"J","1I":"F","1K":"E","1L":"I"},
+"BCEFGHIK":{"1A":"E","1B":"G","1D":"B","1E":"C","1G":"H","1I":"F","1K":"I","1L":"K"},
+"BCEFGHIL":{"1A":"E","1B":"G","1D":"B","1E":"C","1G":"H","1I":"F","1K":"L","1L":"I"},
+"BCEFGHJK":{"1A":"H","1B":"G","1D":"B","1E":"C","1G":"J","1I":"F","1K":"E","1L":"K"},
+"BCEFGHJL":{"1A":"H","1B":"G","1D":"B","1E":"C","1G":"J","1I":"F","1K":"L","1L":"E"},
+"BCEFGHKL":{"1A":"E","1B":"G","1D":"B","1E":"C","1G":"H","1I":"F","1K":"L","1L":"K"},
+"BCEFGIJK":{"1A":"E","1B":"G","1D":"B","1E":"C","1G":"J","1I":"F","1K":"I","1L":"K"},
+"BCEFGIJL":{"1A":"E","1B":"G","1D":"B","1E":"C","1G":"J","1I":"F","1K":"L","1L":"I"},
+"BCEFGIKL":{"1A":"E","1B":"G","1D":"B","1E":"C","1G":"I","1I":"F","1K":"L","1L":"K"},
+"BCEFGJKL":{"1A":"E","1B":"G","1D":"B","1E":"C","1G":"J","1I":"F","1K":"L","1L":"K"},
+"BCEFHIJK":{"1A":"E","1B":"J","1D":"B","1E":"C","1G":"H","1I":"F","1K":"I","1L":"K"},
+"BCEFHIJL":{"1A":"E","1B":"J","1D":"B","1E":"C","1G":"H","1I":"F","1K":"L","1L":"I"},
+"BCEFHIKL":{"1A":"E","1B":"I","1D":"B","1E":"C","1G":"H","1I":"F","1K":"L","1L":"K"},
+"BCEFHJKL":{"1A":"E","1B":"J","1D":"B","1E":"C","1G":"H","1I":"F","1K":"L","1L":"K"},
+"BCEFIJKL":{"1A":"E","1B":"J","1D":"B","1E":"C","1G":"I","1I":"F","1K":"L","1L":"K"},
+"BCEGHIJK":{"1A":"E","1B":"J","1D":"B","1E":"C","1G":"H","1I":"G","1K":"I","1L":"K"},
+"BCEGHIJL":{"1A":"E","1B":"J","1D":"B","1E":"C","1G":"H","1I":"G","1K":"L","1L":"I"},
+"BCEGHIKL":{"1A":"E","1B":"G","1D":"B","1E":"C","1G":"I","1I":"H","1K":"L","1L":"K"},
+"BCEGHJKL":{"1A":"E","1B":"J","1D":"B","1E":"C","1G":"H","1I":"G","1K":"L","1L":"K"},
+"BCEGIJKL":{"1A":"E","1B":"J","1D":"B","1E":"C","1G":"I","1I":"G","1K":"L","1L":"K"},
+"BCEHIJKL":{"1A":"E","1B":"J","1D":"B","1E":"C","1G":"I","1I":"H","1K":"L","1L":"K"},
+"BCFGHIJK":{"1A":"H","1B":"G","1D":"B","1E":"C","1G":"J","1I":"F","1K":"I","1L":"K"},
+"BCFGHIJL":{"1A":"H","1B":"G","1D":"B","1E":"C","1G":"J","1I":"F","1K":"L","1L":"I"},
+"BCFGHIKL":{"1A":"H","1B":"G","1D":"B","1E":"C","1G":"I","1I":"F","1K":"L","1L":"K"},
+"BCFGHJKL":{"1A":"H","1B":"G","1D":"B","1E":"C","1G":"J","1I":"F","1K":"L","1L":"K"},
+"BCFGIJKL":{"1A":"I","1B":"G","1D":"B","1E":"C","1G":"J","1I":"F","1K":"L","1L":"K"},
+"BCFHIJKL":{"1A":"H","1B":"J","1D":"B","1E":"C","1G":"I","1I":"F","1K":"L","1L":"K"},
+"BCGHIJKL":{"1A":"H","1B":"J","1D":"B","1E":"C","1G":"I","1I":"G","1K":"L","1L":"K"},
+"BDEFGHIJ":{"1A":"H","1B":"G","1D":"B","1E":"D","1G":"J","1I":"F","1K":"E","1L":"I"},
+"BDEFGHIK":{"1A":"E","1B":"G","1D":"B","1E":"D","1G":"H","1I":"F","1K":"I","1L":"K"},
+"BDEFGHIL":{"1A":"E","1B":"G","1D":"B","1E":"D","1G":"H","1I":"F","1K":"L","1L":"I"},
+"BDEFGHJK":{"1A":"H","1B":"G","1D":"B","1E":"D","1G":"J","1I":"F","1K":"E","1L":"K"},
+"BDEFGHJL":{"1A":"H","1B":"G","1D":"B","1E":"D","1G":"J","1I":"F","1K":"L","1L":"E"},
+"BDEFGHKL":{"1A":"E","1B":"G","1D":"B","1E":"D","1G":"H","1I":"F","1K":"L","1L":"K"},
+"BDEFGIJK":{"1A":"E","1B":"G","1D":"B","1E":"D","1G":"J","1I":"F","1K":"I","1L":"K"},
+"BDEFGIJL":{"1A":"E","1B":"G","1D":"B","1E":"D","1G":"J","1I":"F","1K":"L","1L":"I"},
+"BDEFGIKL":{"1A":"E","1B":"G","1D":"B","1E":"D","1G":"I","1I":"F","1K":"L","1L":"K"},
+"BDEFGJKL":{"1A":"E","1B":"G","1D":"B","1E":"D","1G":"J","1I":"F","1K":"L","1L":"K"},
+"BDEFHIJK":{"1A":"E","1B":"J","1D":"B","1E":"D","1G":"H","1I":"F","1K":"I","1L":"K"},
+"BDEFHIJL":{"1A":"E","1B":"J","1D":"B","1E":"D","1G":"H","1I":"F","1K":"L","1L":"I"},
+"BDEFHIKL":{"1A":"E","1B":"I","1D":"B","1E":"D","1G":"H","1I":"F","1K":"L","1L":"K"},
+"BDEFHJKL":{"1A":"E","1B":"J","1D":"B","1E":"D","1G":"H","1I":"F","1K":"L","1L":"K"},
+"BDEFIJKL":{"1A":"E","1B":"J","1D":"B","1E":"D","1G":"I","1I":"F","1K":"L","1L":"K"},
+"BDEGHIJK":{"1A":"E","1B":"J","1D":"B","1E":"D","1G":"H","1I":"G","1K":"I","1L":"K"},
+"BDEGHIJL":{"1A":"E","1B":"J","1D":"B","1E":"D","1G":"H","1I":"G","1K":"L","1L":"I"},
+"BDEGHIKL":{"1A":"E","1B":"G","1D":"B","1E":"D","1G":"I","1I":"H","1K":"L","1L":"K"},
+"BDEGHJKL":{"1A":"E","1B":"J","1D":"B","1E":"D","1G":"H","1I":"G","1K":"L","1L":"K"},
+"BDEGIJKL":{"1A":"E","1B":"J","1D":"B","1E":"D","1G":"I","1I":"G","1K":"L","1L":"K"},
+"BDEHIJKL":{"1A":"E","1B":"J","1D":"B","1E":"D","1G":"I","1I":"H","1K":"L","1L":"K"},
+"BDFGHIJK":{"1A":"H","1B":"G","1D":"B","1E":"D","1G":"J","1I":"F","1K":"I","1L":"K"},
+"BDFGHIJL":{"1A":"H","1B":"G","1D":"B","1E":"D","1G":"J","1I":"F","1K":"L","1L":"I"},
+"BDFGHIKL":{"1A":"H","1B":"G","1D":"B","1E":"D","1G":"I","1I":"F","1K":"L","1L":"K"},
+"BDFGHJKL":{"1A":"H","1B":"G","1D":"B","1E":"D","1G":"J","1I":"F","1K":"L","1L":"K"},
+"BDFGIJKL":{"1A":"I","1B":"G","1D":"B","1E":"D","1G":"J","1I":"F","1K":"L","1L":"K"},
+"BDFHIJKL":{"1A":"H","1B":"J","1D":"B","1E":"D","1G":"I","1I":"F","1K":"L","1L":"K"},
+"BDGHIJKL":{"1A":"H","1B":"J","1D":"B","1E":"D","1G":"I","1I":"G","1K":"L","1L":"K"},
+"BEFGHIJK":{"1A":"E","1B":"J","1D":"B","1E":"F","1G":"H","1I":"G","1K":"I","1L":"K"},
+"BEFGHIJL":{"1A":"E","1B":"J","1D":"B","1E":"F","1G":"H","1I":"G","1K":"L","1L":"I"},
+"BEFGHIKL":{"1A":"E","1B":"G","1D":"B","1E":"F","1G":"I","1I":"H","1K":"L","1L":"K"},
+"BEFGHJKL":{"1A":"E","1B":"J","1D":"B","1E":"F","1G":"H","1I":"G","1K":"L","1L":"K"},
+"BEFGIJKL":{"1A":"E","1B":"J","1D":"B","1E":"F","1G":"I","1I":"G","1K":"L","1L":"K"},
+"BEFHIJKL":{"1A":"E","1B":"J","1D":"B","1E":"F","1G":"I","1I":"H","1K":"L","1L":"K"},
+"BEGHIJKL":{"1A":"E","1B":"J","1D":"I","1E":"B","1G":"H","1I":"G","1K":"L","1L":"K"},
+"BFGHIJKL":{"1A":"H","1B":"J","1D":"B","1E":"F","1G":"I","1I":"G","1K":"L","1L":"K"},
+"CDEFGHIJ":{"1A":"C","1B":"G","1D":"J","1E":"D","1G":"H","1I":"F","1K":"E","1L":"I"},
+"CDEFGHIK":{"1A":"C","1B":"G","1D":"E","1E":"D","1G":"H","1I":"F","1K":"I","1L":"K"},
+"CDEFGHIL":{"1A":"C","1B":"G","1D":"E","1E":"D","1G":"H","1I":"F","1K":"L","1L":"I"},
+"CDEFGHJK":{"1A":"C","1B":"G","1D":"J","1E":"D","1G":"H","1I":"F","1K":"E","1L":"K"},
+"CDEFGHJL":{"1A":"C","1B":"G","1D":"J","1E":"D","1G":"H","1I":"F","1K":"L","1L":"E"},
+"CDEFGHKL":{"1A":"C","1B":"G","1D":"E","1E":"D","1G":"H","1I":"F","1K":"L","1L":"K"},
+"CDEFGIJK":{"1A":"C","1B":"G","1D":"E","1E":"D","1G":"J","1I":"F","1K":"I","1L":"K"},
+"CDEFGIJL":{"1A":"C","1B":"G","1D":"E","1E":"D","1G":"J","1I":"F","1K":"L","1L":"I"},
+"CDEFGIKL":{"1A":"C","1B":"G","1D":"E","1E":"D","1G":"I","1I":"F","1K":"L","1L":"K"},
+"CDEFGJKL":{"1A":"C","1B":"G","1D":"E","1E":"D","1G":"J","1I":"F","1K":"L","1L":"K"},
+"CDEFHIJK":{"1A":"C","1B":"J","1D":"E","1E":"D","1G":"H","1I":"F","1K":"I","1L":"K"},
+"CDEFHIJL":{"1A":"C","1B":"J","1D":"E","1E":"D","1G":"H","1I":"F","1K":"L","1L":"I"},
+"CDEFHIKL":{"1A":"C","1B":"E","1D":"I","1E":"D","1G":"H","1I":"F","1K":"L","1L":"K"},
+"CDEFHJKL":{"1A":"C","1B":"J","1D":"E","1E":"D","1G":"H","1I":"F","1K":"L","1L":"K"},
+"CDEFIJKL":{"1A":"C","1B":"J","1D":"E","1E":"D","1G":"I","1I":"F","1K":"L","1L":"K"},
+"CDEGHIJK":{"1A":"E","1B":"G","1D":"J","1E":"C","1G":"H","1I":"D","1K":"I","1L":"K"},
+"CDEGHIJL":{"1A":"E","1B":"G","1D":"J","1E":"C","1G":"H","1I":"D","1K":"L","1L":"I"},
+"CDEGHIKL":{"1A":"E","1B":"G","1D":"I","1E":"C","1G":"H","1I":"D","1K":"L","1L":"K"},
+"CDEGHJKL":{"1A":"E","1B":"G","1D":"J","1E":"C","1G":"H","1I":"D","1K":"L","1L":"K"},
+"CDEGIJKL":{"1A":"E","1B":"G","1D":"I","1E":"C","1G":"J","1I":"D","1K":"L","1L":"K"},
+"CDEHIJKL":{"1A":"E","1B":"J","1D":"I","1E":"C","1G":"H","1I":"D","1K":"L","1L":"K"},
+"CDFGHIJK":{"1A":"C","1B":"G","1D":"J","1E":"D","1G":"H","1I":"F","1K":"I","1L":"K"},
+"CDFGHIJL":{"1A":"C","1B":"G","1D":"J","1E":"D","1G":"H","1I":"F","1K":"L","1L":"I"},
+"CDFGHIKL":{"1A":"C","1B":"G","1D":"I","1E":"D","1G":"H","1I":"F","1K":"L","1L":"K"},
+"CDFGHJKL":{"1A":"C","1B":"G","1D":"J","1E":"D","1G":"H","1I":"F","1K":"L","1L":"K"},
+"CDFGIJKL":{"1A":"C","1B":"G","1D":"I","1E":"D","1G":"J","1I":"F","1K":"L","1L":"K"},
+"CDFHIJKL":{"1A":"C","1B":"J","1D":"I","1E":"D","1G":"H","1I":"F","1K":"L","1L":"K"},
+"CDGHIJKL":{"1A":"H","1B":"G","1D":"I","1E":"C","1G":"J","1I":"D","1K":"L","1L":"K"},
+"CEFGHIJK":{"1A":"E","1B":"G","1D":"J","1E":"C","1G":"H","1I":"F","1K":"I","1L":"K"},
+"CEFGHIJL":{"1A":"E","1B":"G","1D":"J","1E":"C","1G":"H","1I":"F","1K":"L","1L":"I"},
+"CEFGHIKL":{"1A":"E","1B":"G","1D":"I","1E":"C","1G":"H","1I":"F","1K":"L","1L":"K"},
+"CEFGHJKL":{"1A":"E","1B":"G","1D":"J","1E":"C","1G":"H","1I":"F","1K":"L","1L":"K"},
+"CEFGIJKL":{"1A":"E","1B":"G","1D":"I","1E":"C","1G":"J","1I":"F","1K":"L","1L":"K"},
+"CEFHIJKL":{"1A":"E","1B":"J","1D":"I","1E":"C","1G":"H","1I":"F","1K":"L","1L":"K"},
+"CEGHIJKL":{"1A":"E","1B":"J","1D":"I","1E":"C","1G":"H","1I":"G","1K":"L","1L":"K"},
+"CFGHIJKL":{"1A":"H","1B":"G","1D":"I","1E":"C","1G":"J","1I":"F","1K":"L","1L":"K"},
+"DEFGHIJK":{"1A":"E","1B":"G","1D":"J","1E":"D","1G":"H","1I":"F","1K":"I","1L":"K"},
+"DEFGHIJL":{"1A":"E","1B":"G","1D":"J","1E":"D","1G":"H","1I":"F","1K":"L","1L":"I"},
+"DEFGHIKL":{"1A":"E","1B":"G","1D":"I","1E":"D","1G":"H","1I":"F","1K":"L","1L":"K"},
+"DEFGHJKL":{"1A":"E","1B":"G","1D":"J","1E":"D","1G":"H","1I":"F","1K":"L","1L":"K"},
+"DEFGIJKL":{"1A":"E","1B":"G","1D":"I","1E":"D","1G":"J","1I":"F","1K":"L","1L":"K"},
+"DEFHIJKL":{"1A":"E","1B":"J","1D":"I","1E":"D","1G":"H","1I":"F","1K":"L","1L":"K"},
+"DEGHIJKL":{"1A":"E","1B":"J","1D":"I","1E":"D","1G":"H","1I":"G","1K":"L","1L":"K"},
+"DFGHIJKL":{"1A":"H","1B":"G","1D":"I","1E":"D","1G":"J","1I":"F","1K":"L","1L":"K"},
+"EFGHIJKL":{"1A":"E","1B":"J","1D":"I","1E":"F","1G":"H","1I":"G","1K":"L","1L":"K"}
+};
+
+function buildAnnexC(){
+  return ANNEX_C;
+}
+
+
+// ── Calcular tabla de un grupo ──
+function calcGroupTable(grupo){
+  const matches=FIXTURE_GRUPOS[grupo]||[];
+  const teams={};
+  
+  // Inicializar
+  (GROUPS[grupo]?.teams||[]).forEach(t=>{
+    teams[t]={name:t,pts:0,gf:0,ga:0,gd:0,played:0,wins:0,draws:0,losses:0,fairplay:0};
+  });
+  
+  matches.forEach(m=>{
+    const res=resultadosDB[getMatchIndex()[m.home+"|||"+m.away]];
+    if(!res||!res.played)return;
+    
+    const h=res.home_score, a=res.away_score;
+    if(!teams[m.home]||!teams[m.away])return;
+    
+    teams[m.home].gf+=h; teams[m.home].ga+=a; teams[m.home].gd+=h-a; teams[m.home].played++;
+    teams[m.away].gf+=a; teams[m.away].ga+=h; teams[m.away].gd+=a-h; teams[m.away].played++;
+    
+    // Fair play (tarjetas rojas penalizan más)
+    if(res.tarjeta_home)teams[m.home].fairplay-=3;
+    if(res.tarjeta_away)teams[m.away].fairplay-=3;
+    
+    if(h>a){
+      teams[m.home].pts+=3; teams[m.home].wins++;
+      teams[m.away].losses++;
+    } else if(h<a){
+      teams[m.away].pts+=3; teams[m.away].wins++;
+      teams[m.home].losses++;
+    } else {
+      teams[m.home].pts+=1; teams[m.home].draws++;
+      teams[m.away].pts+=1; teams[m.away].draws++;
+    }
+  });
+  
+  // Ordenar: pts → gd → gf → fairplay → ranking FIFA
+  return Object.values(teams).sort((a,b)=>{
+    if(b.pts!==a.pts)return b.pts-a.pts;
+    if(b.gd!==a.gd)return b.gd-a.gd;
+    if(b.gf!==a.gf)return b.gf-a.gf;
+    if(b.fairplay!==a.fairplay)return b.fairplay-a.fairplay;
+    return (FIFA_RANKING[a.name]||99)-(FIFA_RANKING[b.name]||99);
+  });
+}
+
+// ── Obtener todos los clasificados ──
+function getClassified(){
+  const classified={firsts:{},seconds:{},thirds:[]};
+  
+  "ABCDEFGHIJKL".split('').forEach(g=>{
+    const table=calcGroupTable(g);
+    if(table.length>=1)classified.firsts[g]=table[0];
+    if(table.length>=2)classified.seconds[g]=table[1];
+    if(table.length>=3)classified.thirds.push({...table[2],group:g});
+  });
+  
+  // Ranking mejores 8 terceros
+  classified.thirds.sort((a,b)=>{
+    if(b.pts!==a.pts)return b.pts-a.pts;
+    if(b.gd!==a.gd)return b.gd-a.gd;
+    if(b.gf!==a.gf)return b.gf-a.gf;
+    if(b.fairplay!==a.fairplay)return b.fairplay-a.fairplay;
+    return (FIFA_RANKING[a.name]||99)-(FIFA_RANKING[b.name]||99);
+  });
+  
+  classified.best8thirds=classified.thirds.slice(0,8);
+  classified.thirdsOut=classified.thirds.slice(8);
+  
+  return classified;
+}
+
+// ── Resolver bracket R32 usando Anexo C ──
+function resolveR32Bracket(){
+  const classified=getClassified();
+  const {firsts,seconds,best8thirds}=classified;
+  
+  if(best8thirds.length<8){
+    // No todos los grupos terminaron
+    return null;
+  }
+  
+  // Identificar qué grupos clasificaron terceros
+  const qualifiedGroups=best8thirds.map(t=>t.group).sort().join('');
+  
+  // Buscar en Anexo C
+  const annexC=buildAnnexC();
+  const mapping=annexC[qualifiedGroups];
+  
+  // Map de grupo → equipo tercero clasificado
+  const thirdByGroup={};
+  best8thirds.forEach(t=>{thirdByGroup[t.group]=t;});
+  
+  // Resolver cada partido
+  const resolved={};
+  BRACKET_R32.forEach(match=>{
+    const home=match.home.type==="1st"?firsts[match.home.group]:seconds[match.home.group];
+    let away=null;
+    
+    if(match.away.type==="2nd"){
+      away=seconds[match.away.group];
+    } else if(match.away.type==="3rd"&&mapping){
+      // Slot del anexo C
+      const slotKey="1"+match.home.group; // ej "1A","1E", etc
+      const thirdGroup=mapping[slotKey];
+      if(thirdGroup)away=thirdByGroup[thirdGroup];
+    }
+    
+    resolved[match.id]={...match,homeTeam:home,awayTeam:away};
+  });
+  
+  return resolved;
+}
+
+// ── Guardar clasificados en Sheet ──
+async function saveClassifiedToSheet(){
+  if(!isAdmin)return;
+  try{
+    const classified=getClassified();
+    const bracket=resolveR32Bracket();
+    await postToSheet({
+      type:"clasificados",
+      firsts:Object.fromEntries(Object.entries(classified.firsts).map(([g,t])=>[g,t.name])),
+      seconds:Object.fromEntries(Object.entries(classified.seconds).map(([g,t])=>[g,t.name])),
+      best8thirds:classified.best8thirds.map(t=>({name:t.name,group:t.group})),
+      bracket:bracket?Object.fromEntries(Object.entries(bracket).map(([id,m])=>[id,{
+        home:m.homeTeam?.name,away:m.awayTeam?.name
+      }])):null
+    });
+  }catch(e){SyncLogger.error("Error guardando clasificados",e.message);}
+}
+
+
 function getMatchIndex(){
   if(_matchIndex)return _matchIndex;
   _matchIndex={};
@@ -2302,6 +2995,51 @@ function renderGrupoMatches(g){
   }).join("");
 }
 
+
+// ── Resolver nombre real de equipo en bracket eliminatorio ──
+function resolveElimTeam(label){
+  // Si ya es un nombre real de equipo, devolverlo
+  if(FLAGS[label])return label;
+  
+  try{
+    const classified=getClassified();
+    const bracket=resolveR32Bracket();
+    
+    // Resolver 1ros y 2dos directos
+    const m1=label.match(/^1ro Grupo ([A-L])$/);
+    if(m1)return classified.firsts[m1[1]]?.name||label;
+    
+    const m2=label.match(/^2do Grupo ([A-L])$/);
+    if(m2)return classified.seconds[m2[1]]?.name||label;
+    
+    // 3ros: resolver via Annexo C
+    const m3=label.match(/^3ro ([A-L\/]+)$/);
+    if(m3&&bracket){
+      // Buscar en el bracket resuelto qué equipo va en este slot
+      for(const [id,match] of Object.entries(bracket)){
+        if(match.awayTeam&&match.away?.type==="3rd"){
+          return match.awayTeam?.name||label;
+        }
+      }
+    }
+    
+    // Ganadores de rondas anteriores
+    if(label.startsWith("Gan. M")){
+      const matchNum=parseInt(label.replace("Gan. M",""));
+      const res=Object.values(resultadosDB).find(r=>r.match_num===matchNum);
+      if(res?.winner)return res.winner;
+    }
+  }catch(e){}
+  
+  return label; // fallback al texto descriptivo
+}
+
+// ── Resolver flag URL para bracket (acepta nombre real o placeholder) ──
+function resolveElimFlag(label){
+  const resolved=resolveElimTeam(label);
+  return FLAGS[resolved]?flagUrl(resolved):null;
+}
+
 function renderElimMatches(phId){
   const BRACKET={"dieciseis": [{"home": "2do Grupo A", "away": "2do Grupo B", "match": 73, "fecha": "dom, 28 jun", "time": "16:00 ARG", "stadium": "SoFi Stadium", "ciudad": "Los Ángeles"}, {"home": "1ro Grupo C", "away": "2do Grupo F", "match": 76, "fecha": "lun, 29 jun", "time": "14:00 ARG", "stadium": "NRG Stadium", "ciudad": "Houston"}, {"home": "1ro Grupo E", "away": "3ro A/B/C/D/F", "match": 74, "fecha": "lun, 29 jun", "time": "17:30 ARG", "stadium": "Gillette Stadium", "ciudad": "Boston"}, {"home": "1ro Grupo F", "away": "2do Grupo C", "match": 75, "fecha": "lun, 29 jun", "time": "22:00 ARG", "stadium": "Estadio BBVA", "ciudad": "Monterrey"}, {"home": "2do Grupo E", "away": "2do Grupo I", "match": 78, "fecha": "mar, 30 jun", "time": "14:00 ARG", "stadium": "AT&T Stadium", "ciudad": "Dallas"}, {"home": "1ro Grupo I", "away": "3ro C/D/F/G/H", "match": 77, "fecha": "mar, 30 jun", "time": "18:00 ARG", "stadium": "MetLife Stadium", "ciudad": "Nueva York"}, {"home": "1ro Grupo A", "away": "3ro C/E/F/H/I", "match": 79, "fecha": "mar, 30 jun", "time": "22:00 ARG", "stadium": "Estadio Azteca", "ciudad": "Cdad. México"}, {"home": "1ro Grupo L", "away": "3ro E/H/I/J/K", "match": 80, "fecha": "mié, 1 jul", "time": "13:00 ARG", "stadium": "Mercedes-Benz Stadium", "ciudad": "Atlanta"}, {"home": "1ro Grupo G", "away": "3ro A/E/H/I/J", "match": 82, "fecha": "mié, 1 jul", "time": "17:00 ARG", "stadium": "Lumen Field", "ciudad": "Seattle"}, {"home": "1ro Grupo D", "away": "3ro B/E/F/I/J", "match": 81, "fecha": "mié, 1 jul", "time": "21:00 ARG", "stadium": "Levi's Stadium", "ciudad": "San Francisco"}, {"home": "2do Grupo K", "away": "2do Grupo L", "match": 83, "fecha": "jue, 2 jul", "time": "13:00 ARG", "stadium": "BMO Field", "ciudad": "Toronto"}, {"home": "1ro Grupo H", "away": "2do Grupo J", "match": 84, "fecha": "jue, 2 jul", "time": "16:00 ARG", "stadium": "SoFi Stadium", "ciudad": "Los Ángeles"}, {"home": "1ro Grupo B", "away": "3ro E/F/G/I/J", "match": 85, "fecha": "jue, 2 jul", "time": "21:00 ARG", "stadium": "BC Place", "ciudad": "Vancouver"}, {"home": "2do Grupo D", "away": "2do Grupo G", "match": 88, "fecha": "vie, 3 jul", "time": "15:00 ARG", "stadium": "AT&T Stadium", "ciudad": "Dallas"}, {"home": "1ro Grupo J", "away": "2do Grupo H", "match": 86, "fecha": "vie, 3 jul", "time": "19:00 ARG", "stadium": "Hard Rock Stadium", "ciudad": "Miami"}, {"home": "1ro Grupo K", "away": "3ro D/E/I/J/L", "match": 87, "fecha": "vie, 3 jul", "time": "22:30 ARG", "stadium": "GEHA Field Arrowhead", "ciudad": "Kansas City"}], "octavos": [{"home": "Gan. M73", "away": "Gan. M75", "match": 90, "fecha": "sáb, 4 jul", "time": "14:00 ARG", "stadium": "NRG Stadium", "ciudad": "Houston"}, {"home": "Gan. M74", "away": "Gan. M77", "match": 89, "fecha": "sáb, 4 jul", "time": "18:00 ARG", "stadium": "Lincoln Financial Field", "ciudad": "Filadelfia"}, {"home": "Gan. M76", "away": "Gan. M78", "match": 91, "fecha": "dom, 5 jul", "time": "17:00 ARG", "stadium": "MetLife Stadium", "ciudad": "Nueva York"}, {"home": "Gan. M79", "away": "Gan. M80", "match": 92, "fecha": "dom, 5 jul", "time": "21:00 ARG", "stadium": "Estadio Azteca", "ciudad": "Cdad. México"}, {"home": "Gan. M83", "away": "Gan. M84", "match": 93, "fecha": "lun, 6 jul", "time": "16:00 ARG", "stadium": "AT&T Stadium", "ciudad": "Dallas"}, {"home": "Gan. M81", "away": "Gan. M82", "match": 94, "fecha": "lun, 6 jul", "time": "21:00 ARG", "stadium": "Lumen Field", "ciudad": "Seattle"}, {"home": "Gan. M86", "away": "Gan. M88", "match": 95, "fecha": "mar, 7 jul", "time": "13:00 ARG", "stadium": "Mercedes-Benz Stadium", "ciudad": "Atlanta"}, {"home": "Gan. M85", "away": "Gan. M87", "match": 96, "fecha": "mar, 7 jul", "time": "17:00 ARG", "stadium": "BC Place", "ciudad": "Vancouver"}], "cuartos": [{"home": "Gan. M89", "away": "Gan. M90", "match": 97, "fecha": "jue, 9 jul", "time": "21:00 ARG", "stadium": "Gillette Stadium", "ciudad": "Boston"}, {"home": "Gan. M93", "away": "Gan. M94", "match": 98, "fecha": "vie, 10 jul", "time": "21:00 ARG", "stadium": "SoFi Stadium", "ciudad": "Los Ángeles"}, {"home": "Gan. M91", "away": "Gan. M92", "match": 99, "fecha": "sáb, 11 jul", "time": "17:00 ARG", "stadium": "Hard Rock Stadium", "ciudad": "Miami"}, {"home": "Gan. M95", "away": "Gan. M96", "match": 100, "fecha": "sáb, 11 jul", "time": "21:00 ARG", "stadium": "GEHA Field Arrowhead", "ciudad": "Kansas City"}], "semis": [{"home": "Gan. M97", "away": "Gan. M98", "match": 101, "fecha": "mar, 14 jul", "time": "21:00 ARG", "stadium": "AT&T Stadium", "ciudad": "Dallas"}, {"home": "Gan. M99", "away": "Gan. M100", "match": 102, "fecha": "mié, 15 jul", "time": "21:00 ARG", "stadium": "Mercedes-Benz Stadium", "ciudad": "Atlanta"}], "3er": [{"home": "Perd. Semi 1", "away": "Perd. Semi 2", "match": 103, "fecha": "sáb, 18 jul", "time": "16:00 ARG", "stadium": "Hard Rock Stadium", "ciudad": "Miami"}], "final": [{"home": "Gan. Semi 1", "away": "Gan. Semi 2", "match": 104, "fecha": "dom, 19 jul", "time": "16:00 ARG", "stadium": "MetLife Stadium", "ciudad": "Nueva York"}]};
   const matches=BRACKET[phId]||[];
@@ -2313,12 +3051,22 @@ function renderElimMatches(phId){
     const res=resultadosDB[mid]||null;
     const lk=!!(res&&res.played);
     const bon=userBonus[mid];
-    const fL=FLAGS[m.home]?`<img class="t-flag" src="${flagUrl(m.home)}" onerror="this.style.display='none'">`:`<div class="t-flag-ph"></div>`;
-    const fR=FLAGS[m.away]?`<img class="t-flag" src="${flagUrl(m.away)}" onerror="this.style.display='none'">`:`<div class="t-flag-ph"></div>`;
+    const homeResolved=resolveElimTeam(m.home);
+    const awayResolved=resolveElimTeam(m.away);
+    const homeFlag=resolveElimFlag(m.home);
+    const awayFlag=resolveElimFlag(m.away);
+    const fLurl=homeFlag;
+    const fRurl=awayFlag;
+    const fL=homeFlag?`<img class="t-flag" src="${homeFlag}" onerror="this.style.display='none'">`:`<div class="t-flag-ph"></div>`;
+    const fR=awayFlag?`<img class="t-flag" src="${awayFlag}" onerror="this.style.display='none'">`:`<div class="t-flag-ph"></div>`;
+    const homeDisplay=FLAGS[homeResolved]?homeResolved:m.home;
+    const awayDisplay=FLAGS[awayResolved]?awayResolved:m.away;
     return `<div class="match-card${lk?" locked":""}">
-      <div class="match-body">
-        <div class="match-teams">
-          <div class="team-l">${fL}<div class="t-name">${m.home}</div></div>
+      <div class="match-flag-area">
+        ${fLurl?`<div class="match-flag-l"><img src="${fLurl}" alt=""></div>`:""}
+        ${fRurl?`<div class="match-flag-r"><img src="${fRurl}" alt=""></div>`:""}
+        <div class="match-flag-content">
+          <div class="team-l"><div class="t-name">${homeDisplay}</div></div>
           <div class="match-mid">
             <div class="score-row">
               <input class="s-inp" type="number" min="0" max="99" value="${pr.home??''}" placeholder="–"
@@ -2332,12 +3080,13 @@ function renderElimMatches(phId){
                 ${lk?"disabled":""} title="Bonus: duplica puntos">⭐</button>
             </div>
           </div>
-          <div class="team-r"><div class="t-name">${m.away}</div>${fR}</div>
+          <div class="team-r"><div class="t-name">${awayDisplay}</div></div>
         </div>
-        <div class="match-meta">
-          <div class="ml">${m.fecha} | ${m.time}</div>
-          <div class="mr">${m.stadium} | ${m.ciudad}</div>
         </div>
+      </div>
+      <div class="match-meta">
+        <div class="ml">${m.fecha} | ${m.time}</div>
+        <div class="mr">${m.stadium} | ${m.ciudad}</div>
       </div>
     </div>`;
   }).join("");
