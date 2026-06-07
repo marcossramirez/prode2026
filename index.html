@@ -430,6 +430,9 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
   height:90px;
   flex-shrink:0;
 }
+.match-flag-area.elim{
+  height:120px;
+}
 .match-flag-l{
   position:absolute;top:0;left:0;width:50%;height:100%;
   overflow:hidden;pointer-events:none;z-index:1;
@@ -505,6 +508,19 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
 .s-inp::-webkit-outer-spin-button,.s-inp::-webkit-inner-spin-button{-webkit-appearance:none;}
 .s-inp:focus{border-color:var(--green);background:rgba(0,255,71,.05);box-shadow:0 0 0 3px rgba(0,255,71,.1);}
 .s-inp:disabled{background:rgba(255,255,255,.04);color:rgba(255,255,255,.3);cursor:not-allowed;border-color:transparent;}
+.pen-inp{
+  width:36px;height:36px;border-radius:8px;text-align:center;
+  background:rgba(255,255,255,.06);border:2px dashed rgba(255,255,255,.2);
+  color:rgba(255,255,255,.4);font-family:"Barlow Condensed",sans-serif;font-weight:900;font-size:18px;
+  outline:none;transition:all .2s;-moz-appearance:textfield;
+}
+.pen-inp::-webkit-outer-spin-button,.pen-inp::-webkit-inner-spin-button{-webkit-appearance:none;}
+.pen-inp:not(:disabled){border-color:rgba(58,134,255,.6);color:var(--white);background:rgba(58,134,255,.1);}
+.pen-inp:not(:disabled):focus{border-color:#3a86ff;box-shadow:0 0 0 3px rgba(58,134,255,.2);}
+.pen-inp:disabled{cursor:not-allowed;}
+.pen-label{font-size:9px;color:rgba(255,255,255,.3);text-align:center;letter-spacing:1px;font-family:"Barlow Condensed",sans-serif;display:block;margin-top:2px;}
+.pen-wrap{display:flex;flex-direction:column;align-items:center;gap:2px;}
+.elim-mid{display:flex;flex-direction:column;align-items:center;gap:4px;}
 .s-vs{
   font-family:"Barlow Condensed",sans-serif;font-weight:900;font-size:13px;
   color:var(--dim);letter-spacing:1px;width:26px;text-align:center;
@@ -873,7 +889,7 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
           <span class="lk">🔒</span><span>Los especiales están cerrados — el torneo ya comenzó.</span>
         </div>
         <div class="esp-card">
-          <div class="esp-row"><div class="esp-lbl">Balón de Oro — Mejor jugador del torneo<span class="esp-pts">4 PTS</span></div><input class="esp-inp" id="esp1" placeholder="Ej: Lamine Yamal"></div>
+          <div class="esp-row"><div class="esp-lbl">Balón de Oro — Mejor jugador<span class="esp-pts">4 PTS</span></div><input class="esp-inp" id="esp1" placeholder="Ej: Lamine Yamal"></div>
           <div class="esp-row"><div class="esp-lbl">Bota de Oro — Máximo goleador<span class="esp-pts">6 PTS</span></div><input class="esp-inp" id="esp2" placeholder="Ej: Kylian Mbappé"></div>
           <div class="esp-row"><div class="esp-lbl">Guante de Oro — Mejor arquero<span class="esp-pts">4 PTS</span></div><input class="esp-inp" id="esp3" placeholder="Ej: Emiliano Martínez"></div>
           <div class="esp-row"><div class="esp-lbl">Mejor Jugador Joven — Sub 21<span class="esp-pts">4 PTS</span></div><input class="esp-inp" id="esp4" placeholder="Ej: Lamine Yamal"></div>
@@ -3082,18 +3098,36 @@ function renderElimMatches(phId){
     const homeDisplay=FLAGS[homeResolved]?homeResolved:m.home;
     const awayDisplay=FLAGS[awayResolved]?awayResolved:m.away;
     return `<div class="match-card${lk?" locked":""}">
-      <div class="match-flag-area">
+      <div class="match-flag-area elim">
         ${fLurl?`<div class="match-flag-l"><img src="${fLurl}" alt=""></div>`:""}
         ${fRurl?`<div class="match-flag-r"><img src="${fRurl}" alt=""></div>`:""}
         <div class="match-flag-content">
-          <div class="team-l"><div class="t-name">${homeDisplay}</div></div>
-          <div class="match-mid">
-            <div class="score-row">
+          <div class="team-l">
+            <div class="t-name">${homeDisplay}</div>
+          </div>
+          <div class="match-mid elim-mid">
+            <div class="score-row" style="align-items:flex-start;gap:4px;">
+              <div class="pen-wrap">
+                <input class="pen-inp" type="number" min="0" max="20"
+                  value="${pr.pen_home??''}" placeholder="–"
+                  ${(lk||!isDrawn(pr))?"disabled":""}
+                  onchange="savePenalElim('${mid}','home',this.value)"
+                  title="Goles en penales">
+                <span class="pen-label">PENS</span>
+              </div>
               <input class="s-inp" type="number" min="0" max="99" value="${pr.home??''}" placeholder="–"
-                ${lk?"disabled":""} onchange="savePronostico('${mid}','home',this.value)">
+                ${lk?"disabled":""} onchange="savePronosticoElim('${mid}','home',this.value)">
               <span class="${lk?"s-lock":"s-vs"}">${lk?"🔒":"VS"}</span>
               <input class="s-inp" type="number" min="0" max="99" value="${pr.away??''}" placeholder="–"
-                ${lk?"disabled":""} onchange="savePronostico('${mid}','away',this.value)">
+                ${lk?"disabled":""} onchange="savePronosticoElim('${mid}','away',this.value)">
+              <div class="pen-wrap">
+                <input class="pen-inp" type="number" min="0" max="20"
+                  value="${pr.pen_away??''}" placeholder="–"
+                  ${(lk||!isDrawn(pr))?"disabled":""}
+                  onchange="savePenalElim('${mid}','away',this.value)"
+                  title="Goles en penales">
+                <span class="pen-label">PENS</span>
+              </div>
             </div>
             <div class="bonus-row">
               <div class="match-card-action">
@@ -3108,8 +3142,9 @@ function renderElimMatches(phId){
               </div>
             </div>
           </div>
-          <div class="team-r"><div class="t-name">${awayDisplay}</div></div>
-        </div>
+          <div class="team-r">
+            <div class="t-name">${awayDisplay}</div>
+          </div>
         </div>
       </div>
       <div class="match-meta">
@@ -3211,6 +3246,53 @@ function renderAdmin(){
         <button class="btn-save" onclick="saveRes('${m.id}')">GUARDAR</button>
       </div>
     </div>`).join("");
+}
+
+// ── Verificar si el pronóstico actual es empate ──
+function isDrawn(pr){
+  const h=parseInt(pr.home), a=parseInt(pr.away);
+  return !isNaN(h)&&!isNaN(a)&&h===a;
+}
+
+// ── Guardar pronóstico eliminatoria (re-habilita/deshabilita penales) ──
+async function savePronosticoElim(mid, side, val){
+  if(!userPron[mid])userPron[mid]={};
+  userPron[mid][side]=val===''?null:parseInt(val);
+  
+  // Habilitar/deshabilitar inputs de penales según si hay empate
+  const card=document.querySelector(`[data-mid="${mid}"]`);
+  const penInputs=document.querySelectorAll(`.pen-inp[data-mid="${mid}"]`);
+  const drawn=isDrawn(userPron[mid]);
+  penInputs.forEach(inp=>{
+    inp.disabled=!drawn;
+    if(!drawn){inp.value=''; userPron[mid].pen_home=null; userPron[mid].pen_away=null;}
+  });
+  
+  await savePronostico(mid, side, val);
+}
+
+// ── Guardar goles de penales en eliminatoria ──
+async function savePenalElim(mid, side, val){
+  if(!userPron[mid])userPron[mid]={};
+  const key=side==='home'?'pen_home':'pen_away';
+  userPron[mid][key]=val===''?null:parseInt(val);
+  
+  await postToSheet({
+    type:"pronostico",
+    mail:currentPlayer.mail,
+    alias:currentPlayer.alias,
+    match_id:mid,
+    home_score:userPron[mid]?.home??null,
+    away_score:userPron[mid]?.away??null,
+    pen_home:userPron[mid]?.pen_home??null,
+    pen_away:userPron[mid]?.pen_away??null,
+    bonus:userBonus[mid]||false,
+    penal_home:userPenal[mid]?.home||false,
+    penal_away:userPenal[mid]?.away||false,
+    tarjeta_home:userTarjeta[mid]?.home||false,
+    tarjeta_away:userTarjeta[mid]?.away||false
+  });
+  showToast("✓ Penales guardados");
 }
 
 async function togglePenal(id,side,btn){
