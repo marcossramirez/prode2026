@@ -250,12 +250,12 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
 .profile-card{
   background:var(--blue);
   border-radius:20px;padding:18px;
-  display:flex;align-items:center;gap:16px;
+  display:flex;align-items:center;gap:12px;
   position:relative;overflow:hidden;
   width:100%;box-sizing:border-box;
 }
-.profile-left{display:flex;flex-direction:column;gap:10px;flex:1;min-width:0;}
-.profile-right{flex-shrink:0;display:flex;align-items:center;}
+.profile-left{display:flex;flex-direction:column;gap:8px;flex:1;min-width:0;}
+.profile-right{flex-shrink:0;display:flex;align-items:center;justify-content:center;width:145px;height:145px;}
 
 .profile-av{
   width:80px;height:80px;border-radius:50%;flex-shrink:0;
@@ -971,6 +971,30 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
 ═══════════════════════════════════════════ */
 const SHEET_URL="https://script.google.com/macros/s/AKfycbweIK2lRu8H1SoZv4xOxSZmGLbjkRXAi8h3m_X7ioke2VGemr0lb3nj76gBqMsASR3H/exec";
 const SYNC_SECRET="f2d62ae2a83581813bc2d9529f80e410";
+
+// ── Modo de prueba para visualizar banderas en eliminatorias ──
+// Poner en true para ver todas las banderas con equipos simulados
+const ELIMINATION_PREVIEW_MODE=false;
+
+// Equipos de prueba para cada slot cuando ELIMINATION_PREVIEW_MODE=true
+const PREVIEW_TEAMS={
+  "1ro Grupo A":"Argentina","2do Grupo A":"México",
+  "1ro Grupo B":"Brasil","2do Grupo B":"Alemania",
+  "1ro Grupo C":"Francia","2do Grupo C":"España",
+  "1ro Grupo D":"Portugal","2do Grupo D":"Inglaterra",
+  "1ro Grupo E":"Países Bajos","2do Grupo E":"Bélgica",
+  "1ro Grupo F":"Croacia","2do Grupo F":"Uruguay",
+  "1ro Grupo G":"Japón","2do Grupo G":"Marruecos",
+  "1ro Grupo H":"EE.UU.","2do Grupo H":"Senegal",
+  "1ro Grupo I":"Noruega","2do Grupo I":"Ecuador",
+  "1ro Grupo J":"Colombia","2do Grupo J":"Turquía",
+  "1ro Grupo K":"Australia","2do Grupo K":"Suecia",
+  "1ro Grupo L":"Corea del Sur","2do Grupo L":"Ghana",
+  "3ro A/B/C/D/F":"Suiza","3ro C/D/F/G/H":"Irán",
+  "3ro B/E/F/I/J":"Qatar","3ro A/E/H/I/J":"Canadá",
+  "3ro C/E/F/H/I":"Escocia","3ro E/H/I/J/K":"Túnez",
+  "3ro D/E/I/J/L":"Haití","3ro E/F/G/I/J":"Panamá",
+};
 const API_FOOTBALL_KEY="0dc2cb88b0952d45c1c2f11e7f4fcb84";
 const WC2026_ID=1; // ID del Mundial 2026 en API-Football
 
@@ -3169,10 +3193,10 @@ function renderRanking(player){
   // Calcular métricas para el recuadro de perfil
   const metr=calcMetricas(player.mail);
   document.getElementById("profStats").innerHTML=metr?`
-    <div class="profile-stat"><span>Precisión</span><span class="psv" style="color:#00FF47">${metr.precision}%</span></div>
-    <div class="profile-stat"><span>Efectividad</span><span class="psv" style="color:#00FF47">${metr.efectividad}%</span></div>
     <div class="profile-stat"><span>▲ Ganados</span><span class="psv" style="color:#00FF47">${metr.pctGanados}%</span></div>
-    <div class="profile-stat"><span>▼ Perdidos</span><span class="psv" style="color:#E8292A">${metr.pctPerdidos}%</span></div>`:`
+    <div class="profile-stat"><span>▼ Perdidos</span><span class="psv" style="color:#E8292A">${metr.pctPerdidos}%</span></div>
+    <div class="profile-stat"><span>🔥 Racha</span><span class="psv" style="color:#00FF47">${metr.pg}</span></div>
+    <div class="profile-stat" style="margin-top:4px;"><span style="font-size:9px;color:var(--dim);letter-spacing:1px">ESTILO</span><span class="psv" style="color:#00FF47;font-size:11px">${getEstilo(metr.riesgo)}</span></div>`:`
     <div class="profile-stat" style="color:rgba(255,255,255,.4);font-size:11px">Jugá partidos para ver tus métricas</div>`;
   // Gráfico araña en el lado derecho
   const spiderEl=document.getElementById("profSpider");
@@ -3382,6 +3406,8 @@ function renderGrupoMatches(g){
 function resolveElimTeam(label){
   // Si ya es un nombre real de equipo conocido, devolverlo
   if(FLAGS[label])return label;
+  // Modo preview: usar equipo simulado
+  if(ELIMINATION_PREVIEW_MODE&&PREVIEW_TEAMS[label])return PREVIEW_TEAMS[label];
   
   // Solo resolver si es un placeholder de posición
   const m1=label.match(/^1ro Grupo ([A-L])$/);
@@ -3630,13 +3656,17 @@ function getElimMatches(){
   const all=[];
   phases.forEach(ph=>{
     const matches=BRACKET_R32[ph]||[];
-    matches.forEach(m=>{
-      const mid=`elim_${ph}_${m.match}`;
+    matches.forEach((m,i)=>{
+      const mid=`elim_${ph}_${i}`; // igual que renderElimMatches
       const res=resultadosDB[mid]||null;
       const homeDisplay=resolveElimTeam(m.home);
       const awayDisplay=resolveElimTeam(m.away);
+      const fLurl=resolveElimFlag(m.home);
+      const fRurl=resolveElimFlag(m.away);
       all.push({
         id:mid, home:homeDisplay, away:awayDisplay,
+        homeRaw:m.home, awayRaw:m.away,
+        fLurl, fRurl,
         date:m.fecha, time:m.time, stadium:m.stadium, city:m.ciudad,
         played:!!(res&&res.played),
         result:res&&res.played?{home:res.home_score,away:res.away_score}:null,
