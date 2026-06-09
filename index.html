@@ -255,7 +255,7 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
   width:100%;box-sizing:border-box;
 }
 .profile-left{display:flex;flex-direction:column;gap:8px;flex:1;min-width:0;}
-.profile-right{flex-shrink:0;display:flex;align-items:center;justify-content:center;width:145px;height:145px;}
+.profile-right{flex-shrink:0;display:flex;align-items:center;justify-content:center;width:180px;height:180px;}
 
 .profile-av{
   width:80px;height:80px;border-radius:50%;flex-shrink:0;
@@ -816,7 +816,6 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
     <div id="tab-ranking" class="tab-content active">
       <div class="rank-top">
         <div class="profile-card">
-          <div class="profile-av" id="profAv">MO</div>
           <div class="profile-left">
             <div class="profile-name" id="profName">MONO</div>
             <div id="profStats"></div>
@@ -3049,10 +3048,10 @@ function buildPronDB(data){
 // ── Solo el SVG del araña (para el recuadro de perfil) ──
 function renderSpiderSvg(metricas){
   if(!metricas)metricas={precision:0,efectividad:0,riesgo:0,intuicion:0,magia:0};
-  const labels=["Precisión","Efectividad","Riesgo","Intuición","Magia"];
+  const labels=["PRECISIÓN","EFECTIVIDAD","RIESGO","INTUICIÓN","MAGIA"];
   const values=[metricas.precision,metricas.efectividad,metricas.riesgo,metricas.intuicion,metricas.magia];
   const N=5;
-  const cx=65,cy=65,r=48;
+  const cx=90,cy=90,r=68;
   const angleStep=(2*Math.PI)/N;
   const startAngle=-Math.PI/2;
   const pts=values.map((v,i)=>{
@@ -3074,11 +3073,11 @@ function renderSpiderSvg(metricas){
     const angle=startAngle+i*angleStep;
     const ex=cx+r*Math.cos(angle),ey=cy+r*Math.sin(angle);
     axes+=`<line x1="${cx}" y1="${cy}" x2="${ex.toFixed(1)}" y2="${ey.toFixed(1)}" stroke="rgba(255,255,255,.2)" stroke-width="0.8"/>`;
-    const lx=cx+(r+12)*Math.cos(angle),ly=cy+(r+12)*Math.sin(angle);
+    const lx=cx+(r+16)*Math.cos(angle),ly=cy+(r+16)*Math.sin(angle);
     const anchor=lx<cx-5?"end":lx>cx+5?"start":"middle";
-    labelsHtml+=`<text x="${lx.toFixed(1)}" y="${(ly+3).toFixed(1)}" text-anchor="${anchor}" fill="rgba(255,255,255,.7)" font-size="6.5" font-family="Barlow Condensed,sans-serif" font-weight="700">${labels[i]}</text>`;
+    labelsHtml+=`<text x="${lx.toFixed(1)}" y="${(ly+3).toFixed(1)}" text-anchor="${anchor}" fill="rgba(255,255,255,.85)" font-size="9" font-family="Barlow Condensed,sans-serif" font-weight="900" letter-spacing="0.5">${labels[i]}</text>`;
   });
-  return`<svg width="130" height="130" viewBox="0 0 130 130">
+  return`<svg width="180" height="180" viewBox="0 0 180 180">
     ${grid}${axes}
     <polygon points="${polyPts}" fill="rgba(0,255,71,.2)" stroke="#00ff47" stroke-width="1.5" stroke-linejoin="round"/>
     ${labelsHtml}
