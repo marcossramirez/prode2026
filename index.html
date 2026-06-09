@@ -956,6 +956,10 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
     <div id="tab-admin" class="tab-content">
       <div class="sec-title">Admin</div>
       <div class="admin-alert">⚠ Panel exclusivo — Cargar resultados oficiales</div>
+      <div style="display:flex;gap:8px;margin-bottom:16px;">
+        <button class="phase-btn active" id="adminPhaseGrupos" onclick="selAdminPhase('grupos',this)">FASE DE GRUPOS</button>
+        <button class="phase-btn" id="adminPhaseElim" onclick="selAdminPhase('elim',this)">FASE ELIMINATORIA</button>
+      </div>
       <div id="adminMatches"></div>
     </div>
   </div>
@@ -3167,6 +3171,7 @@ function renderRanking(player){
           ${bannerDiv}
           <span class="rank-name">${displayName}</span>
         </div>
+        ${isMe?`<div class="spider-wrap">${renderSpider(calcMetricas(player.mail))}</div>`:""}
       </div>
       <div class="rank-pts">${p.pts}</div>
       <div class="rank-trend">${tEl}</div>
@@ -3572,10 +3577,49 @@ function renderResGruposContent(g){
 
 /* ADMIN */
 
-function renderAdmin(){
-  // Todos los partidos de grupos ordenados por fecha/hora
+let currentAdminPhase='grupos';
+
+// ── Obtener partidos eliminatorios para admin ──
+function getElimMatches(){
+  const phases=['dieciseis','octavos','cuartos','semis','3er','final'];
+  const phaseNames={'dieciseis':'16avos','octavos':'Octavos','cuartos':'Cuartos','semis':'Semifinal','3er':'3er Puesto','final':'Final'};
   const all=[];
-  "ABCDEFGHIJKL".split("").forEach(g=>all.push(...getMatches(g)));
+  phases.forEach(ph=>{
+    const matches=BRACKET_R32[ph]||[];
+    matches.forEach(m=>{
+      const mid=`elim_${ph}_${m.match}`;
+      const res=resultadosDB[mid]||null;
+      const homeDisplay=resolveElimTeam(m.home);
+      const awayDisplay=resolveElimTeam(m.away);
+      all.push({
+        id:mid, home:homeDisplay, away:awayDisplay,
+        date:m.fecha, time:m.time, stadium:m.stadium, city:m.ciudad,
+        played:!!(res&&res.played),
+        result:res&&res.played?{home:res.home_score,away:res.away_score}:null,
+        ts:parseMatchTime(m.fecha,m.time)?.getTime()||0,
+        ronda:phaseNames[ph]
+      });
+    });
+  });
+  return all;
+}
+
+function selAdminPhase(phase, btn){
+  currentAdminPhase=phase;
+  document.querySelectorAll('.phase-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderAdmin();
+}
+
+function renderAdmin(){
+  // Partidos según fase seleccionada
+  const all=[];
+  if(currentAdminPhase==='grupos'){
+    "ABCDEFGHIJKL".split("").forEach(g=>all.push(...getMatches(g)));
+  } else {
+    // Fase eliminatoria — usar BRACKET_R32 + fases siguientes
+    all.push(...getElimMatches());
+  }
   all.sort((a,b)=>a.ts-b.ts);
 
   // Agrupar por fecha
