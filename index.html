@@ -248,22 +248,24 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
 
 /* Profile card — brand color accent */
 .profile-card{
-  background:var(--blue);
-  border-radius:20px;padding:18px;
-  display:flex;align-items:center;gap:12px;
+  background:#0a0a0a;
+  border-radius:20px;padding:12px 14px;
+  display:flex;align-items:flex-start;gap:12px;
   position:relative;overflow:hidden;
   width:100%;box-sizing:border-box;
+  border:1px solid rgba(255,255,255,.08);
 }
 .profile-left{display:flex;flex-direction:column;gap:8px;flex:1;min-width:0;}
-.profile-right{flex-shrink:0;display:flex;align-items:center;justify-content:center;width:180px;height:180px;}
+.profile-right{flex-shrink:0;display:flex;align-items:center;justify-content:flex-end;width:250px;height:160px;}
 
 .profile-av{
-  width:52px;height:52px;border-radius:50%;flex-shrink:0;
+  width:36px;height:36px;border-radius:50%;flex-shrink:0;
   background:var(--surface2);
   display:flex;align-items:center;justify-content:center;
-  font-family:"Barlow Condensed",sans-serif;font-weight:900;font-size:20px;color:var(--white);
+  font-family:"Barlow Condensed",sans-serif;font-weight:900;font-size:14px;color:var(--white);
   overflow:hidden;border:none;
-  background-size:cover;background-position:center;background-repeat:no-repeat;
+  background-size:cover;background-position:center;
+  align-self:flex-start;background-repeat:no-repeat;
 }
 .profile-name{font-family:"Barlow Condensed",sans-serif;font-weight:900;font-size:22px;letter-spacing:1px;margin-bottom:6px;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .profile-stat{display:flex;justify-content:space-between;font-size:11px;color:rgba(255,255,255,.7);margin-bottom:5px;}
@@ -816,8 +818,8 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
     <div id="tab-ranking" class="tab-content active">
       <div class="rank-top">
         <div class="profile-card">
-          <div class="profile-av" id="profAv">MO</div>
-          <div class="profile-left">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex-shrink:0;justify-content:center;align-self:stretch;">
+            <div class="profile-av" id="profAv">MO</div>
             <div id="profStats"></div>
           </div>
           <div class="profile-right" id="profSpider"></div>
@@ -826,7 +828,7 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
       </div>
       <div class="sec-title">Tabla de Posiciones</div>
       <div class="rank-table">
-        <div class="rank-head"><div>#</div><div>Jugador</div><div style="text-align:center">PTS</div><div style="text-align:center">Pos.</div></div>
+        <div class="rank-head"><div style="text-align:center">#</div><div style="text-align:center">Jugador</div><div style="text-align:center">PTS</div><div style="text-align:center">POS</div></div>
         <div id="rankRows"></div>
       </div>
       <div class="pts-legend">
@@ -1291,6 +1293,8 @@ async function loadResultadosFromSheet(){
     const res=await fetch(`${SHEET_URL}?type=resultados`);
     const data=await res.json();
     data.forEach(r=>{
+      const fixture=Object.values(FIXTURE_GRUPOS).flat().find(f=>f.home===r.home&&f.away===r.away);
+      const ts=fixture?parseMatchTime(fixture.date,fixture.time)?.getTime()||0:0;
       resultadosDB[r.match_id]={
         home:r.home,away:r.away,
         home_score:parseInt(r.home_score)||0,
@@ -1299,7 +1303,8 @@ async function loadResultadosFromSheet(){
         penal_home:r.penal_home==="TRUE"||r.penal_home===true,
         penal_away:r.penal_away==="TRUE"||r.penal_away===true,
         tarjeta_home:r.tarjeta_home==="TRUE"||r.tarjeta_home===true,
-        tarjeta_away:r.tarjeta_away==="TRUE"||r.tarjeta_away===true
+        tarjeta_away:r.tarjeta_away==="TRUE"||r.tarjeta_away===true,
+        ts
       };
     });
     renderResultados();
@@ -3004,6 +3009,32 @@ function calcMetricas(mail){
 
   if(totalJugados===0)return null;
 
+  // ── Racha real: aciertos consecutivos en orden cronológico ──
+  // Ordenar partidos jugados por timestamp
+  const partidosOrdenados=Object.entries(misProns)
+    .filter(([mid,pr])=>{
+      const res=resultadosDB[mid];
+      return res?.played && pr.home!==null && pr.home!==undefined && pr.away!==null && pr.away!==undefined;
+    })
+    .map(([mid,pr])=>({mid,pr,ts:resultadosDB[mid].ts||0}))
+    .sort((a,b)=>a.ts-b.ts);
+
+  let rachaActual=0, rachaMax=0, rachaTemp=0;
+  partidosOrdenados.forEach(({mid,pr})=>{
+    const res=resultadosDB[mid];
+    const rH=res.home_score, rA=res.away_score;
+    const pH=parseInt(pr.home), pA=parseInt(pr.away);
+    const rRes=rH>rA?1:rH<rA?-1:0;
+    const pRes=pH>pA?1:pH<pA?-1:0;
+    if(rRes===pRes){
+      rachaTemp++;
+      rachaMax=Math.max(rachaMax,rachaTemp);
+    } else {
+      rachaTemp=0;
+    }
+  });
+  rachaActual=rachaTemp; // racha actual es la última racha activa
+
   // Normalizar a 0-100
   const precisionPct=Math.round((precision/totalJugados)*100);
   const efectividadPct=Math.round((efectividad/totalJugados)*100);
@@ -3025,6 +3056,8 @@ function calcMetricas(mail){
     magia:magiaPct,
     pg,pp,pe:totalJugados-pg-pp,
     pctGanados,pctPerdidos,
+    racha:rachaActual,
+    rachaMax,
     totalJugados
   };
 }
@@ -3046,12 +3079,25 @@ function buildPronDB(data){
 
 // ── Renderizar gráfico de araña SVG ──
 // ── Solo el SVG del araña (para el recuadro de perfil) ──
-function renderSpiderSvg(metricas){
+const PLAYER_COLORS=["#FF69B4", "#FFFFFF", "#90EE90", "#FFA500", "#FFD700", "#40E0D0", "#87CEEB", "#FF4444", "#4488FF", "#CC88FF", "#FF44CC"];
+
+function getPlayerColor(mail){
+  const idx=REGISTRY.findIndex(p=>p.mail===mail);
+  return PLAYER_COLORS[((idx<0?0:idx))%PLAYER_COLORS.length];
+}
+
+function renderSpiderSvg(metricas, color){
   if(!metricas)metricas={precision:0,efectividad:0,riesgo:0,intuicion:0,magia:0};
-  const labels=["PRECISIÓN","EFECTIVIDAD","RIESGO","INTUICIÓN","MAGIA"];
-  const values=[metricas.precision,metricas.efectividad,metricas.riesgo,metricas.intuicion,metricas.magia];
+  if(!color)color='#00ff47';
+  // Punto 6: Efectividad y Riesgo intercambiados
+  // Orden: PRECISIÓN, RIESGO, INTUICIÓN, MAGIA, EFECTIVIDAD
+  const labels=["PRECISIÓN","RIESGO","EFECTIVIDAD","INTUICIÓN","MAGIA"];
+  const values=[metricas.precision,metricas.riesgo,metricas.efectividad,metricas.intuicion,metricas.magia];
   const N=5;
-  const cx=90,cy=90,r=68;
+  // Mover centro a la derecha para dar espacio a labels largos a la izquierda
+  const cx=120,cy=90,r=62;
+  const VW=250,VH=160;
+  const vbX=0, vbY=0, vbW=VW, vbH=VH;
   const angleStep=(2*Math.PI)/N;
   const startAngle=-Math.PI/2;
   const pts=values.map((v,i)=>{
@@ -3061,25 +3107,32 @@ function renderSpiderSvg(metricas){
   });
   const polyPts=pts.map(p=>`${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
   let axes='',grid='',labelsHtml='';
-  [0.25,0.5,0.75,1].forEach(pct=>{
+  // 5 anillos: 20% cada uno
+  [0.2,0.4,0.6,0.8,1].forEach(pct=>{
     const gp=Array.from({length:N},(_,i)=>{
       const angle=startAngle+i*angleStep;
       const dist=pct*r;
       return`${(cx+dist*Math.cos(angle)).toFixed(1)},${(cy+dist*Math.sin(angle)).toFixed(1)}`;
     }).join(' ');
-    grid+=`<polygon points="${gp}" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="0.5"/>`;
+    grid+=`<polygon points="${gp}" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="0.5"/>`;
   });
   Array.from({length:N},(_,i)=>{
     const angle=startAngle+i*angleStep;
     const ex=cx+r*Math.cos(angle),ey=cy+r*Math.sin(angle);
     axes+=`<line x1="${cx}" y1="${cy}" x2="${ex.toFixed(1)}" y2="${ey.toFixed(1)}" stroke="rgba(255,255,255,.2)" stroke-width="0.8"/>`;
-    const lx=cx+(r+16)*Math.cos(angle),ly=cy+(r+16)*Math.sin(angle);
+    const lx=cx+(r+18)*Math.cos(angle),ly=cy+(r+18)*Math.sin(angle);
     const anchor=lx<cx-5?"end":lx>cx+5?"start":"middle";
-    labelsHtml+=`<text x="${lx.toFixed(1)}" y="${(ly+3).toFixed(1)}" text-anchor="${anchor}" fill="rgba(255,255,255,.85)" font-size="9" font-family="Barlow Condensed,sans-serif" font-weight="900" letter-spacing="0.5">${labels[i]}</text>`;
+    labelsHtml+=`<text x="${lx.toFixed(1)}" y="${(ly+3).toFixed(1)}" text-anchor="${anchor}" fill="rgba(255,255,255,.9)" font-size="9.5" font-family="Barlow Condensed,sans-serif" font-weight="900" letter-spacing="0.8">${labels[i]}</text>`;
   });
-  return`<svg width="180" height="180" viewBox="0 0 180 180">
+  // Color fill con alpha
+  const hexToRgba=(hex,a)=>{
+    const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+    return `rgba(${r},${g},${b},${a})`;
+  };
+  const fillColor=hexToRgba(color,0.2);
+  return`<svg width="${VW}" height="${VH}" viewBox="${vbX} ${vbY} ${vbW} ${vbH}" style="display:block;">
     ${grid}${axes}
-    <polygon points="${polyPts}" fill="rgba(0,255,71,.2)" stroke="#00ff47" stroke-width="1.5" stroke-linejoin="round"/>
+    <polygon points="${polyPts}" fill="${fillColor}" stroke="${color}" stroke-width="2" stroke-linejoin="round"/>
     ${labelsHtml}
   </svg>`;
 }
@@ -3193,12 +3246,27 @@ function renderRanking(player){
   // Calcular métricas para el recuadro de perfil
   const metr=calcMetricas(player.mail)||{precision:0,efectividad:0,riesgo:0,intuicion:0,magia:0,pctGanados:0,pctPerdidos:0,pg:0,pp:0,pe:0,totalJugados:0};
   document.getElementById("profStats").innerHTML=`
-    <div class="profile-stat"><span>▲ Ganados</span><span class="psv" style="color:#00FF47">${metr.pctGanados}%</span></div>
-    <div class="profile-stat"><span>▼ Perdidos</span><span class="psv" style="color:#E8292A">${metr.pctPerdidos}%</span></div>
-    <div class="profile-stat"><span>🔥 Racha</span><span class="psv" style="color:#00FF47">${metr.pg}</span></div>
-    <div class="profile-stat" style="margin-top:4px;"><span style="font-size:9px;color:var(--dim);letter-spacing:1px">ESTILO</span><span class="psv" style="color:#00FF47;font-size:11px">${getEstilo(metr.riesgo)}</span></div>`;
+    <div style="display:flex;flex-direction:column;gap:2px;margin-top:4px;">
+      <div style="display:flex;align-items:center;gap:2px;">
+        <span style="font-size:15px;">👍</span>
+        <span style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:16px;color:#00FF47;width:38px;text-align:right;">${metr.pctGanados}%</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:2px;">
+        <span style="font-size:15px;">👎</span>
+        <span style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:16px;color:#E8292A;width:38px;text-align:right;">${metr.pctPerdidos}%</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:2px;">
+        <span style="font-size:15px;">🔥</span>
+        <span style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:16px;color:#FFA500;width:38px;text-align:right;">${metr.racha}</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:2px;">
+        <span style="font-size:15px;">🎯</span>
+        <span style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:16px;color:#FFD700;width:38px;text-align:right;">${metr.precision}%</span>
+      </div>
+    </div>`;
+  const spiderColor=getPlayerColor(player.mail);
   const spiderEl=document.getElementById("profSpider");
-  if(spiderEl)spiderEl.innerHTML=renderSpiderSvg(metr);
+  if(spiderEl)spiderEl.innerHTML=renderSpiderSvg(metr,spiderColor);
 
   // ── Tabla de posiciones — TODOS los jugadores registrados ──
   // Aplicar aliases del sheet a cada jugador
