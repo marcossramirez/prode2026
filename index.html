@@ -3244,7 +3244,7 @@ function renderRanking(player){
   const profName=document.getElementById("profName");
   if(profName)profName.textContent=(player.alias||"").toUpperCase();
   // Calcular métricas para el recuadro de perfil
-  const metr=calcMetricas(player.mail)||{precision:0,efectividad:0,riesgo:0,intuicion:0,magia:0,pctGanados:0,pctPerdidos:0,pg:0,pp:0,pe:0,totalJugados:0};
+  const metr=calcMetricas(player.mail)||{precision:0,efectividad:0,riesgo:0,intuicion:0,magia:0,pctGanados:0,pctPerdidos:0,pg:0,pp:0,pe:0,racha:0,rachaMax:0,totalJugados:0};
   document.getElementById("profStats").innerHTML=`
     <div style="display:flex;flex-direction:column;gap:2px;margin-top:4px;">
       <div style="display:flex;align-items:center;gap:2px;">
