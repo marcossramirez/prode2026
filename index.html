@@ -3137,6 +3137,7 @@ async function loadConfig(){
   try{
     const res=await fetch(`${SHEET_URL}?type=config`);
     const data=await res.json();
+    console.log('Config data:', JSON.stringify(data).slice(0,300));
 
     // Hora ARG actual
     const now=new Date();
@@ -3151,8 +3152,11 @@ async function loadConfig(){
       if(data.ticker_admin&&data.ticker_admin.trim()!==''){
         frase=data.ticker_admin.trim();
       } else {
-        // Buscar texto del día actual en ticker_diario
-        const hoy=argNow.toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric'});
+        // Buscar texto del día actual — formato DD/MM/YYYY
+        const dd=String(argNow.getDate()).padStart(2,'0');
+        const mo=String(argNow.getMonth()+1).padStart(2,'0');
+        const yyyy=argNow.getFullYear();
+        const hoy=`${dd}/${mo}/${yyyy}`;
         if(data['ticker_'+hoy]&&data['ticker_'+hoy].trim()!==''){
           frase=data['ticker_'+hoy].trim();
         }
