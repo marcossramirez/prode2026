@@ -195,6 +195,28 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
   padding:6px 14px 0;
 }
 .nav-inner{max-width:960px;margin:0 auto;display:flex;flex-direction:column;}
+.nav-ticker{
+  flex:1;overflow:hidden;
+  margin:0 10px;
+  display:flex;align-items:center;
+}
+.nav-ticker-track{
+  display:inline-block;
+  white-space:nowrap;
+  animation:nav-ticker-scroll 20s linear infinite;
+  will-change:transform;
+}
+.nav-ticker-text{
+  font-family:"Barlow Condensed",sans-serif;
+  font-weight:700;font-size:13px;
+  letter-spacing:1px;text-transform:uppercase;
+  color:#00ff47;
+  padding-right:80px;
+}
+@keyframes nav-ticker-scroll{
+  0%{transform:translateX(100%);}
+  100%{transform:translateX(-100%);}
+}
 .nav-row1{display:flex;align-items:center;justify-content:space-between;padding-bottom:2px;}
 .nav-row2{display:flex;align-items:center;gap:4px;padding-bottom:6px;}
 .nav-brand{
@@ -245,6 +267,34 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
    RANKING
 ══════════════════════════════ */
 .rank-top{display:block;margin-bottom:20px;}
+
+/* Ticker cartel vía pública */
+.ticker-wrap{
+  width:100%;overflow:hidden;
+  background:#0a0a0a;
+  border:1px solid rgba(0,255,71,.3);
+  border-radius:8px;
+  padding:6px 0;
+  margin-bottom:12px;
+  box-sizing:border-box;
+}
+.ticker-track{
+  display:inline-block;
+  white-space:nowrap;
+  animation:ticker-scroll 25s linear infinite;
+}
+.ticker-track:hover{animation-play-state:paused;}
+.ticker-text{
+  font-family:"Barlow Condensed",sans-serif;
+  font-weight:700;font-size:14px;
+  letter-spacing:1px;text-transform:uppercase;
+  color:#00ff47;
+  padding:0 40px;
+}
+@keyframes ticker-scroll{
+  0%{transform:translateX(100vw);}
+  100%{transform:translateX(-100%);}
+}
 
 /* Profile card — brand color accent */
 .profile-card{
@@ -801,6 +851,11 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
     <div class="nav-inner">
       <div class="nav-row1">
         <div class="nav-brand"><img src="https://i.imgur.com/cgCTvSM.png" alt="Mundial 2026" style="height:32px;width:auto;display:block;"></div>
+        <div class="nav-ticker" id="navTickerWrap">
+          <div class="nav-ticker-track" id="navTickerTrack">
+            <span class="nav-ticker-text" id="navTickerText"></span>
+          </div>
+        </div>
         <div class="nav-av" id="navAv" title="Cerrar sesión" onclick="logout()">M</div>
       </div>
       <div class="nav-row2">
@@ -955,6 +1010,18 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
     <div id="tab-admin" class="tab-content">
       <div class="sec-title">Admin</div>
       <div class="admin-alert">⚠ Panel exclusivo — Cargar resultados oficiales</div>
+      <div style="margin-bottom:16px;background:#0a0a0a;border:1px solid rgba(0,255,71,.3);border-radius:12px;padding:12px;">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:11px;letter-spacing:2px;color:var(--green);margin-bottom:8px;">📢 MENSAJE DEL DÍA (TICKER)</div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input id="tickerInput" type="text" placeholder="Escribí el mensaje del día..."
+            style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:8px;
+            padding:8px 12px;color:var(--white);font-family:'Barlow Condensed',sans-serif;
+            font-size:14px;outline:none;"
+            onkeydown="if(event.key==='Enter')saveTickerAdmin(this.value)">
+          <button class="btn-save" onclick="saveTickerAdmin(document.getElementById('tickerInput').value)">PUBLICAR</button>
+        </div>
+        <div style="font-size:10px;color:var(--dim);margin-top:6px;">Este mensaje reemplaza la frase del Sheet por el día. Dejalo vacío para volver a la frase del Sheet.</div>
+      </div>
       <div style="display:flex;gap:8px;margin-bottom:16px;">
         <button class="phase-btn active" id="adminPhaseGrupos" onclick="selAdminPhase('grupos',this)">FASE DE GRUPOS</button>
         <button class="phase-btn" id="adminPhaseElim" onclick="selAdminPhase('elim',this)">FASE ELIMINATORIA</button>
@@ -3064,6 +3131,88 @@ function calcMetricas(mail){
 
 // ── Guardar/leer pronósticos de todos los jugadores (para intuición) ──
 let pronDB={}; // {mail: {mid: {home,away,...}}}
+
+// ── Cargar config (ticker) desde Sheet ──
+async function loadConfig(){
+  try{
+    const res=await fetch(`${SHEET_URL}?type=config`);
+    const data=await res.json();
+
+    // Hora ARG actual
+    const now=new Date();
+    const argNow=new Date(now.toLocaleString('en-US',{timeZone:'America/Argentina/Buenos_Aires'}));
+    const hh=argNow.getHours(), mm=argNow.getMinutes();
+    // Entre 23:59 y 00:00 no mostrar nada
+    const isMidnight=(hh===23&&mm>=59)||(hh===0&&mm===0);
+
+    let frase='';
+    if(!isMidnight){
+      // ticker_admin tiene prioridad — es noticia urgente del día
+      if(data.ticker_admin&&data.ticker_admin.trim()!==''){
+        frase=data.ticker_admin.trim();
+      } else {
+        // Buscar texto del día actual en ticker_diario
+        const hoy=argNow.toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric'});
+        if(data['ticker_'+hoy]&&data['ticker_'+hoy].trim()!==''){
+          frase=data['ticker_'+hoy].trim();
+        }
+      }
+    }
+
+    // Mostrar u ocultar ticker
+    const wrap=document.getElementById('navTickerWrap');
+    const el=document.getElementById('navTickerText');
+    const track=document.getElementById('navTickerTrack');
+    if(!frase||frase===''){
+      if(wrap)wrap.style.display='none';
+      return;
+    }
+    if(wrap)wrap.style.display='flex';
+    if(el)el.textContent=frase;
+    if(track){
+      const duration=Math.max(12,frase.length*0.35);
+      track.style.animationDuration=duration+'s';
+    }
+
+    // Verificar cada minuto si cambió el estado
+    setTimeout(loadConfig, 60000);
+  }catch(e){console.warn('Error cargando config:',e);}
+}
+
+// ── Guardar ticker desde admin ──
+async function saveTickerAdmin(val){
+  await fetch(SHEET_URL,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({type:'config',key:'ticker_admin',value:val.trim(),secret:SYNC_SECRET})
+  });
+  loadConfig();
+  showToast(val.trim()!==''?'✅ Mensaje publicado':'✅ Mensaje borrado');
+}
+
+// Borrar ticker admin Y del día a las 23:59
+function schedulerTickerClear(){
+  const now=new Date();
+  const argNow=new Date(now.toLocaleString('en-US',{timeZone:'America/Argentina/Buenos_Aires'}));
+  const hh=argNow.getHours(),mm=argNow.getMinutes();
+  if(hh===23&&mm===59){
+    // Borrar admin
+    saveTickerAdmin('');
+    const inp=document.getElementById('tickerInput');
+    if(inp)inp.value='';
+    // Borrar texto del día en Sheet
+    const dd=String(argNow.getDate()).padStart(2,'0');
+    const mo=String(argNow.getMonth()+1).padStart(2,'0');
+    const yyyy=argNow.getFullYear();
+    const fechaKey=`${dd}/${mo}/${yyyy}`;
+    fetch(SHEET_URL,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({type:'config',key:fechaKey,value:'',secret:SYNC_SECRET})
+    });
+  }
+  setTimeout(schedulerTickerClear,60000);
+}
 
 function buildPronDB(data){
   pronDB={};
