@@ -1241,6 +1241,7 @@ async function fetchResultadosAPI(){
     // Guardar en Sheet también
     await saveResultadosToSheet();
     renderResultados();
+    buildPronDB(data);
     recalcularPuntos();
   }catch(e){
     console.warn("API-Football no disponible:",e);
@@ -2888,6 +2889,229 @@ function showTab(tab,btn){
 /* ═══════════════════════════════════════════
    RANKING
 ═══════════════════════════════════════════ */
+
+// ── Calcular métricas de desempeño de un jugador ──
+function calcMetricas(mail){
+  const prons=Object.entries(userPron||{});
+  let totalJugados=0, precision=0, efectividad=0;
+  let totalBonus=0, bonusAcertados=0;
+  let riesgoSum=0, pg=0, pp=0, pe=0;
+  
+  // Para intuición: necesitamos saber qué % del grupo acertó cada partido
+  const aciertosGlobales={}; // match_id → {total, acertaron}
+  
+  // Primero calcular aciertos globales de todos los jugadores
+  PLAYERS.forEach(p=>{
+    const misProns=pronDB[p.mail]||{};
+    Object.entries(misProns).forEach(([mid, pr])=>{
+      const res=resultadosDB[mid];
+      if(!res?.played)return;
+      if(!aciertosGlobales[mid])aciertosGlobales[mid]={total:0,acertaron:0};
+      aciertosGlobales[mid].total++;
+      const rRes=res.home_score>res.away_score?1:res.home_score<res.away_score?-1:0;
+      const pRes=(pr.home>pr.away)?1:(pr.home<pr.away)?-1:0;
+      if(rRes===pRes)aciertosGlobales[mid].acertaron++;
+    });
+  });
+
+  // Calcular métricas del jugador
+  const misProns=pronDB[mail]||{};
+  Object.entries(misProns).forEach(([mid, pr])=>{
+    const res=resultadosDB[mid];
+    if(!res?.played)return;
+    if(pr.home===null||pr.home===undefined||pr.away===null||pr.away===undefined)return;
+    
+    totalJugados++;
+    const rH=res.home_score, rA=res.away_score;
+    const pH=parseInt(pr.home), pA=parseInt(pr.away);
+    const rRes=rH>rA?1:rH<rA?-1:0;
+    const pRes=pH>pA?1:pH<pA?-1:0;
+    const acerto=rRes===pRes;
+    const exacto=rH===pH&&rA===pA;
+    
+    if(acerto)pg++; else pp++;
+    if(exacto)precision++;
+    if(acerto)efectividad++;
+    
+    // Riesgo: diferencia de goles pronosticada (más diferencia = más conservador, más cerca = más arriesgado)
+    const diffPron=Math.abs(pH-pA);
+    const diffReal=Math.abs(rH-rA);
+    riesgoSum+=diffPron; // promedio de diferencias pronosticadas
+    
+    // Bonus acertados
+    if(userBonus[mid]){
+      totalBonus++;
+      if(exacto)bonusAcertados++;
+    }
+    if(userPenal[mid]?.home){
+      totalBonus++;
+      if(res.penal_home)bonusAcertados++;
+    }
+    if(userPenal[mid]?.away){
+      totalBonus++;
+      if(res.penal_away)bonusAcertados++;
+    }
+    if(userTarjeta[mid]?.home){
+      totalBonus++;
+      if(res.tarjeta_home)bonusAcertados++;
+    }
+    if(userTarjeta[mid]?.away){
+      totalBonus++;
+      if(res.tarjeta_away)bonusAcertados++;
+    }
+  });
+
+  // Intuición: % de partidos acertados donde menos del 40% del grupo acertó
+  let intuicionBase=0, intuicionAciertos=0;
+  Object.entries(misProns).forEach(([mid, pr])=>{
+    const res=resultadosDB[mid];
+    if(!res?.played)return;
+    const global=aciertosGlobales[mid];
+    if(!global||global.total===0)return;
+    const pctGrupo=global.acertaron/global.total;
+    if(pctGrupo<0.4){ // partido difícil — menos del 40% acertó
+      intuicionBase++;
+      const rRes=res.home_score>res.away_score?1:res.home_score<res.away_score?-1:0;
+      const pRes=(parseInt(pr.home)>parseInt(pr.away))?1:(parseInt(pr.home)<parseInt(pr.away))?-1:0;
+      if(rRes===pRes)intuicionAciertos++;
+    }
+  });
+
+  if(totalJugados===0)return null;
+
+  // Normalizar a 0-100
+  const precisionPct=Math.round((precision/totalJugados)*100);
+  const efectividadPct=Math.round((efectividad/totalJugados)*100);
+  // Riesgo: 0=muy conservador (diferencias grandes), 100=muy arriesgado (diferencias chicas)
+  const avgDiff=riesgoSum/totalJugados;
+  const riesgoPct=Math.round(Math.max(0,Math.min(100,100-(avgDiff/3)*100)));
+  const intuicionPct=intuicionBase>0?Math.round((intuicionAciertos/intuicionBase)*100):0;
+  const magiaPct=totalBonus>0?Math.round((bonusAcertados/totalBonus)*100):0;
+
+  // Stats para panel derecho
+  const pctGanados=Math.round((pg/totalJugados)*100);
+  const pctPerdidos=Math.round((pp/totalJugados)*100);
+
+  return{
+    precision:precisionPct,
+    efectividad:efectividadPct,
+    riesgo:riesgoPct,
+    intuicion:intuicionPct,
+    magia:magiaPct,
+    pg,pp,pe:totalJugados-pg-pp,
+    pctGanados,pctPerdidos,
+    totalJugados
+  };
+}
+
+// ── Guardar/leer pronósticos de todos los jugadores (para intuición) ──
+let pronDB={}; // {mail: {mid: {home,away,...}}}
+
+function buildPronDB(data){
+  pronDB={};
+  data.forEach(r=>{
+    if(!pronDB[r.mail])pronDB[r.mail]={};
+    pronDB[r.mail][r.match_id]={
+      home:parseInt(r.home_score),away:parseInt(r.away_score),
+      bonus:r.bonus,penal_home:r.penal_home,penal_away:r.penal_away,
+      tarjeta_home:r.tarjeta_home,tarjeta_away:r.tarjeta_away
+    };
+  });
+}
+
+// ── Renderizar gráfico de araña SVG ──
+function renderSpider(metricas){
+  if(!metricas)return'<div style="color:var(--dim);font-size:11px;text-align:center;padding:8px;">Jugá más partidos para ver tus métricas</div>';
+  
+  const labels=["Precisión","Efectividad","Riesgo","Intuición","Magia"];
+  const values=[metricas.precision,metricas.efectividad,metricas.riesgo,metricas.intuicion,metricas.magia];
+  const N=5;
+  const cx=70,cy=70,r=55;
+  const angleStep=(2*Math.PI)/N;
+  const startAngle=-Math.PI/2;
+
+  // Puntos del polígono del jugador
+  const pts=values.map((v,i)=>{
+    const angle=startAngle+i*angleStep;
+    const dist=(v/100)*r;
+    return{x:cx+dist*Math.cos(angle),y:cy+dist*Math.sin(angle)};
+  });
+  const polyPts=pts.map(p=>`${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+
+  // Ejes y grillas
+  let axes='', grid='', labelsHtml='';
+  [0.25,0.5,0.75,1].forEach(pct=>{
+    const gridPts=Array.from({length:N},(_, i)=>{
+      const angle=startAngle+i*angleStep;
+      const dist=pct*r;
+      return`${(cx+dist*Math.cos(angle)).toFixed(1)},${(cy+dist*Math.sin(angle)).toFixed(1)}`;
+    }).join(' ');
+    grid+=`<polygon points="${gridPts}" fill="none" stroke="rgba(255,255,255,.1)" stroke-width="0.5"/>`;
+  });
+
+  Array.from({length:N},(_,i)=>{
+    const angle=startAngle+i*angleStep;
+    const ex=cx+r*Math.cos(angle), ey=cy+r*Math.sin(angle);
+    axes+=`<line x1="${cx}" y1="${cy}" x2="${ex.toFixed(1)}" y2="${ey.toFixed(1)}" stroke="rgba(255,255,255,.15)" stroke-width="0.8"/>`;
+    // Labels
+    const lx=cx+(r+14)*Math.cos(angle), ly=cy+(r+14)*Math.sin(angle);
+    const anchor=lx<cx-5?'end':lx>cx+5?'start':'middle';
+    labelsHtml+=`<text x="${lx.toFixed(1)}" y="${(ly+3).toFixed(1)}" text-anchor="${anchor}" fill="rgba(255,255,255,.6)" font-size="7" font-family="Barlow Condensed,sans-serif" font-weight="700">${labels[i]}</text>`;
+    // Valor
+    const vx=cx+(r*values[i]/100)*Math.cos(angle)*0.7, vy=cy+(r*values[i]/100)*Math.sin(angle)*0.7;
+  });
+
+  // Valores en los vértices
+  const valLabels=pts.map((p,i)=>{
+    const angle=startAngle+i*angleStep;
+    const vx=cx+(r*values[i]/100+8)*Math.cos(angle);
+    const vy=cy+(r*values[i]/100+8)*Math.sin(angle);
+    return`<text x="${vx.toFixed(1)}" y="${(vy+3).toFixed(1)}" text-anchor="middle" fill="#00ff47" font-size="7.5" font-family="Barlow Condensed,sans-serif" font-weight="900">${values[i]}%</text>`;
+  }).join('');
+
+  const svg=`<svg width="140" height="140" viewBox="0 0 140 140">
+    ${grid}${axes}
+    <polygon points="${polyPts}" fill="rgba(0,255,71,.15)" stroke="#00ff47" stroke-width="1.5" stroke-linejoin="round"/>
+    ${labelsHtml}${valLabels}
+  </svg>`;
+
+  // Panel derecho
+  const panel=`<div style="display:flex;flex-direction:column;gap:6px;justify-content:center;font-family:'Barlow Condensed',sans-serif;">
+    <div style="font-size:11px;color:var(--dim);letter-spacing:1px;text-transform:uppercase;margin-bottom:2px;">STATS</div>
+    <div style="display:flex;align-items:center;gap:6px;">
+      <span style="color:#00ff47;font-size:11px;">▲</span>
+      <span style="font-size:13px;font-weight:700;color:var(--white)">${metricas.pctGanados}%</span>
+      <span style="font-size:10px;color:var(--dim)">ganados</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:6px;">
+      <span style="color:#ff4444;font-size:11px;">▼</span>
+      <span style="font-size:13px;font-weight:700;color:var(--white)">${metricas.pctPerdidos}%</span>
+      <span style="font-size:10px;color:var(--dim)">perdidos</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:6px;">
+      <span style="font-size:11px;">🔥</span>
+      <span style="font-size:13px;font-weight:700;color:var(--white)">${metricas.pg}</span>
+      <span style="font-size:10px;color:var(--dim)">sin perder</span>
+    </div>
+    <div style="margin-top:4px;padding:4px 6px;background:rgba(0,255,71,.08);border-radius:6px;border:1px solid rgba(0,255,71,.2);">
+      <div style="font-size:9px;color:var(--dim);letter-spacing:1px;">ESTILO</div>
+      <div style="font-size:12px;font-weight:900;color:#00ff47;">${getEstilo(metricas.riesgo)}</div>
+    </div>
+  </div>`;
+
+  return`<div style="display:flex;align-items:center;gap:8px;padding:8px 0;">
+    ${svg}${panel}
+  </div>`;
+}
+
+function getEstilo(riesgo){
+  if(riesgo>=80)return"KAMIKAZE";
+  if(riesgo>=60)return"ATREVIDO";
+  if(riesgo>=40)return"EQUILIBRADO";
+  if(riesgo>=20)return"CALCULADOR";
+  return"CONSERVADOR";
+}
+
 function renderRanking(player){
   // ── Tarjeta de perfil privada ──
   const pfUrl=driveImg(player.foto_perfil);
