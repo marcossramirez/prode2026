@@ -254,12 +254,9 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
   position:relative;overflow:hidden;
   width:100%;box-sizing:border-box;
 }
-.profile-card::after{
-  content:"26";
-  position:absolute;right:-10px;bottom:-20px;
-  font-family:"Barlow Condensed",sans-serif;font-weight:900;font-style:italic;
-  font-size:100px;color:rgba(255,255,255,.1);line-height:1;pointer-events:none;
-}
+.profile-left{display:flex;flex-direction:column;gap:10px;flex:1;min-width:0;}
+.profile-right{flex-shrink:0;display:flex;align-items:center;}
+
 .profile-av{
   width:80px;height:80px;border-radius:50%;flex-shrink:0;
   background:var(--surface2);
@@ -820,10 +817,11 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
       <div class="rank-top">
         <div class="profile-card">
           <div class="profile-av" id="profAv">MO</div>
-          <div style="flex:1;min-width:0">
+          <div class="profile-left">
             <div class="profile-name" id="profName">MONO</div>
             <div id="profStats"></div>
           </div>
+          <div class="profile-right" id="profSpider"></div>
         </div>
 
       </div>
@@ -3024,6 +3022,45 @@ function buildPronDB(data){
 }
 
 // ── Renderizar gráfico de araña SVG ──
+// ── Solo el SVG del araña (para el recuadro de perfil) ──
+function renderSpiderSvg(metricas){
+  if(!metricas)return"";
+  const labels=["Precisión","Efectividad","Riesgo","Intuición","Magia"];
+  const values=[metricas.precision,metricas.efectividad,metricas.riesgo,metricas.intuicion,metricas.magia];
+  const N=5;
+  const cx=65,cy=65,r=48;
+  const angleStep=(2*Math.PI)/N;
+  const startAngle=-Math.PI/2;
+  const pts=values.map((v,i)=>{
+    const angle=startAngle+i*angleStep;
+    const dist=(v/100)*r;
+    return{x:cx+dist*Math.cos(angle),y:cy+dist*Math.sin(angle)};
+  });
+  const polyPts=pts.map(p=>`${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+  let axes='',grid='',labelsHtml='';
+  [0.25,0.5,0.75,1].forEach(pct=>{
+    const gp=Array.from({length:N},(_,i)=>{
+      const angle=startAngle+i*angleStep;
+      const dist=pct*r;
+      return`${(cx+dist*Math.cos(angle)).toFixed(1)},${(cy+dist*Math.sin(angle)).toFixed(1)}`;
+    }).join(' ');
+    grid+=`<polygon points="${gp}" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="0.5"/>`;
+  });
+  Array.from({length:N},(_,i)=>{
+    const angle=startAngle+i*angleStep;
+    const ex=cx+r*Math.cos(angle),ey=cy+r*Math.sin(angle);
+    axes+=`<line x1="${cx}" y1="${cy}" x2="${ex.toFixed(1)}" y2="${ey.toFixed(1)}" stroke="rgba(255,255,255,.2)" stroke-width="0.8"/>`;
+    const lx=cx+(r+12)*Math.cos(angle),ly=cy+(r+12)*Math.sin(angle);
+    const anchor=lx<cx-5?"end":lx>cx+5?"start":"middle";
+    labelsHtml+=`<text x="${lx.toFixed(1)}" y="${(ly+3).toFixed(1)}" text-anchor="${anchor}" fill="rgba(255,255,255,.7)" font-size="6.5" font-family="Barlow Condensed,sans-serif" font-weight="700">${labels[i]}</text>`;
+  });
+  return`<svg width="130" height="130" viewBox="0 0 130 130">
+    ${grid}${axes}
+    <polygon points="${polyPts}" fill="rgba(0,255,71,.2)" stroke="#00ff47" stroke-width="1.5" stroke-linejoin="round"/>
+    ${labelsHtml}
+  </svg>`;
+}
+
 function renderSpider(metricas){
   if(!metricas)return'<div style="color:var(--dim);font-size:11px;text-align:center;padding:8px;">Jugá más partidos para ver tus métricas</div>';
   
@@ -3129,10 +3166,17 @@ function renderRanking(player){
     profAvEl.textContent=(player.alias||"?")[0].toUpperCase();
   }
   document.getElementById("profName").textContent=(player.alias||"").toUpperCase();
-  document.getElementById("profStats").innerHTML=`
-    <div class="profile-stat"><span>% aciertos</span><span class="psv" style="color:#00FF47">${player.pct}%</span></div>
-    <div class="profile-stat"><span>Goles acertados</span><span class="psv" style="color:#00FF47">⚽ ${player.gAci}</span></div>
-    <div class="profile-stat"><span>Goles errados</span><span class="psv" style="color:#E8292A">✗ ${player.gErr}</span></div>`;
+  // Calcular métricas para el recuadro de perfil
+  const metr=calcMetricas(player.mail);
+  document.getElementById("profStats").innerHTML=metr?`
+    <div class="profile-stat"><span>Precisión</span><span class="psv" style="color:#00FF47">${metr.precision}%</span></div>
+    <div class="profile-stat"><span>Efectividad</span><span class="psv" style="color:#00FF47">${metr.efectividad}%</span></div>
+    <div class="profile-stat"><span>▲ Ganados</span><span class="psv" style="color:#00FF47">${metr.pctGanados}%</span></div>
+    <div class="profile-stat"><span>▼ Perdidos</span><span class="psv" style="color:#E8292A">${metr.pctPerdidos}%</span></div>`:`
+    <div class="profile-stat" style="color:rgba(255,255,255,.4);font-size:11px">Jugá partidos para ver tus métricas</div>`;
+  // Gráfico araña en el lado derecho
+  const spiderEl=document.getElementById("profSpider");
+  if(spiderEl)spiderEl.innerHTML=metr?renderSpiderSvg(metr):"";
 
   // ── Tabla de posiciones — TODOS los jugadores registrados ──
   // Aplicar aliases del sheet a cada jugador
@@ -3171,7 +3215,7 @@ function renderRanking(player){
           ${bannerDiv}
           <span class="rank-name">${displayName}</span>
         </div>
-        ${isMe?`<div class="spider-wrap">${renderSpider(calcMetricas(player.mail))}</div>`:""}
+
       </div>
       <div class="rank-pts">${p.pts}</div>
       <div class="rank-trend">${tEl}</div>
