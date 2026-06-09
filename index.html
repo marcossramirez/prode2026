@@ -3048,7 +3048,7 @@ function buildPronDB(data){
 // ── Renderizar gráfico de araña SVG ──
 // ── Solo el SVG del araña (para el recuadro de perfil) ──
 function renderSpiderSvg(metricas){
-  if(!metricas)return"";
+  if(!metricas)metricas={precision:0,efectividad:0,riesgo:0,intuicion:0,magia:0};
   const labels=["Precisión","Efectividad","Riesgo","Intuición","Magia"];
   const values=[metricas.precision,metricas.efectividad,metricas.riesgo,metricas.intuicion,metricas.magia];
   const N=5;
@@ -3191,16 +3191,14 @@ function renderRanking(player){
   }
   document.getElementById("profName").textContent=(player.alias||"").toUpperCase();
   // Calcular métricas para el recuadro de perfil
-  const metr=calcMetricas(player.mail);
-  document.getElementById("profStats").innerHTML=metr?`
+  const metr=calcMetricas(player.mail)||{precision:0,efectividad:0,riesgo:0,intuicion:0,magia:0,pctGanados:0,pctPerdidos:0,pg:0,pp:0,pe:0,totalJugados:0};
+  document.getElementById("profStats").innerHTML=`
     <div class="profile-stat"><span>▲ Ganados</span><span class="psv" style="color:#00FF47">${metr.pctGanados}%</span></div>
     <div class="profile-stat"><span>▼ Perdidos</span><span class="psv" style="color:#E8292A">${metr.pctPerdidos}%</span></div>
     <div class="profile-stat"><span>🔥 Racha</span><span class="psv" style="color:#00FF47">${metr.pg}</span></div>
-    <div class="profile-stat" style="margin-top:4px;"><span style="font-size:9px;color:var(--dim);letter-spacing:1px">ESTILO</span><span class="psv" style="color:#00FF47;font-size:11px">${getEstilo(metr.riesgo)}</span></div>`:`
-    <div class="profile-stat" style="color:rgba(255,255,255,.4);font-size:11px">Jugá partidos para ver tus métricas</div>`;
-  // Gráfico araña en el lado derecho
+    <div class="profile-stat" style="margin-top:4px;"><span style="font-size:9px;color:var(--dim);letter-spacing:1px">ESTILO</span><span class="psv" style="color:#00FF47;font-size:11px">${getEstilo(metr.riesgo)}</span></div>`;
   const spiderEl=document.getElementById("profSpider");
-  if(spiderEl)spiderEl.innerHTML=metr?renderSpiderSvg(metr):"";
+  if(spiderEl)spiderEl.innerHTML=renderSpiderSvg(metr);
 
   // ── Tabla de posiciones — TODOS los jugadores registrados ──
   // Aplicar aliases del sheet a cada jugador
