@@ -375,6 +375,16 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
    DROPDOWN — brand style
 ══════════════════════════════ */
 .dd-wrap{position:relative;margin-bottom:16px;z-index:100;}
+.group-table-wrap{margin-bottom:16px;border-radius:12px;overflow:hidden;border:1px solid var(--border);}
+.group-table-title{background:var(--surface2);padding:8px 12px;font-family:"Barlow Condensed",sans-serif;font-weight:900;font-size:12px;letter-spacing:2px;color:var(--dim);text-transform:uppercase;}
+.group-table{width:100%;border-collapse:collapse;font-size:11px;}
+.group-table th{background:var(--surface2);color:var(--dim);font-weight:700;padding:6px 8px;text-align:center;font-size:10px;letter-spacing:1px;border-bottom:1px solid var(--border);}
+.group-table th:first-child{text-align:left;}
+.group-table td{padding:6px 8px;text-align:center;border-bottom:1px solid rgba(255,255,255,.04);color:var(--text);}
+.group-table td:first-child{text-align:left;font-weight:700;font-size:12px;}
+.group-table tr:last-child td{border-bottom:none;}
+.group-table tr.classified td{color:#00ff47;}
+.group-table tr.classified td:first-child{color:#00ff47;}
 .dd-btn{
   width:100%;padding:13px 18px;border-radius:14px;
   background:var(--surface2);
@@ -868,6 +878,7 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
           <button class="dd-btn" id="grupoBtn" onclick="toggleDD('grupo')"><span id="grupoLbl">Grupo A</span><span class="arr">▼</span></button>
           <div class="dd-menu" id="grupoMenu"></div>
         </div>
+        <div id="groupTableWrap" style="display:none"></div>
         <div id="grupoMatches"></div>
       </div>
       <div id="phElim" style="display:none">
@@ -1422,6 +1433,17 @@ function recalcularPuntos(){
     p.gAci=gAci;
     p.gErr=gErr;
   });
+
+  // Calcular trend (cambio de posición respecto a última vez)
+  const prevPositions={};
+  PLAYERS.forEach((p,i)=>{ prevPositions[p.mail]=p._lastPos||0; });
+  const sorted=[...PLAYERS].sort((a,b)=>b.pts-a.pts||( (a.alias||a.mail).localeCompare(b.alias||b.mail)));
+  sorted.forEach((p,i)=>{
+    const prev=prevPositions[p.mail];
+    p.trend=prev>0?(prev-(i+1)):0;
+    p._lastPos=i+1;
+  });
+
   if(currentPlayer)renderRanking(currentPlayer);
 }
 
@@ -2810,7 +2832,7 @@ async function enterApp(player){
 
   // Render inmediato con datos locales
   buildGrupoDD();buildResGrupoDD();
-  renderGrupoMatches("A");renderElimMatches("dieciseis");
+  renderGroupTable("A");renderGrupoMatches("A");renderElimMatches("dieciseis");
   initEsp();renderAdmin();
   renderRanking(player);
 
@@ -2900,7 +2922,7 @@ function renderRanking(player){
     let tEl;
     if(p.trend>0)tEl=`<span style="color:#00FF47;font-size:15px">▲</span><span style="color:#00FF47;font-weight:700">${p.trend}</span>`;
     else if(p.trend<0)tEl=`<span style="color:#E8292A;font-size:15px">▼</span><span style="color:#E8292A;font-weight:700">${Math.abs(p.trend)}</span>`;
-    else tEl=`<span style="color:rgba(255,255,255,.3);font-size:18px">—</span>`;
+    else tEl=`<span style="color:#00bcd4;font-size:18px">—</span>`;
 
     const avStyle=pf?`background-image:url('${pf}');background-size:cover;background-position:center;`:``;
     const avInner=pf?"":(p.alias||"?")[0].toUpperCase();
@@ -2923,6 +2945,37 @@ function renderRanking(player){
 /* ═══════════════════════════════════════════
    PRONÓSTICOS
 ═══════════════════════════════════════════ */
+// ── Renderizar tabla de posiciones del grupo seleccionado ──
+function renderGroupTable(grupo){
+  const el=document.getElementById("groupTableWrap");
+  if(!el)return;
+  const table=calcGroupTable(grupo);
+  if(!table||table.length===0){el.style.display="none";return;}
+  el.style.display="block";
+
+  const rows=table.map((t,i)=>{
+    const cl=i<2?"classified":"";
+    return `<tr class="${cl}">
+      <td>${t.name}</td>
+      <td>${t.played}</td><td>${t.wins}</td><td>${t.draws}</td><td>${t.losses}</td>
+      <td>${t.gf}</td><td>${t.ga}</td>
+      <td>${t.gd>=0?"+"+t.gd:t.gd}</td>
+      <td><strong>${t.pts}</strong></td>
+    </tr>`;
+  }).join("");
+
+  el.innerHTML=`<div class="group-table-wrap">
+    <div class="group-table-title">Grupo ${grupo} — Tabla de posiciones</div>
+    <table class="group-table">
+      <thead><tr>
+        <th>Equipo</th><th>PJ</th><th>PG</th><th>PE</th><th>PP</th>
+        <th>GF</th><th>GC</th><th>DG</th><th>Pts</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+  </div>`;
+}
+
 function selPhase(ph,btn){
   document.querySelectorAll(".phase-btn").forEach(b=>b.classList.remove("active"));btn.classList.add("active");
   document.getElementById("phGrupos").style.display=ph==="grupos"?"block":"none";
@@ -2961,7 +3014,7 @@ document.addEventListener("click",e=>{if(!e.target.closest(".dd-wrap"))closeAllD
 function selGrupo(g){
   curGrupo=g;document.getElementById("grupoLbl").textContent="Grupo "+g;
   document.querySelectorAll("#grupoMenu .dd-item").forEach((el,i)=>el.classList.toggle("sel",Object.keys(GROUPS)[i]===g));
-  closeAllDD();renderGrupoMatches(g);
+  closeAllDD();renderGroupTable(g);renderGrupoMatches(g);
 }
 function selElim(id,lbl){
   curElim=id;document.getElementById("elimLbl").textContent=lbl;
@@ -3290,16 +3343,24 @@ function isDrawn(pr){
 async function savePronosticoElim(mid, side, val){
   if(!userPron[mid])userPron[mid]={};
   userPron[mid][side]=val===''?null:parseInt(val);
-  
-  // Habilitar/deshabilitar inputs de penales según si hay empate
-  const card=document.querySelector(`[data-mid="${mid}"]`);
-  const penInputs=document.querySelectorAll(`.pen-inp[data-mid="${mid}"]`);
+
   const drawn=isDrawn(userPron[mid]);
-  penInputs.forEach(inp=>{
-    inp.disabled=!drawn;
-    if(!drawn){inp.value=''; userPron[mid].pen_home=null; userPron[mid].pen_away=null;}
+
+  // Buscar los pen-inp de este partido por proximidad al input que cambió
+  // Recorrer todos los pen-inp y filtrar los del mismo partido
+  document.querySelectorAll('.pen-inp').forEach(inp=>{
+    if(inp.getAttribute('onchange')&&inp.getAttribute('onchange').includes(`'${mid}'`)){
+      inp.disabled=!drawn;
+      if(!drawn){
+        inp.value='';
+        if(inp.getAttribute('onchange').includes("'home'"))
+          userPron[mid].pen_home=null;
+        else
+          userPron[mid].pen_away=null;
+      }
+    }
   });
-  
+
   await savePronostico(mid, side, val);
 }
 
@@ -3307,8 +3368,26 @@ async function savePronosticoElim(mid, side, val){
 async function savePenalElim(mid, side, val){
   if(!userPron[mid])userPron[mid]={};
   const key=side==='home'?'pen_home':'pen_away';
-  userPron[mid][key]=val===''?null:parseInt(val);
-  
+  const otherKey=side==='home'?'pen_away':'pen_home';
+  const newVal=val===''?null:parseInt(val);
+
+  // Validar que no sea empate en penales
+  const otherVal=userPron[mid][otherKey];
+  if(newVal!==null&&otherVal!==null&&newVal===otherVal){
+    showToast("⚠️ En penales no puede haber empate");
+    // Revertir el input al valor anterior
+    document.querySelectorAll('.pen-inp').forEach(inp=>{
+      if(inp.getAttribute('onchange')&&
+         inp.getAttribute('onchange').includes(`'${mid}'`)&&
+         inp.getAttribute('onchange').includes(`'${side}'`)){
+        inp.value=userPron[mid][key]??'';
+      }
+    });
+    return;
+  }
+
+  userPron[mid][key]=newVal;
+
   await postToSheet({
     type:"pronostico",
     mail:currentPlayer.mail,
