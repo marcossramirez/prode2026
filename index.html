@@ -2668,7 +2668,7 @@ async function fetchESPN(){
     const events=data.events||[];
     logESPN("Eventos recibidos",events.length);
     
-    const matchIdx=buildMatchIndex();
+    const matchIdx=getMatchIndex();
     let changed=false;
     let newFinished=[];
 
