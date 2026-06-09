@@ -210,7 +210,7 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
   font-family:"Barlow Condensed",sans-serif;
   font-weight:700;font-size:13px;
   letter-spacing:1px;text-transform:uppercase;
-  color:#00ff47;
+  color:#ffffff;
   padding-right:80px;
 }
 @keyframes nav-ticker-scroll{
@@ -1020,7 +1020,7 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
             onkeydown="if(event.key==='Enter')saveTickerAdmin(this.value)">
           <button class="btn-save" onclick="saveTickerAdmin(document.getElementById('tickerInput').value)">PUBLICAR</button>
         </div>
-        <div style="font-size:10px;color:var(--dim);margin-top:6px;">Este mensaje reemplaza la frase del Sheet por el día. Dejalo vacío para volver a la frase del Sheet.</div>
+
       </div>
       <div style="display:flex;gap:8px;margin-bottom:16px;">
         <button class="phase-btn active" id="adminPhaseGrupos" onclick="selAdminPhase('grupos',this)">FASE DE GRUPOS</button>
@@ -3185,13 +3185,21 @@ async function loadConfig(){
 
 // ── Guardar ticker desde admin ──
 async function saveTickerAdmin(val){
-  await fetch(SHEET_URL,{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({type:'config',key:'ticker_admin',value:val.trim(),secret:SYNC_SECRET})
-  });
-  loadConfig();
-  showToast(val.trim()!==''?'✅ Mensaje publicado':'✅ Mensaje borrado');
+  try{
+    const r=await fetch(SHEET_URL,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({type:'config',key:'ticker_admin',value:val.trim(),secret:SYNC_SECRET})
+    });
+    const res=await r.json();
+    console.log('saveTickerAdmin result:',res);
+    showToast(val.trim()!==''?'✅ Mensaje publicado':'✅ Mensaje borrado');
+    // Esperar 1.5s para que el Sheet se actualice y recargar
+    setTimeout(()=>{ location.reload(); }, 1500);
+  }catch(e){
+    console.error('Error guardando ticker:',e);
+    showToast('❌ Error al publicar');
+  }
 }
 
 // Borrar ticker admin Y del día a las 23:59
