@@ -2684,8 +2684,8 @@ async function fetchESPN(){
         
         const espnHome=homeComp.team?.displayName||homeComp.team?.name||"";
         const espnAway=awayComp.team?.displayName||awayComp.team?.name||"";
-        const proHome=ESPN_NAMES[espnHome];
-        const proAway=ESPN_NAMES[espnAway];
+        const proHome=TEAM_NAME_MAP[espnHome]||espnHome;
+        const proAway=TEAM_NAME_MAP[espnAway]||espnAway;
         
         if(!proHome||!proAway){
           logESPN("Sin mapeo",{espnHome,espnAway});
@@ -3137,7 +3137,11 @@ async function loadConfig(){
   try{
     const res=await fetch(`${SHEET_URL}?type=config`);
     const data=await res.json();
-    console.log('Config data:', JSON.stringify(data).slice(0,300));
+    console.log('Config keys:', Object.keys(data));
+    console.log('ticker_admin:', data.ticker_admin);
+    const dd2=new Date(new Date().toLocaleString('en-US',{timeZone:'America/Argentina/Buenos_Aires'}));
+    const hoyDebug=`${String(dd2.getDate()).padStart(2,'0')}/${String(dd2.getMonth()+1).padStart(2,'0')}/${dd2.getFullYear()}`;
+    console.log('Buscando clave:', 'ticker_'+hoyDebug, '→', data['ticker_'+hoyDebug]);
 
     // Hora ARG actual
     const now=new Date();
