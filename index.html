@@ -672,6 +672,86 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
 .esp-inp:not(:disabled):focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(0,255,71,.1);}
 .esp-inp:disabled{background:rgba(255,255,255,.03);color:var(--dim);cursor:not-allowed;border-color:transparent;}
 
+/* ── BUSCADOR DE JUGADORES ── */
+.esp-search-wrap{position:relative;width:100%;}
+.esp-search-inp{
+  width:100%;padding:11px 14px;border-radius:10px;
+  background:var(--surface2);border:2px solid var(--border);
+  color:var(--white);font-family:"DM Sans",sans-serif;font-size:14px;
+  outline:none;transition:all .2s;
+}
+.esp-search-inp:not(:disabled):focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(0,255,71,.1);}
+.esp-search-inp:disabled{background:rgba(255,255,255,.03);color:var(--dim);cursor:not-allowed;border-color:transparent;}
+.esp-search-selected{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  background:rgba(0,255,71,.08);border:2px solid var(--green);
+  border-radius:10px;padding:10px 14px;
+  font-size:13px;color:var(--white);cursor:pointer;
+}
+.esp-search-selected.locked{cursor:default;border-color:var(--border);background:rgba(255,255,255,.03);color:var(--dim);}
+.esp-search-selected .sel-name{font-weight:700;color:var(--green);}
+.esp-search-selected.locked .sel-name{color:var(--dim);}
+.esp-search-selected .sel-meta{font-size:11px;color:var(--dim);margin-top:2px;}
+.esp-search-selected .sel-clear{font-size:16px;color:var(--dim);padding:0 4px;background:none;border:none;cursor:pointer;color:rgba(255,255,255,.4);}
+.esp-search-selected .sel-clear:hover{color:var(--white);}
+.esp-dropdown{
+  position:absolute;top:calc(100% + 4px);left:0;right:0;z-index:999;
+  background:#1a1a1a;border:1px solid var(--border2);border-radius:12px;
+  overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.6);
+  max-height:280px;overflow-y:auto;display:none;
+}
+.esp-dropdown.open{display:block;}
+.esp-dd-filters{
+  padding:10px 12px;border-bottom:1px solid var(--border);
+  display:flex;gap:6px;flex-wrap:wrap;background:#131313;
+}
+.esp-dd-filter{
+  padding:4px 10px;border-radius:20px;font-size:10px;font-weight:700;
+  letter-spacing:1px;text-transform:uppercase;cursor:pointer;
+  border:1px solid var(--border);background:transparent;color:var(--dim);transition:all .15s;
+}
+.esp-dd-filter.active{background:var(--green);border-color:var(--green);color:var(--black);}
+.esp-dd-item{
+  padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--border);
+  transition:background .12s;
+}
+.esp-dd-item:last-child{border-bottom:none;}
+.esp-dd-item:hover,.esp-dd-item.focused{background:rgba(255,255,255,.06);}
+.esp-dd-name{font-size:13px;font-weight:600;color:var(--white);}
+.esp-dd-meta{font-size:11px;color:var(--dim);margin-top:2px;}
+.esp-dd-empty{padding:16px 14px;text-align:center;font-size:12px;color:var(--dim);}
+
+/* ── ADMIN ESPECIALES ── */
+.adm-esp-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:14px;padding:16px;margin-bottom:12px;
+}
+.adm-esp-row{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:10px 0;border-bottom:1px solid var(--border);
+}
+.adm-esp-row:last-child{border-bottom:none;}
+.adm-esp-label{font-size:12px;color:var(--white);font-weight:600;}
+.adm-esp-pts{font-family:"Barlow Condensed",sans-serif;font-weight:900;font-size:13px;color:var(--green);margin-left:6px;}
+.adm-esp-toggle{
+  display:flex;align-items:center;gap:8px;
+  background:none;border:none;cursor:pointer;
+  font-family:"Barlow Condensed",sans-serif;font-weight:900;font-size:12px;letter-spacing:2px;
+}
+.adm-esp-switch{
+  width:40px;height:22px;border-radius:11px;background:#333;
+  position:relative;transition:background .2s;flex-shrink:0;
+}
+.adm-esp-switch::after{
+  content:"";position:absolute;width:16px;height:16px;border-radius:50%;
+  background:#fff;top:3px;left:3px;transition:left .2s;
+}
+.adm-esp-switch.on{background:var(--green);}
+.adm-esp-switch.on::after{left:21px;}
+.adm-esp-status{font-size:11px;letter-spacing:1px;}
+.adm-esp-status.open{color:var(--green);}
+.adm-esp-status.closed{color:var(--dim);}
+
 /* ══════════════════════════════
    RESULTADOS
 ══════════════════════════════ */
@@ -994,18 +1074,115 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
         <div id="elimMatches"></div>
       </div>
       <div id="phEsp" style="display:none">
-        <div id="espLockedNotice" style="display:none" class="esp-locked">
-          <span class="lk">🔒</span><span>Los especiales están cerrados — el torneo ya comenzó.</span>
-        </div>
-        <div class="esp-card">
-          <div class="esp-row"><div class="esp-lbl">Balón de Oro — Mejor jugador<span class="esp-pts">4 PTS</span></div><input class="esp-inp" id="esp1" placeholder="Ej: Lamine Yamal"></div>
-          <div class="esp-row"><div class="esp-lbl">Bota de Oro — Máximo goleador<span class="esp-pts">6 PTS</span></div><input class="esp-inp" id="esp2" placeholder="Ej: Kylian Mbappé"></div>
-          <div class="esp-row"><div class="esp-lbl">Guante de Oro — Mejor arquero<span class="esp-pts">4 PTS</span></div><input class="esp-inp" id="esp3" placeholder="Ej: Emiliano Martínez"></div>
-          <div class="esp-row"><div class="esp-lbl">Mejor Jugador Joven — Sub 21<span class="esp-pts">4 PTS</span></div><input class="esp-inp" id="esp4" placeholder="Ej: Lamine Yamal"></div>
-          <div class="esp-row"><div class="esp-lbl">Primer país eliminado<span class="esp-pts">3 PTS</span></div><input class="esp-inp" id="esp5" placeholder="Ej: Arabia Saudita"></div>
-          <div class="esp-row"><div class="esp-lbl">Total goles fase de grupos (±1)<span class="esp-pts">4 PTS</span></div><input class="esp-inp" id="esp6" type="number" placeholder="Ej: 120"></div>
-          <div class="esp-row"><div class="esp-lbl">Total partidos definidos por penales (±1)<span class="esp-pts">4 PTS</span></div><input class="esp-inp" id="esp7" type="number" placeholder="Ej: 4"></div>
-          
+        <div class="esp-card" id="espCard">
+
+          <!-- Balón de Oro -->
+          <div class="esp-row" id="espRow_balon">
+            <div class="esp-lbl">Balón de Oro — Mejor jugador<span class="esp-pts">4 PTS</span></div>
+            <div class="esp-search-wrap" id="espWrap_balon">
+              <div id="espSelected_balon" style="display:none" class="esp-search-selected">
+                <div><div class="sel-name" id="espSelName_balon"></div><div class="sel-meta" id="espSelMeta_balon"></div></div>
+                <button class="sel-clear" onclick="clearEspSearch('balon')">✕</button>
+              </div>
+              <div id="espInputWrap_balon">
+                <input class="esp-search-inp" id="espInp_balon" placeholder="Buscá un jugador..." autocomplete="off"
+                  oninput="onEspSearch('balon',this.value)" onfocus="openEspDD('balon')" onblur="closeEspDDDelay('balon')">
+                <div class="esp-dropdown" id="espDD_balon">
+                  <div class="esp-dd-filters" id="espFilters_balon"></div>
+                  <div id="espDDList_balon"></div>
+                </div>
+              </div>
+            </div>
+            <div id="espLocked_balon" style="display:none;font-size:12px;color:var(--dim);padding:10px 14px;background:rgba(255,255,255,.03);border-radius:10px;border:1px solid var(--border)">Esta apuesta especial ha sido cerrada por el administrador.</div>
+          </div>
+
+          <!-- Bota de Oro -->
+          <div class="esp-row" id="espRow_bota">
+            <div class="esp-lbl">Bota de Oro — Máximo goleador<span class="esp-pts">6 PTS</span></div>
+            <div class="esp-search-wrap" id="espWrap_bota">
+              <div id="espSelected_bota" style="display:none" class="esp-search-selected">
+                <div><div class="sel-name" id="espSelName_bota"></div><div class="sel-meta" id="espSelMeta_bota"></div></div>
+                <button class="sel-clear" onclick="clearEspSearch('bota')">✕</button>
+              </div>
+              <div id="espInputWrap_bota">
+                <input class="esp-search-inp" id="espInp_bota" placeholder="Buscá un jugador de campo..." autocomplete="off"
+                  oninput="onEspSearch('bota',this.value)" onfocus="openEspDD('bota')" onblur="closeEspDDDelay('bota')">
+                <div class="esp-dropdown" id="espDD_bota">
+                  <div class="esp-dd-filters" id="espFilters_bota"></div>
+                  <div id="espDDList_bota"></div>
+                </div>
+              </div>
+            </div>
+            <div id="espLocked_bota" style="display:none;font-size:12px;color:var(--dim);padding:10px 14px;background:rgba(255,255,255,.03);border-radius:10px;border:1px solid var(--border)">Esta apuesta especial ha sido cerrada por el administrador.</div>
+          </div>
+
+          <!-- Guante de Oro -->
+          <div class="esp-row" id="espRow_guante">
+            <div class="esp-lbl">Guante de Oro — Mejor arquero<span class="esp-pts">4 PTS</span></div>
+            <div class="esp-search-wrap" id="espWrap_guante">
+              <div id="espSelected_guante" style="display:none" class="esp-search-selected">
+                <div><div class="sel-name" id="espSelName_guante"></div><div class="sel-meta" id="espSelMeta_guante"></div></div>
+                <button class="sel-clear" onclick="clearEspSearch('guante')">✕</button>
+              </div>
+              <div id="espInputWrap_guante">
+                <input class="esp-search-inp" id="espInp_guante" placeholder="Buscá un arquero..." autocomplete="off"
+                  oninput="onEspSearch('guante',this.value)" onfocus="openEspDD('guante')" onblur="closeEspDDDelay('guante')">
+                <div class="esp-dropdown" id="espDD_guante">
+                  <div class="esp-dd-filters" id="espFilters_guante"></div>
+                  <div id="espDDList_guante"></div>
+                </div>
+              </div>
+            </div>
+            <div id="espLocked_guante" style="display:none;font-size:12px;color:var(--dim);padding:10px 14px;background:rgba(255,255,255,.03);border-radius:10px;border:1px solid var(--border)">Esta apuesta especial ha sido cerrada por el administrador.</div>
+          </div>
+
+          <!-- Mejor Jugador Joven -->
+          <div class="esp-row" id="espRow_joven">
+            <div class="esp-lbl">Mejor Jugador Joven — Sub 21<span class="esp-pts">4 PTS</span></div>
+            <div class="esp-search-wrap" id="espWrap_joven">
+              <div id="espSelected_joven" style="display:none" class="esp-search-selected">
+                <div><div class="sel-name" id="espSelName_joven"></div><div class="sel-meta" id="espSelMeta_joven"></div></div>
+                <button class="sel-clear" onclick="clearEspSearch('joven')">✕</button>
+              </div>
+              <div id="espInputWrap_joven">
+                <input class="esp-search-inp" id="espInp_joven" placeholder="Buscá un jugador ≤21 años..." autocomplete="off"
+                  oninput="onEspSearch('joven',this.value)" onfocus="openEspDD('joven')" onblur="closeEspDDDelay('joven')">
+                <div class="esp-dropdown" id="espDD_joven">
+                  <div class="esp-dd-filters" id="espFilters_joven"></div>
+                  <div id="espDDList_joven"></div>
+                </div>
+              </div>
+            </div>
+            <div id="espLocked_joven" style="display:none;font-size:12px;color:var(--dim);padding:10px 14px;background:rgba(255,255,255,.03);border-radius:10px;border:1px solid var(--border)">Esta apuesta especial ha sido cerrada por el administrador.</div>
+          </div>
+
+          <!-- Primer país eliminado -->
+          <div class="esp-row" id="espRow_eliminado">
+            <div class="esp-lbl">Primer país eliminado<span class="esp-pts">3 PTS</span></div>
+            <div id="espWrap_eliminado">
+              <input class="esp-inp" id="espInp_eliminado" placeholder="Ej: Arabia Saudita" onchange="saveEspField('eliminado',this.value)" onblur="saveEspField('eliminado',this.value)">
+            </div>
+            <div id="espLocked_eliminado" style="display:none;font-size:12px;color:var(--dim);padding:10px 14px;background:rgba(255,255,255,.03);border-radius:10px;border:1px solid var(--border)">Esta apuesta especial ha sido cerrada por el administrador.</div>
+          </div>
+
+          <!-- Total goles -->
+          <div class="esp-row" id="espRow_goles">
+            <div class="esp-lbl">Total goles fase de grupos (±1)<span class="esp-pts">4 PTS</span></div>
+            <div id="espWrap_goles">
+              <input class="esp-inp" id="espInp_goles" type="number" placeholder="Ej: 120" onchange="saveEspField('goles',this.value)" onblur="saveEspField('goles',this.value)">
+            </div>
+            <div id="espLocked_goles" style="display:none;font-size:12px;color:var(--dim);padding:10px 14px;background:rgba(255,255,255,.03);border-radius:10px;border:1px solid var(--border)">Esta apuesta especial ha sido cerrada por el administrador.</div>
+          </div>
+
+          <!-- Total penales -->
+          <div class="esp-row" id="espRow_penales">
+            <div class="esp-lbl">Total partidos definidos por penales (±1)<span class="esp-pts">4 PTS</span></div>
+            <div id="espWrap_penales">
+              <input class="esp-inp" id="espInp_penales" type="number" placeholder="Ej: 4" onchange="saveEspField('penales',this.value)" onblur="saveEspField('penales',this.value)">
+            </div>
+            <div id="espLocked_penales" style="display:none;font-size:12px;color:var(--dim);padding:10px 14px;background:rgba(255,255,255,.03);border-radius:10px;border:1px solid var(--border)">Esta apuesta especial ha sido cerrada por el administrador.</div>
+          </div>
+
         </div>
       </div>
     </div>
@@ -1061,8 +1238,13 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
       <div style="display:flex;gap:8px;margin-bottom:16px;">
         <button class="phase-btn active" id="adminPhaseGrupos" onclick="selAdminPhase('grupos',this)">FASE DE GRUPOS</button>
         <button class="phase-btn" id="adminPhaseElim" onclick="selAdminPhase('elim',this)">FASE ELIMINATORIA</button>
+        <button class="phase-btn" id="adminPhaseEsp" onclick="selAdminPhase('especiales',this)">ESPECIALES</button>
       </div>
       <div id="adminMatches"></div>
+      <div id="adminEspPanel" style="display:none">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:11px;letter-spacing:3px;color:var(--green);margin-bottom:12px;">🔐 CONTROL DE APUESTAS ESPECIALES</div>
+        <div class="adm-esp-card" id="adminEspCard"></div>
+      </div>
     </div>
   </div>
 </div>
@@ -2995,7 +3177,7 @@ async function enterApp(player){
   // Render inmediato con datos locales
   buildGrupoDD();buildResGrupoDD();
   renderGroupTable("A");renderGrupoMatches("A");renderElimMatches("dieciseis");
-  initEsp();renderAdmin();
+  renderAdmin();
   renderRanking(player);
 
   // Cargar ticker
@@ -3003,11 +3185,12 @@ async function enterApp(player){
   schedulerTickerClear();
 
   // Cargar datos del Sheet en paralelo (no bloquea la UI)
-  Promise.all([loadAllAliases(), loadMisPronosticos(), loadResultadosFromSheet()])
+  Promise.all([loadAllAliases(), loadMisPronosticos(), loadResultadosFromSheet(), loadJugadores()])
     .then(()=>{
       renderRanking(currentPlayer||player);
       renderGrupoMatches(curGrupo);
       renderResultados();
+      initEsp(); // Inicializar especiales después de tener jugadores
     });
 
   // Forzar re-render del ranking después de 1 segundo (por si los aliases tardaron)
@@ -3585,6 +3768,7 @@ function selPhase(ph,btn){
   document.getElementById("phGrupos").style.display=ph==="grupos"?"block":"none";
   document.getElementById("phElim").style.display=ph==="eliminacion"?"block":"none";
   document.getElementById("phEsp").style.display=ph==="especiales"?"block":"none";
+  if(ph==="especiales") renderEspSection();
 }
 function buildGrupoDD(){
   document.getElementById("grupoMenu").innerHTML=Object.keys(GROUPS).map(g=>`
@@ -3874,17 +4058,330 @@ async function toggleBonus(id,btn){
   }
 }
 
-function initEsp(){
-  const locked=torneoStarted(); // Se bloquea al inicio del torneo (11 jun 16:00 ARG)
-  document.getElementById("espLockedNotice").style.display=locked?"flex":"none";
-  const espBtn=document.getElementById("espSaveBtn");if(espBtn)espBtn.style.display=locked?"none":"block";
-  ["esp1","esp2","esp3","esp4","esp5","esp6","esp7"].forEach(id=>{
-    const el=document.getElementById(id);
-    el.disabled=locked;if(locked)el.placeholder="Cerrado";
+/* ═══════════════════════════════════════════
+   ESPECIALES — DATOS Y ESTADO
+═══════════════════════════════════════════ */
+let jugadoresDB = []; // cargados desde DATOS_JUGADORES sheet
+let espLocks = {balon:false, bota:false, guante:false, joven:false, eliminado:false, goles:false, penales:false};
+let espSelections = {balon:null, bota:null, guante:null, joven:null, eliminado:'', goles:'', penales:''};
+let espDDFilters = {balon:{pais:'',posicion:'',edad:''},bota:{pais:'',posicion:'',edad:''},guante:{pais:'',posicion:'',edad:''},joven:{pais:'',posicion:'',edad:''}};
+
+const ESP_DEFS = [
+  {key:'balon',  label:'Balón de Oro',    pts:'4 PTS', tipo:'jugador'},
+  {key:'bota',   label:'Bota de Oro',     pts:'6 PTS', tipo:'jugador'},
+  {key:'guante', label:'Guante de Oro',   pts:'4 PTS', tipo:'jugador'},
+  {key:'joven',  label:'Mejor Jug. Joven',pts:'4 PTS', tipo:'jugador'},
+  {key:'eliminado', label:'Primer País Eliminado', pts:'3 PTS', tipo:'texto'},
+  {key:'goles',  label:'Total Goles Grupos', pts:'4 PTS', tipo:'numero'},
+  {key:'penales',label:'Total Penales',   pts:'4 PTS', tipo:'numero'},
+];
+
+// Normaliza texto quitando tildes y pasando a minúsculas
+function normalizeStr(s){
+  if(!s)return'';
+  return s.toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/[^a-z0-9 ]/g,'');
+}
+
+// Carga jugadores desde sheet DATOS_JUGADORES
+async function loadJugadores(){
+  try{
+    const res=await fetch(`${SHEET_URL}?type=datos_jugadores`);
+    const data=await res.json();
+    jugadoresDB=data.map(j=>({
+      nombre: j.nombre||j['Nombre y Apellido']||'',
+      pais:   j.pais||j['País']||'',
+      posicion:j.posicion||j['Posición']||'',
+      edad:   parseInt(j.edad||j['Edad'])||0,
+      elegible_joven: (parseInt(j.edad||j['Edad'])||0)<=21,
+      elegible_guante: (j.posicion||j['Posición']||'').toLowerCase().includes('arquero'),
+    }));
+    console.log(`✅ Jugadores cargados: ${jugadoresDB.length}`);
+  }catch(e){console.warn('Error cargando jugadores:',e);}
+}
+
+// Carga estado de locks de especiales
+async function loadEspLocks(){
+  try{
+    const res=await fetch(`${SHEET_URL}?type=esp_locks`);
+    const data=await res.json();
+    if(data&&typeof data==='object'){
+      Object.keys(espLocks).forEach(k=>{
+        if(data[k]!==undefined) espLocks[k]=(data[k]==='TRUE'||data[k]===true);
+      });
+    }
+  }catch(e){console.warn('Error cargando esp_locks:',e);}
+}
+
+// Carga pronósticos especiales del jugador actual
+async function loadMisEspeciales(){
+  if(!currentPlayer)return;
+  try{
+    const res=await fetch(`${SHEET_URL}?type=especiales&mail=${encodeURIComponent(currentPlayer.mail)}`);
+    const data=await res.json();
+    if(data){
+      ['balon','bota','guante','joven','eliminado','goles','penales'].forEach(k=>{
+        if(data[k]!==undefined&&data[k]!==null&&data[k]!==''){
+          if(['balon','bota','guante','joven'].includes(k)){
+            // buscar jugador por nombre
+            const jugador=jugadoresDB.find(j=>j.nombre===data[k]);
+            espSelections[k]=jugador||{nombre:data[k],pais:'',posicion:'',edad:0};
+          } else {
+            espSelections[k]=data[k];
+          }
+        }
+      });
+    }
+  }catch(e){console.warn('Error cargando especiales:',e);}
+}
+
+// Inicializa la sección de especiales
+async function initEsp(){
+  await loadEspLocks();
+  await loadMisEspeciales();
+  renderEspSection();
+}
+
+function renderEspSection(){
+  // Buscadores de jugadores
+  ['balon','bota','guante','joven'].forEach(key=>{
+    const locked=espLocks[key];
+    const sel=espSelections[key];
+    const wrapEl=document.getElementById(`espWrap_${key}`);
+    const lockedEl=document.getElementById(`espLocked_${key}`);
+    if(!wrapEl||!lockedEl)return;
+    if(locked){
+      wrapEl.style.display='none';
+      lockedEl.style.display='block';
+    } else {
+      wrapEl.style.display='block';
+      lockedEl.style.display='none';
+      // Mostrar selección si existe
+      if(sel){
+        showEspSelected(key, sel);
+      } else {
+        document.getElementById(`espSelected_${key}`).style.display='none';
+        document.getElementById(`espInputWrap_${key}`).style.display='block';
+      }
+      // Inicializar filtros
+      renderEspFilters(key);
+    }
+  });
+  // Inputs de texto y número
+  ['eliminado','goles','penales'].forEach(key=>{
+    const locked=espLocks[key];
+    const inp=document.getElementById(`espInp_${key}`);
+    const wrapEl=document.getElementById(`espWrap_${key}`);
+    const lockedEl=document.getElementById(`espLocked_${key}`);
+    if(!inp||!wrapEl||!lockedEl)return;
+    if(locked){
+      wrapEl.style.display='none';
+      lockedEl.style.display='block';
+    } else {
+      wrapEl.style.display='block';
+      lockedEl.style.display='none';
+      inp.disabled=false;
+      inp.value=espSelections[key]||'';
+    }
   });
 }
 
-function saveEsp(){if(torneoStarted()){showToast("🔒 El torneo ya comenzó");return;}showToast("✓ GUARDADO");}
+function showEspSelected(key, jugador){
+  const selEl=document.getElementById(`espSelected_${key}`);
+  const inpWrapEl=document.getElementById(`espInputWrap_${key}`);
+  document.getElementById(`espSelName_${key}`).textContent=jugador.nombre;
+  document.getElementById(`espSelMeta_${key}`).textContent=
+    [jugador.pais, jugador.posicion, jugador.edad?`${jugador.edad} años`:''].filter(Boolean).join(' · ');
+  selEl.style.display='flex';
+  inpWrapEl.style.display='none';
+  // Si está bloqueado, sin botón de limpiar
+  if(espLocks[key]) selEl.classList.add('locked');
+  else selEl.classList.remove('locked');
+}
+
+function clearEspSearch(key){
+  if(espLocks[key])return;
+  espSelections[key]=null;
+  document.getElementById(`espSelected_${key}`).style.display='none';
+  document.getElementById(`espInputWrap_${key}`).style.display='block';
+  document.getElementById(`espInp_${key}`).value='';
+  document.getElementById(`espInp_${key}`).focus();
+  saveEspJugador(key, null);
+}
+
+// Filtrar jugadores según tipo de apuesta
+function filterJugadoresForKey(key, query, filters){
+  let lista=[...jugadoresDB];
+  // Filtros de elegibilidad por tipo
+  if(key==='guante') lista=lista.filter(j=>j.elegible_guante);
+  if(key==='joven')  lista=lista.filter(j=>j.elegible_joven);
+  if(key==='bota')   lista=lista.filter(j=>!j.elegible_guante); // excluir arqueros
+  // Filtros de UI
+  if(filters.pais) lista=lista.filter(j=>j.pais===filters.pais);
+  if(filters.posicion) lista=lista.filter(j=>j.posicion===filters.posicion);
+  if(filters.edad==='joven') lista=lista.filter(j=>j.elegible_joven);
+  // Búsqueda por texto
+  if(query){
+    const q=normalizeStr(query);
+    lista=lista.filter(j=>normalizeStr(j.nombre).includes(q)||normalizeStr(j.pais).includes(q));
+  }
+  // Priorizar delanteros en Bota de Oro
+  if(key==='bota'&&!query&&!filters.posicion){
+    const delanteros=lista.filter(j=>normalizeStr(j.posicion).includes('delantero'));
+    const otros=lista.filter(j=>!normalizeStr(j.posicion).includes('delantero'));
+    lista=[...delanteros,...otros];
+  }
+  return lista.slice(0,30);
+}
+
+// Obtiene listas únicas de países y posiciones para filtros
+function getEspFilterOptions(key){
+  let lista=[...jugadoresDB];
+  if(key==='guante') lista=lista.filter(j=>j.elegible_guante);
+  if(key==='joven')  lista=lista.filter(j=>j.elegible_joven);
+  if(key==='bota')   lista=lista.filter(j=>!j.elegible_guante);
+  const paises=[...new Set(lista.map(j=>j.pais))].filter(Boolean).sort();
+  const posiciones=[...new Set(lista.map(j=>j.posicion))].filter(Boolean).sort();
+  return {paises, posiciones};
+}
+
+function renderEspFilters(key){
+  const {paises, posiciones}=getEspFilterOptions(key);
+  const filtersEl=document.getElementById(`espFilters_${key}`);
+  if(!filtersEl)return;
+  const f=espDDFilters[key];
+  let html='';
+  // Filtro posición (solo si hay varias)
+  posiciones.forEach(pos=>{
+    const active=f.posicion===pos?'active':'';
+    html+=`<button class="esp-dd-filter ${active}" onclick="setEspFilter('${key}','posicion','${active?'':pos}')">${pos}</button>`;
+  });
+  // Filtro edad joven (solo balon y bota)
+  if(key==='balon'||key==='bota'){
+    const active=f.edad==='joven'?'active':'';
+    html+=`<button class="esp-dd-filter ${active}" onclick="setEspFilter('${key}','edad','${active?'':'joven'}')">≤21</button>`;
+  }
+  filtersEl.innerHTML=html||'<span style="font-size:10px;color:var(--dim);padding:2px 4px">Todos</span>';
+}
+
+function setEspFilter(key, tipo, val){
+  espDDFilters[key][tipo]=val;
+  renderEspFilters(key);
+  renderEspDDList(key, document.getElementById(`espInp_${key}`)?.value||'');
+}
+
+function onEspSearch(key, query){
+  renderEspFilters(key);
+  renderEspDDList(key, query);
+  openEspDD(key);
+}
+
+function openEspDD(key){
+  renderEspDDList(key, document.getElementById(`espInp_${key}`)?.value||'');
+  const dd=document.getElementById(`espDD_${key}`);
+  if(dd)dd.classList.add('open');
+}
+
+function closeEspDDDelay(key){
+  setTimeout(()=>{
+    const dd=document.getElementById(`espDD_${key}`);
+    if(dd)dd.classList.remove('open');
+  },200);
+}
+
+function renderEspDDList(key, query){
+  const lista=filterJugadoresForKey(key, query, espDDFilters[key]);
+  const listEl=document.getElementById(`espDDList_${key}`);
+  if(!listEl)return;
+  if(lista.length===0){
+    listEl.innerHTML=`<div class="esp-dd-empty">Sin resultados para "${query}"</div>`;
+    return;
+  }
+  listEl.innerHTML=lista.map(j=>`
+    <div class="esp-dd-item" onmousedown="selectEspJugador('${key}','${j.nombre.replace(/'/g,"\\'")}')">
+      <div class="esp-dd-name">${j.nombre}</div>
+      <div class="esp-dd-meta">${[j.pais,j.posicion,j.edad?j.edad+' años':''].filter(Boolean).join(' · ')}</div>
+    </div>`).join('');
+}
+
+function selectEspJugador(key, nombre){
+  // Validación frontend
+  const jugador=jugadoresDB.find(j=>j.nombre===nombre);
+  if(!jugador){showToast('⚠️ Jugador no encontrado');return;}
+  if(key==='guante'&&!jugador.elegible_guante){showToast('⚠️ Solo arqueros para el Guante de Oro');return;}
+  if(key==='joven'&&!jugador.elegible_joven){showToast('⚠️ Solo jugadores ≤21 años');return;}
+  if(key==='bota'&&jugador.elegible_guante){showToast('⚠️ La Bota de Oro excluye arqueros');return;}
+  espSelections[key]=jugador;
+  showEspSelected(key, jugador);
+  document.getElementById(`espDD_${key}`).classList.remove('open');
+  saveEspJugador(key, jugador.nombre);
+}
+
+async function saveEspJugador(key, nombre){
+  if(!currentPlayer)return;
+  // Validación backend también se hará en el Apps Script
+  await postToSheet({
+    type:'especial',
+    mail: currentPlayer.mail,
+    key,
+    valor: nombre||'',
+    secret: SYNC_SECRET
+  });
+  showToast(nombre?'✓ Especial guardado':'✓ Selección borrada');
+}
+
+async function saveEspField(key, val){
+  if(!currentPlayer)return;
+  if(espLocks[key]){showToast('🔒 Esta apuesta está cerrada');return;}
+  espSelections[key]=val;
+  await postToSheet({
+    type:'especial',
+    mail: currentPlayer.mail,
+    key,
+    valor: val,
+    secret: SYNC_SECRET
+  });
+  showToast('✓ Especial guardado');
+}
+
+function saveEsp(){showToast('✓ GUARDADO');}
+
+/* ═══════════════════════════════════════════
+   ADMIN — ESPECIALES
+═══════════════════════════════════════════ */
+function renderAdminEsp(){
+  const card=document.getElementById('adminEspCard');
+  if(!card)return;
+  card.innerHTML=ESP_DEFS.map(def=>`
+    <div class="adm-esp-row">
+      <div>
+        <span class="adm-esp-label">${def.label}</span>
+        <span class="adm-esp-pts">${def.pts}</span>
+      </div>
+      <button class="adm-esp-toggle" onclick="toggleEspLock('${def.key}')">
+        <div class="adm-esp-switch ${espLocks[def.key]?'':'on'}" id="admEspSwitch_${def.key}"></div>
+        <span class="adm-esp-status ${espLocks[def.key]?'closed':'open'}" id="admEspStatus_${def.key}">
+          ${espLocks[def.key]?'CERRADA':'ABIERTA'}
+        </span>
+      </button>
+    </div>`).join('');
+}
+
+async function toggleEspLock(key){
+  const newVal=!espLocks[key];
+  espLocks[key]=newVal;
+  // Actualizar UI admin
+  const sw=document.getElementById(`admEspSwitch_${key}`);
+  const st=document.getElementById(`admEspStatus_${key}`);
+  if(sw){sw.className=`adm-esp-switch ${newVal?'':'on'}`;}
+  if(st){st.className=`adm-esp-status ${newVal?'closed':'open'}`;st.textContent=newVal?'CERRADA':'ABIERTA';}
+  // Guardar en sheet
+  await postToSheet({type:'esp_lock',key,locked:newVal,secret:SYNC_SECRET});
+  showToast(newVal?`🔒 ${key} cerrada`:`🔓 ${key} abierta`);
+  // Si el usuario está en especiales, re-renderizar
+  renderEspSection();
+}
 
 /* RESULTADOS */
 
@@ -3981,7 +4478,16 @@ function selAdminPhase(phase, btn){
   currentAdminPhase=phase;
   document.querySelectorAll('.phase-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
-  renderAdmin();
+  const adminMatchesEl=document.getElementById('adminMatches');
+  const adminEspPanelEl=document.getElementById('adminEspPanel');
+  if(phase==='especiales'){
+    if(adminMatchesEl)adminMatchesEl.style.display='none';
+    if(adminEspPanelEl){adminEspPanelEl.style.display='block';renderAdminEsp();}
+  } else {
+    if(adminMatchesEl)adminMatchesEl.style.display='block';
+    if(adminEspPanelEl)adminEspPanelEl.style.display='none';
+    renderAdmin();
+  }
 }
 
 function renderAdmin(){
