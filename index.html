@@ -3241,8 +3241,22 @@ async function saveTickerAdmin(val){
     const r=await fetch(`${SHEET_URL}?${params.toString()}`);
     const res=await r.json();
     console.log('saveTickerAdmin result:',res);
-    showToast(val.trim()!==''?'✅ Mensaje publicado':'✅ Mensaje borrado');
-    setTimeout(()=>{ location.reload(); }, 1500);
+    // Mostrar inmediatamente en el ticker sin recargar
+    const el=document.getElementById('navTickerText');
+    const track=document.getElementById('navTickerTrack');
+    const wrap=document.getElementById('navTickerWrap');
+    if(val.trim()!==''){
+      if(el)el.textContent=val.trim();
+      if(wrap)wrap.style.display='flex';
+      if(track){
+        const duration=Math.max(12,val.trim().length*0.35);
+        track.style.animationDuration=duration+'s';
+      }
+      showToast('✅ Mensaje publicado');
+    } else {
+      if(wrap)wrap.style.display='none';
+      showToast('✅ Mensaje borrado');
+    }
   }catch(e){
     console.error('Error guardando ticker:',e);
     showToast('❌ Error al publicar');
@@ -3537,7 +3551,6 @@ function renderGroupTable(grupo){
   }).join("");
 
   el.innerHTML=`<div class="group-table-wrap">
-    <div class="group-table-title">Grupo ${grupo} — Tabla de posiciones</div>
     <table class="group-table">
       <thead><tr>
         <th>Equipo</th><th>PJ</th><th>PG</th><th>PE</th><th>PP</th>
