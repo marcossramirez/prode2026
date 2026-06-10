@@ -3338,7 +3338,10 @@ function renderSpiderSvg(metricas, color){
     axes+=`<line x1="${cx}" y1="${cy}" x2="${ex.toFixed(1)}" y2="${ey.toFixed(1)}" stroke="rgba(255,255,255,.2)" stroke-width="0.8"/>`;
     const lx=cx+(r+18)*Math.cos(angle),ly=cy+(r+18)*Math.sin(angle);
     const anchor=lx<cx-5?"end":lx>cx+5?"start":"middle";
-    labelsHtml+=`<text x="${lx.toFixed(1)}" y="${(ly+3).toFixed(1)}" text-anchor="${anchor}" fill="rgba(255,255,255,.9)" font-size="9.5" font-family="Barlow Condensed,sans-serif" font-weight="900" letter-spacing="0.8" style="cursor:pointer" onclick="showSpiderTip('${labels[i]}',event)" onmouseleave="hideSpiderTip()">${labels[i]}</text>`;
+    labelsHtml+=`<g onclick="showSpiderTip('${labels[i]}',event)" style="cursor:pointer">
+      <rect x="${(lx-30).toFixed(1)}" y="${(ly-12).toFixed(1)}" width="60" height="18" fill="transparent"/>
+      <text x="${lx.toFixed(1)}" y="${(ly+3).toFixed(1)}" text-anchor="${anchor}" fill="rgba(255,255,255,.9)" font-size="9.5" font-family="Barlow Condensed,sans-serif" font-weight="900" letter-spacing="0.8">${labels[i]}</text>
+    </g>`;
   });
   // Color fill con alpha
   const hexToRgba=(hex,a)=>{
@@ -3460,6 +3463,9 @@ function showSpiderTip(label,evt){
 function hideSpiderTip(){
   document.getElementById('spiderTooltip').classList.remove('visible');
 }
+document.addEventListener('click',function(e){
+  if(!e.target.closest('svg'))hideSpiderTip();
+});
 
 function getEstilo(riesgo){
   if(riesgo>=80)return"KAMIKAZE";
