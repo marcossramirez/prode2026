@@ -325,7 +325,7 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
   border:1px solid rgba(255,255,255,.08);
 }
 .profile-left{display:flex;flex-direction:column;gap:8px;flex:1;min-width:0;}
-.profile-right{flex-shrink:0;display:flex;align-items:center;justify-content:flex-end;width:250px;height:160px;}
+.profile-right{flex-shrink:0;display:flex;align-items:stretch;justify-content:center;width:280px;align-self:stretch;overflow:visible;}
 
 .profile-av{
   width:36px;height:36px;border-radius:50%;flex-shrink:0;
@@ -944,6 +944,23 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
           <div class="pts-row"><span>Total partidos definidos por penales (±1)</span><span class="pts-v">4 PTS</span></div>
         </div>
       </div>
+
+        <div class="pts-legend">
+          <div class="pts-head">Tarjeta de Perfil</div>
+          <div class="pts-grid" style="grid-template-columns:1fr;gap:0;">
+            <div class="pts-sec">DATOS DEL JUGADOR</div>
+            <div class="pts-row" style="flex-direction:column;align-items:flex-start;gap:2px;border-bottom:1px solid rgba(255,255,255,.05);padding:8px 0;"><span style="font-weight:700;">👍 Ganados</span><span style="font-size:11px;color:var(--dim);font-weight:400;">% de resultados acertados</span></div>
+            <div class="pts-row" style="flex-direction:column;align-items:flex-start;gap:2px;border-bottom:1px solid rgba(255,255,255,.05);padding:8px 0;"><span style="font-weight:700;">👎 Perdidos</span><span style="font-size:11px;color:var(--dim);font-weight:400;">% de resultados errados</span></div>
+            <div class="pts-row" style="flex-direction:column;align-items:flex-start;gap:2px;border-bottom:1px solid rgba(255,255,255,.05);padding:8px 0;"><span style="font-weight:700;">🔥 Racha</span><span style="font-size:11px;color:var(--dim);font-weight:400;">Partidos consecutivos sin perder</span></div>
+            <div class="pts-row" style="flex-direction:column;align-items:flex-start;gap:2px;padding:8px 0;"><span style="font-weight:700;">🎯 Precisión</span><span style="font-size:11px;color:var(--dim);font-weight:400;">% de marcadores exactos acertados</span></div>
+            <div class="pts-sec">MÉTRICAS DEL JUGADOR</div>
+            <div class="pts-row" style="flex-direction:column;align-items:flex-start;gap:2px;border-bottom:1px solid rgba(255,255,255,.05);padding:8px 0;"><span style="font-weight:700;">🎯 Precisión</span><span style="font-size:11px;color:var(--dim);font-weight:400;">% de marcadores exactos acertados</span></div>
+            <div class="pts-row" style="flex-direction:column;align-items:flex-start;gap:2px;border-bottom:1px solid rgba(255,255,255,.05);padding:8px 0;"><span style="font-weight:700;">⚡ Efectividad</span><span style="font-size:11px;color:var(--dim);font-weight:400;">% de ganador/empate acertado</span></div>
+            <div class="pts-row" style="flex-direction:column;align-items:flex-start;gap:2px;border-bottom:1px solid rgba(255,255,255,.05);padding:8px 0;"><span style="font-weight:700;">✨ Magia</span><span style="font-size:11px;color:var(--dim);font-weight:400;">% de bonus acertados</span></div>
+            <div class="pts-row" style="flex-direction:column;align-items:flex-start;gap:2px;border-bottom:1px solid rgba(255,255,255,.05);padding:8px 0;"><span style="font-weight:700;">🧠 Intuición</span><span style="font-size:11px;color:var(--dim);font-weight:400;">% de aciertos donde menos del 40% del grupo acertó</span></div>
+            <div class="pts-row" style="flex-direction:column;align-items:flex-start;gap:2px;padding:8px 0;"><span style="font-weight:700;">🎲 Riesgo</span><span style="font-size:11px;color:var(--dim);font-weight:400;">Más goles pronosticados, más riesgo</span></div>
+          </div>
+        </div>
     </div>
 
     <!-- ── PRONOSTICOS ── -->
@@ -1050,7 +1067,6 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
   </div>
 </div>
 <div class="toast" id="toastEl"></div>
-<div class="spider-tooltip" id="spiderTooltip"><strong id="spiderTipTitle"></strong><span id="spiderTipText"></span></div>
 
 
 <script>
@@ -3311,9 +3327,9 @@ function renderSpiderSvg(metricas, color){
   const values=[metricas.precision,metricas.riesgo,metricas.efectividad,metricas.intuicion,metricas.magia];
   const N=5;
   // Mover centro a la derecha para dar espacio a labels largos a la izquierda
-  const cx=120,cy=90,r=62;
-  const VW=250,VH=160;
-  const vbX=0, vbY=0, vbW=VW, vbH=VH;
+  const cx=150,cy=108,r=82;
+  const VW=302,VH=223;
+  const vbX=3, vbY=-13, vbW=VW, vbH=VH;
   const angleStep=(2*Math.PI)/N;
   const startAngle=-Math.PI/2;
   const pts=values.map((v,i)=>{
@@ -3336,12 +3352,9 @@ function renderSpiderSvg(metricas, color){
     const angle=startAngle+i*angleStep;
     const ex=cx+r*Math.cos(angle),ey=cy+r*Math.sin(angle);
     axes+=`<line x1="${cx}" y1="${cy}" x2="${ex.toFixed(1)}" y2="${ey.toFixed(1)}" stroke="rgba(255,255,255,.2)" stroke-width="0.8"/>`;
-    const lx=cx+(r+18)*Math.cos(angle),ly=cy+(r+18)*Math.sin(angle);
+    const lx=cx+(r+22)*Math.cos(angle),ly=cy+(r+22)*Math.sin(angle);
     const anchor=lx<cx-5?"end":lx>cx+5?"start":"middle";
-    labelsHtml+=`<g onclick="showSpiderTip('${labels[i]}',event)" style="cursor:pointer">
-      <rect x="${(lx-30).toFixed(1)}" y="${(ly-12).toFixed(1)}" width="60" height="18" fill="transparent"/>
-      <text x="${lx.toFixed(1)}" y="${(ly+3).toFixed(1)}" text-anchor="${anchor}" fill="rgba(255,255,255,.9)" font-size="9.5" font-family="Barlow Condensed,sans-serif" font-weight="900" letter-spacing="0.8">${labels[i]}</text>
-    </g>`;
+    labelsHtml+=`<text x="${lx.toFixed(1)}" y="${(ly+3).toFixed(1)}" text-anchor="${anchor}" fill="rgba(255,255,255,.9)" font-size="12" font-family="Barlow Condensed,sans-serif" font-weight="900" letter-spacing="1">${labels[i]}</text>`;
   });
   // Color fill con alpha
   const hexToRgba=(hex,a)=>{
@@ -3349,7 +3362,7 @@ function renderSpiderSvg(metricas, color){
     return `rgba(${r},${g},${b},${a})`;
   };
   const fillColor=hexToRgba(color,0.2);
-  return`<svg width="${VW}" height="${VH}" viewBox="${vbX} ${vbY} ${vbW} ${vbH}" style="display:block;">
+  return`<svg width="100%" height="100%" viewBox="${vbX} ${vbY} ${vbW} ${vbH}" style="display:block;overflow:visible;">
     ${grid}${axes}
     <polygon points="${polyPts}" fill="${fillColor}" stroke="${color}" stroke-width="2" stroke-linejoin="round"/>
     ${labelsHtml}
@@ -3440,32 +3453,7 @@ function renderSpider(metricas){
   </div>`;
 }
 
-const SPIDER_INFO={
-  "PRECISIÓN":{title:"🎯 PRECISIÓN",text:"% de partidos donde acertaste el marcador exacto."},
-  "EFECTIVIDAD":{title:"⚡ EFECTIVIDAD",text:"% de partidos donde acertaste el ganador/empate."},
-  "MAGIA":{title:"✨ MAGIA",text:"% de bonus acertados."},
-  "INTUICIÓN":{title:"🧠 INTUICIÓN",text:"% de aciertos en partidos difíciles, donde menos del 40% del grupo acertó el ganador/empate."},
-  "RIESGO":{title:"🎲 RIESGO",text:"Más goles, más riesgo."}
-};
 
-function showSpiderTip(label,evt){
-  const info=SPIDER_INFO[label];
-  if(!info)return;
-  const tip=document.getElementById('spiderTooltip');
-  document.getElementById('spiderTipTitle').textContent=info.title;
-  document.getElementById('spiderTipText').textContent=info.text;
-  tip.classList.add('visible');
-  const x=evt.clientX,y=evt.clientY;
-  tip.style.left=Math.min(x+10,window.innerWidth-230)+'px';
-  tip.style.top=(y-60)+'px';
-}
-
-function hideSpiderTip(){
-  document.getElementById('spiderTooltip').classList.remove('visible');
-}
-document.addEventListener('click',function(e){
-  if(!e.target.closest('svg'))hideSpiderTip();
-});
 
 function getEstilo(riesgo){
   if(riesgo>=80)return"KAMIKAZE";
