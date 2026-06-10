@@ -199,6 +199,7 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
   flex:1;overflow:hidden;
   margin:0 10px;
   display:flex;align-items:center;
+  position:relative;
 }
 .nav-ticker-track{
   display:inline-block;
@@ -207,14 +208,14 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
   will-change:transform;
 }
 .nav-ticker-text{
-  font-family:"Barlow Condensed",sans-serif;
-  font-weight:700;font-size:13px;
-  letter-spacing:1px;text-transform:uppercase;
+  font-family:"Courier New",Courier,monospace;
+  font-weight:700;font-size:12px;
+  letter-spacing:2px;text-transform:uppercase;
   color:#ffffff;
-  padding-right:80px;
+  padding-right:100px;
 }
 @keyframes nav-ticker-scroll{
-  0%{transform:translateX(100%);}
+  0%{transform:translateX(400px);}
   100%{transform:translateX(-100%);}
 }
 .nav-row1{display:flex;align-items:center;justify-content:space-between;padding-bottom:2px;}
