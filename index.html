@@ -892,7 +892,7 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
     <div id="tab-ranking" class="tab-content active">
       <div class="rank-top">
         <div class="profile-card">
-          <div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex-shrink:0;justify-content:center;align-self:stretch;">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex-shrink:0;justify-content:flex-start;align-self:stretch;padding-top:4px;">
             <div class="profile-av" id="profAv">MO</div>
             <div id="profStats"></div>
           </div>
@@ -3327,9 +3327,9 @@ function renderSpiderSvg(metricas, color){
   const values=[metricas.precision,metricas.riesgo,metricas.efectividad,metricas.intuicion,metricas.magia];
   const N=5;
   // Mover centro a la derecha para dar espacio a labels largos a la izquierda
-  const cx=150,cy=108,r=82;
-  const VW=302,VH=223;
-  const vbX=3, vbY=-13, vbW=VW, vbH=VH;
+  const cx=150,cy=108,r=45;
+  const VW=178,VH=126;
+  const vbX=67, vbY=40, vbW=VW, vbH=VH;
   const angleStep=(2*Math.PI)/N;
   const startAngle=-Math.PI/2;
   const pts=values.map((v,i)=>{
@@ -3352,9 +3352,9 @@ function renderSpiderSvg(metricas, color){
     const angle=startAngle+i*angleStep;
     const ex=cx+r*Math.cos(angle),ey=cy+r*Math.sin(angle);
     axes+=`<line x1="${cx}" y1="${cy}" x2="${ex.toFixed(1)}" y2="${ey.toFixed(1)}" stroke="rgba(255,255,255,.2)" stroke-width="0.8"/>`;
-    const lx=cx+(r+22)*Math.cos(angle),ly=cy+(r+22)*Math.sin(angle);
+    const lx=cx+(r+7)*Math.cos(angle),ly=cy+(r+7)*Math.sin(angle);
     const anchor=lx<cx-5?"end":lx>cx+5?"start":"middle";
-    labelsHtml+=`<text x="${lx.toFixed(1)}" y="${(ly+3).toFixed(1)}" text-anchor="${anchor}" fill="rgba(255,255,255,.9)" font-size="12" font-family="Barlow Condensed,sans-serif" font-weight="900" letter-spacing="1">${labels[i]}</text>`;
+    labelsHtml+=`<text x="${lx.toFixed(1)}" y="${(ly+3).toFixed(1)}" text-anchor="${anchor}" fill="rgba(255,255,255,.9)" font-size="8" font-family="Barlow Condensed,sans-serif" font-weight="900" letter-spacing="0.8">${labels[i]}</text>`;
   });
   // Color fill con alpha
   const hexToRgba=(hex,a)=>{
