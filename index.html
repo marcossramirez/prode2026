@@ -1050,6 +1050,8 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
   </div>
 </div>
 <div class="toast" id="toastEl"></div>
+<div class="spider-tooltip" id="spiderTooltip"><strong id="spiderTipTitle"></strong><span id="spiderTipText"></span></div>
+
 
 <script>
 
@@ -3053,7 +3055,7 @@ function calcMetricas(mail){
     });
   });
 
-  // Calcular métricas del jugador
+  // Calcular métricas del jugador (solo partidos jugados)
   const misProns=pronDB[mail]||{};
   Object.entries(misProns).forEach(([mid, pr])=>{
     const res=resultadosDB[mid];
@@ -3071,12 +3073,11 @@ function calcMetricas(mail){
     if(acerto)pg++; else pp++;
     if(exacto)precision++;
     if(acerto)efectividad++;
-    
-    // Riesgo: diferencia de goles pronosticada (más diferencia = más conservador, más cerca = más arriesgado)
+
+    // Riesgo: diferencia de goles pronosticada
     const diffPron=Math.abs(pH-pA);
-    const diffReal=Math.abs(rH-rA);
-    riesgoSum+=diffPron; // promedio de diferencias pronosticadas
-    
+    riesgoSum+=diffPron;
+
     // Bonus acertados
     if(userBonus[mid]){
       totalBonus++;
@@ -3148,8 +3149,8 @@ function calcMetricas(mail){
   const precisionPct=Math.round((precision/totalJugados)*100);
   const efectividadPct=Math.round((efectividad/totalJugados)*100);
   // Riesgo: 0=muy conservador (diferencias grandes), 100=muy arriesgado (diferencias chicas)
-  const avgDiff=riesgoSum/totalJugados;
-  const riesgoPct=Math.round(Math.max(0,Math.min(100,100-(avgDiff/3)*100)));
+  const avgDiff=totalJugados>0?riesgoSum/totalJugados:0;
+  const riesgoPct=Math.round(Math.min(100,(avgDiff/3)*100));
   const intuicionPct=intuicionBase>0?Math.round((intuicionAciertos/intuicionBase)*100):0;
   const magiaPct=totalBonus>0?Math.round((bonusAcertados/totalBonus)*100):0;
 
@@ -3337,7 +3338,7 @@ function renderSpiderSvg(metricas, color){
     axes+=`<line x1="${cx}" y1="${cy}" x2="${ex.toFixed(1)}" y2="${ey.toFixed(1)}" stroke="rgba(255,255,255,.2)" stroke-width="0.8"/>`;
     const lx=cx+(r+18)*Math.cos(angle),ly=cy+(r+18)*Math.sin(angle);
     const anchor=lx<cx-5?"end":lx>cx+5?"start":"middle";
-    labelsHtml+=`<text x="${lx.toFixed(1)}" y="${(ly+3).toFixed(1)}" text-anchor="${anchor}" fill="rgba(255,255,255,.9)" font-size="9.5" font-family="Barlow Condensed,sans-serif" font-weight="900" letter-spacing="0.8">${labels[i]}</text>`;
+    labelsHtml+=`<text x="${lx.toFixed(1)}" y="${(ly+3).toFixed(1)}" text-anchor="${anchor}" fill="rgba(255,255,255,.9)" font-size="9.5" font-family="Barlow Condensed,sans-serif" font-weight="900" letter-spacing="0.8" style="cursor:pointer" onclick="showSpiderTip('${labels[i]}',event)" onmouseleave="hideSpiderTip()">${labels[i]}</text>`;
   });
   // Color fill con alpha
   const hexToRgba=(hex,a)=>{
@@ -3434,6 +3435,30 @@ function renderSpider(metricas){
   return`<div style="display:flex;align-items:center;gap:8px;padding:8px 0;">
     ${svg}${panel}
   </div>`;
+}
+
+const SPIDER_INFO={
+  "PRECISIÓN":{title:"🎯 PRECISIÓN",text:"% de partidos donde acertaste el marcador exacto."},
+  "EFECTIVIDAD":{title:"⚡ EFECTIVIDAD",text:"% de partidos donde acertaste el ganador/empate."},
+  "MAGIA":{title:"✨ MAGIA",text:"% de bonus acertados."},
+  "INTUICIÓN":{title:"🧠 INTUICIÓN",text:"% de aciertos en partidos difíciles, donde menos del 40% del grupo acertó el ganador/empate."},
+  "RIESGO":{title:"🎲 RIESGO",text:"Más goles, más riesgo."}
+};
+
+function showSpiderTip(label,evt){
+  const info=SPIDER_INFO[label];
+  if(!info)return;
+  const tip=document.getElementById('spiderTooltip');
+  document.getElementById('spiderTipTitle').textContent=info.title;
+  document.getElementById('spiderTipText').textContent=info.text;
+  tip.classList.add('visible');
+  const x=evt.clientX,y=evt.clientY;
+  tip.style.left=Math.min(x+10,window.innerWidth-230)+'px';
+  tip.style.top=(y-60)+'px';
+}
+
+function hideSpiderTip(){
+  document.getElementById('spiderTooltip').classList.remove('visible');
 }
 
 function getEstilo(riesgo){
