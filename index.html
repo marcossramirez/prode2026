@@ -2467,6 +2467,25 @@ const OpenFootballAdapter={
 };
 
 // ── ESPNAdapter: única clase que conoce ESPN ──
+// ── Mapa de nombres ESPN/API → nombres en español del prode ──
+const TEAM_NAME_MAP={
+  "Mexico":"México","South Korea":"Corea del Sur","South Africa":"Sudáfrica",
+  "Czech Republic":"Rep. Checa","Canada":"Canadá","Bosnia and Herzegovina":"Bosnia y Herz.",
+  "Switzerland":"Suiza","Brazil":"Brasil","Morocco":"Marruecos","Haiti":"Haití",
+  "Scotland":"Escocia","United States":"EE.UU.","USA":"EE.UU.","Paraguay":"Paraguay",
+  "Australia":"Australia","Turkey":"Turquía","Germany":"Alemania","Curaçao":"Curazao",
+  "Ivory Coast":"C. de Marfil","Ecuador":"Ecuador","Netherlands":"Países Bajos",
+  "Japan":"Japón","Sweden":"Suecia","Tunisia":"Túnez","Belgium":"Bélgica",
+  "Egypt":"Egipto","Iran":"Irán","New Zealand":"Nueva Zelanda","Spain":"España",
+  "Cape Verde":"Cabo Verde","Saudi Arabia":"Arabia Saudita","Uruguay":"Uruguay",
+  "France":"Francia","Senegal":"Senegal","Iraq":"Irak","Norway":"Noruega",
+  "Argentina":"Argentina","Algeria":"Argelia","Austria":"Austria","Jordan":"Jordania",
+  "Portugal":"Portugal","DR Congo":"Rep. D. Congo","Uzbekistan":"Uzbekistán",
+  "Colombia":"Colombia","England":"Inglaterra","Croatia":"Croacia","Ghana":"Ghana",
+  "Panama":"Panamá","Qatar":"Qatar","Cote d'Ivoire":"C. de Marfil",
+  "Korea Republic":"Corea del Sur","Bosnia-Herzegovina":"Bosnia y Herz."
+};
+
 const ESPNAdapter={
   _buildMatchIndex(){
     const idx={};
@@ -2941,6 +2960,10 @@ async function enterApp(player){
   renderGroupTable("A");renderGrupoMatches("A");renderElimMatches("dieciseis");
   initEsp();renderAdmin();
   renderRanking(player);
+
+  // Cargar ticker
+  loadConfig();
+  schedulerTickerClear();
 
   // Cargar datos del Sheet en paralelo (no bloquea la UI)
   Promise.all([loadAllAliases(), loadMisPronosticos(), loadResultadosFromSheet()])
