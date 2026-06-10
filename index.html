@@ -594,7 +594,7 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
   outline:none;transition:all .2s;-moz-appearance:textfield;
 }
 .pen-inp::-webkit-outer-spin-button,.pen-inp::-webkit-inner-spin-button{-webkit-appearance:none;}
-.pen-inp:not(:disabled){border-color:rgba(58,134,255,.6);color:var(--white);background:rgba(58,134,255,.1);}
+.pen-inp:not(:disabled){border-color:rgba(58,134,255,.6);color:var(--white);background:var(--surface2);}
 .pen-inp:not(:disabled):focus{border-color:#3a86ff;box-shadow:0 0 0 3px rgba(58,134,255,.2);}
 .pen-inp:disabled{cursor:not-allowed;}
 .pen-label{font-size:9px;color:rgba(255,255,255,.3);text-align:center;letter-spacing:1px;font-family:"Barlow Condensed",sans-serif;display:block;margin-top:2px;}
@@ -1079,7 +1079,7 @@ const SYNC_SECRET="f2d62ae2a83581813bc2d9529f80e410";
 
 // ── Modo de prueba para visualizar banderas en eliminatorias ──
 // Poner en true para ver todas las banderas con equipos simulados
-const ELIMINATION_PREVIEW_MODE=true;
+const ELIMINATION_PREVIEW_MODE=false;
 
 // Equipos de prueba para cada slot cuando ELIMINATION_PREVIEW_MODE=true
 const PREVIEW_TEAMS={
@@ -4118,8 +4118,6 @@ async function savePronosticoElim(mid, side, val){
 
   const drawn=isDrawn(userPron[mid]);
 
-  // Buscar los pen-inp de este partido por proximidad al input que cambió
-  // Recorrer todos los pen-inp y filtrar los del mismo partido
   document.querySelectorAll('.pen-inp').forEach(inp=>{
     if(inp.getAttribute('onchange')&&inp.getAttribute('onchange').includes(`'${mid}'`)){
       inp.disabled=!drawn;
@@ -4132,6 +4130,12 @@ async function savePronosticoElim(mid, side, val){
       }
     }
   });
+
+  // Si es empate, no guardar hasta que completen los penales
+  if(drawn){
+    showToast("⚠️ Completá los goles de penales");
+    return;
+  }
 
   await savePronostico(mid, side, val);
 }
@@ -4147,7 +4151,6 @@ async function savePenalElim(mid, side, val){
   const otherVal=userPron[mid][otherKey];
   if(newVal!==null&&otherVal!==null&&newVal===otherVal){
     showToast("⚠️ En penales no puede haber empate");
-    // Revertir el input al valor anterior
     document.querySelectorAll('.pen-inp').forEach(inp=>{
       if(inp.getAttribute('onchange')&&
          inp.getAttribute('onchange').includes(`'${mid}'`)&&
@@ -4160,21 +4163,14 @@ async function savePenalElim(mid, side, val){
 
   userPron[mid][key]=newVal;
 
-  await postToSheet({
-    type:"pronostico",
-    mail:currentPlayer.mail,
-    alias:currentPlayer.alias,
-    match_id:mid,
-    home_score:userPron[mid]?.home??null,
-    away_score:userPron[mid]?.away??null,
-    pen_home:userPron[mid]?.pen_home??null,
-    pen_away:userPron[mid]?.pen_away??null,
-    bonus:userBonus[mid]||false,
-    penal_home:userPenal[mid]?.home||false,
-    penal_away:userPenal[mid]?.away||false,
-    tarjeta_home:userTarjeta[mid]?.home||false,
-    tarjeta_away:userTarjeta[mid]?.away||false
-  });
+  // Solo guardar cuando ambos penales están completos y no empatan
+  const ph=userPron[mid].pen_home, pa=userPron[mid].pen_away;
+  if(ph===null||ph===undefined||pa===null||pa===undefined){
+    showToast("⚠️ Completá ambos resultados de penales");
+    return;
+  }
+
+  await savePronostico(mid, side, val);
   showToast("✓ Penales guardados");
 }
 
