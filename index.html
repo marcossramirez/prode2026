@@ -3190,15 +3190,16 @@ async function loadConfig(){
 // ── Guardar ticker desde admin ──
 async function saveTickerAdmin(val){
   try{
-    const r=await fetch(SHEET_URL,{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({type:'config',key:'ticker_admin',value:val.trim(),secret:SYNC_SECRET})
+    const params=new URLSearchParams({
+      type:'config_write',
+      key:'ticker_admin',
+      value:val.trim(),
+      secret:SYNC_SECRET
     });
+    const r=await fetch(`${SHEET_URL}?${params.toString()}`);
     const res=await r.json();
     console.log('saveTickerAdmin result:',res);
     showToast(val.trim()!==''?'✅ Mensaje publicado':'✅ Mensaje borrado');
-    // Esperar 1.5s para que el Sheet se actualice y recargar
     setTimeout(()=>{ location.reload(); }, 1500);
   }catch(e){
     console.error('Error guardando ticker:',e);
@@ -3216,16 +3217,9 @@ function schedulerTickerClear(){
     saveTickerAdmin('');
     const inp=document.getElementById('tickerInput');
     if(inp)inp.value='';
-    // Borrar texto del día en Sheet
-    const dd=String(argNow.getDate()).padStart(2,'0');
-    const mo=String(argNow.getMonth()+1).padStart(2,'0');
-    const yyyy=argNow.getFullYear();
-    const fechaKey=`${dd}/${mo}/${yyyy}`;
-    fetch(SHEET_URL,{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({type:'config',key:fechaKey,value:'',secret:SYNC_SECRET})
-    });
+    // Borrar texto del día en Sheet via GET
+    const params=new URLSearchParams({type:'config_write',key:fechaKey,value:'',secret:SYNC_SECRET});
+    fetch(`${SHEET_URL}?${params.toString()}`);
   }
   setTimeout(schedulerTickerClear,60000);
 }
