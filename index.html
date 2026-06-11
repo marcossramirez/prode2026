@@ -55,6 +55,24 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
 /* ── CONFETTI ── */
 #confettiCanvas{position:fixed;inset:0;z-index:500;pointer-events:none;display:none;}
 
+/* ── SISTEMA DE MEMES ── */
+#memeOverlay{
+  position:fixed;inset:0;z-index:2000;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(0,0,0,.72);
+  opacity:0;pointer-events:none;
+  transition:opacity .3s ease;
+}
+#memeOverlay.show{opacity:1;pointer-events:auto;}
+#memeOverlay img{
+  max-width:600px;width:90vw;max-height:80vh;object-fit:contain;
+  border-radius:16px;
+  transform:scale(.85);
+  transition:transform .3s cubic-bezier(.34,1.56,.64,1);
+  box-shadow:0 8px 40px rgba(0,0,0,.6);
+}
+#memeOverlay.show img{transform:scale(1);}
+
 /* ══════════════════════════════
    SCREENS
 ══════════════════════════════ */
@@ -889,6 +907,9 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
 
 <!-- CONFETTI -->
 <canvas id="confettiCanvas"></canvas>
+
+<!-- MEME OVERLAY -->
+<div id="memeOverlay"><img id="memeImg" src="" alt="meme"></div>
 
 <!-- ═══ LOGIN ═══ -->
 <div id="loginScreen" class="screen">
@@ -1731,6 +1752,104 @@ function calcPuntos(pron,result,bonus,penalHome,penalAway,tarjetaHome,tarjetaAwa
   return pts;
 }
 
+/* ══════════════════════════════════════════════════════════════
+   SISTEMA DE MEMES DINÁMICOS
+   Repo: marcossramirez/prode2026
+   Carpetas: /memes/sube/ | /memes/baja/ | /memes/mantiene/
+════════════════════════════════════════════════════════════════ */
+const MEME_BASE = "https://raw.githubusercontent.com/marcossramirez/prode2026/main/memes/";
+const MEME_CATS = { sube: "sube", baja: "baja", mantiene: "mantiene" };
+
+// Extensiones admitidas (el sistema prueba png → jpg → gif → webp en orden)
+const MEME_EXT = ["png", "jpg", "gif", "webp"];
+
+// Cache de URLs descubiertas por carpeta: { sube: ["url1","url2",...], ... }
+const _memeCache = { sube: null, baja: null, mantiene: null };
+// Índices ya mostrados por carpeta (para no repetir hasta agotar todos)
+const _memeQueue = { sube: [], baja: [], mantiene: [] };
+
+let _memeActive = false;
+let _memeSystemEnabled = false;
+
+// Descubre todas las URLs válidas de una carpeta probando 01, 02, 03...
+// hasta que falle. Guarda el resultado en cache.
+function _discoverMemes(cat) {
+  if (_memeCache[cat] !== null) return Promise.resolve(_memeCache[cat]);
+  return new Promise(resolve => {
+    const found = [];
+    function tryIdx(idx) {
+      _tryExtensions(cat, idx, 0)
+        .then(url => { found.push(url); tryIdx(idx + 1); })
+        .catch(() => {
+          _memeCache[cat] = found;
+          resolve(found);
+        });
+    }
+    tryIdx(1);
+  });
+}
+
+// Prueba todas las extensiones para un índice dado
+function _tryExtensions(cat, idx, extIdx) {
+  return new Promise((resolve, reject) => {
+    if (extIdx >= MEME_EXT.length) { reject(); return; }
+    const url = `${MEME_BASE}${cat}/${String(idx).padStart(2,"0")}.${MEME_EXT[extIdx]}`;
+    const img = new Image();
+    img.onload = () => resolve(url);
+    img.onerror = () => _tryExtensions(cat, idx, extIdx + 1).then(resolve).catch(reject);
+    img.src = url;
+  });
+}
+
+// Elige una URL aleatoria sin repetir hasta agotar todas, luego reinicia
+function _pickFromCache(cat) {
+  const list = _memeCache[cat];
+  if (!list || list.length === 0) return null;
+  // Si la queue está vacía, la recargamos con todos los índices barajados
+  if (_memeQueue[cat].length === 0) {
+    const idxs = list.map((_, i) => i);
+    // Fisher-Yates shuffle
+    for (let i = idxs.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [idxs[i], idxs[j]] = [idxs[j], idxs[i]];
+    }
+    _memeQueue[cat] = idxs;
+  }
+  return list[_memeQueue[cat].pop()];
+}
+
+function showMeme(cat) {
+  if (_memeActive) return;
+  _memeActive = true;
+  _discoverMemes(cat).then(list => {
+    if (!list || list.length === 0) { _memeActive = false; return; }
+    const url = _pickFromCache(cat);
+    if (!url) { _memeActive = false; return; }
+    const overlay = document.getElementById("memeOverlay");
+    const img = document.getElementById("memeImg");
+    if (!overlay || !img) { _memeActive = false; return; }
+    img.src = url;
+    overlay.classList.add("show");
+    setTimeout(() => {
+      overlay.classList.remove("show");
+      setTimeout(() => { img.src = ""; _memeActive = false; }, 320);
+    }, 3000);
+  }).catch(() => { _memeActive = false; });
+}
+
+function _checkMemeSystemEnabled() {
+  if (_memeSystemEnabled) return true;
+  const hasPoints = PLAYERS.some(p => (p.pts || 0) > 0);
+  if (hasPoints) _memeSystemEnabled = true;
+  return _memeSystemEnabled;
+}
+
+// Llamar tras login para mostrar meme inicial (mantiene)
+function showMemeOnLogin() {
+  if (!_checkMemeSystemEnabled()) return;
+  showMeme(MEME_CATS.mantiene);
+}
+
 function recalcularPuntos(){
   PLAYERS.forEach(p=>{
     if(!p.alias)return;
@@ -1768,6 +1887,20 @@ function recalcularPuntos(){
     p.trend=prev>0?(prev-(i+1)):0;
     p._lastPos=i+1;
   });
+
+  // ── DISPARAR MEME si el jugador logueado cambió de posición ──
+  if(currentPlayer && _checkMemeSystemEnabled()){
+    const cp=sorted.find(p=>p.mail===currentPlayer.mail);
+    if(cp){
+      const prev=prevPositions[cp.mail];
+      if(prev>0 && prev!==cp._lastPos){
+        const diff=prev-cp._lastPos;
+        if(diff>0) showMeme(MEME_CATS.sube);
+        else if(diff<0) showMeme(MEME_CATS.baja);
+        else showMeme(MEME_CATS.mantiene);
+      }
+    }
+  }
 
   if(currentPlayer)renderRanking(currentPlayer);
 }
@@ -3174,6 +3307,9 @@ async function enterApp(player){
   if(isAdmin)document.getElementById("adminTab").style.display="inline-block";
   launchConfetti();
 
+  // Meme de bienvenida (solo si ya hay puntos reales)
+  setTimeout(()=>showMemeOnLogin(), 800);
+
   // Render inmediato con datos locales
   buildGrupoDD();buildResGrupoDD();
   renderGroupTable("A");renderGrupoMatches("A");renderElimMatches("dieciseis");
@@ -4089,6 +4225,10 @@ async function loadJugadores(){
   try{
     const res=await fetch(`${SHEET_URL}?type=datos_jugadores`);
     const data=await res.json();
+    if(!Array.isArray(data)||data.length===0){
+      console.warn('⚠️ DATOS_JUGADORES vacío o sin datos. Verificar que el Apps Script esté republicado y la hoja tenga datos.');
+      return;
+    }
     jugadoresDB=data.map(j=>({
       nombre: j.nombre||j['Nombre y Apellido']||'',
       pais:   j.pais||j['País']||'',
@@ -4096,9 +4236,9 @@ async function loadJugadores(){
       edad:   parseInt(j.edad||j['Edad'])||0,
       elegible_joven: (parseInt(j.edad||j['Edad'])||0)<=21,
       elegible_guante: (j.posicion||j['Posición']||'').toLowerCase().includes('arquero'),
-    }));
+    })).filter(j=>j.nombre); // filtrar filas vacías
     console.log(`✅ Jugadores cargados: ${jugadoresDB.length}`);
-  }catch(e){console.warn('Error cargando jugadores:',e);}
+  }catch(e){console.warn('❌ Error cargando jugadores:',e);}
 }
 
 // Carga estado de locks de especiales
@@ -4291,11 +4431,21 @@ function closeEspDDDelay(key){
 }
 
 function renderEspDDList(key, query){
-  const lista=filterJugadoresForKey(key, query, espDDFilters[key]);
   const listEl=document.getElementById(`espDDList_${key}`);
   if(!listEl)return;
+  // Si los jugadores no cargaron todavía
+  if(jugadoresDB.length===0){
+    listEl.innerHTML=`<div class="esp-dd-empty">⏳ Cargando jugadores...</div>`;
+    // Reintentar carga y re-renderizar cuando lleguen
+    loadJugadores().then(()=>{
+      renderEspFilters(key);
+      renderEspDDList(key, query);
+    });
+    return;
+  }
+  const lista=filterJugadoresForKey(key, query, espDDFilters[key]);
   if(lista.length===0){
-    listEl.innerHTML=`<div class="esp-dd-empty">Sin resultados para "${query}"</div>`;
+    listEl.innerHTML=`<div class="esp-dd-empty">${query?`Sin resultados para "${query}"`:'Sin jugadores disponibles'}</div>`;
     return;
   }
   listEl.innerHTML=lista.map(j=>`
