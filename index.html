@@ -473,6 +473,7 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
 .group-table tr.classified td:first-child{color:#00ff47;}
 .group-table tr.third td{color:var(--yellow);}
 .group-table tr.third td:first-child{color:var(--yellow);}
+.prox-arg{border:1px solid rgba(116,172,223,.5)!important;background:rgba(116,172,223,.04)!important;}
 .dd-btn{
   width:100%;padding:13px 18px;border-radius:14px;
   background:var(--surface2);
@@ -990,8 +991,9 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
       <div class="nav-row2">
         <button class="nav-tab active" onclick="showTab('ranking',this)">Ranking</button>
         <button class="nav-tab" onclick="showTab('pronosticos',this)">Pronósticos</button>
+        <button class="nav-tab" onclick="showTab('proximos',this)">Próx. Partidos</button>
         <button class="nav-tab" onclick="showTab('resultados',this)">Resultados</button>
-        <button class="nav-tab" id="adminTab" style="display:none;color:var(--red)" onclick="showTab('admin',this)">Admin ⚙</button>
+        <button class="nav-tab" id="adminTab" style="display:none;color:var(--red)" onclick="showTab('admin',this)">⚙️</button>
       </div>
     </div>
   </nav>
@@ -1019,7 +1021,7 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
         <div class="pts-head">Sistema de Puntos</div>
         <div class="pts-grid">
           <div class="pts-row"><span>Acertar ganador o empate</span><span class="pts-v">2 PTS</span></div>
-          <div class="pts-row"><span>Resultado perfecto (goles exactos)</span><span class="pts-v">4 PTS</span></div>
+          <div class="pts-row"><span>Resultado perfecto (goles exactos)</span><span class="pts-v">+2 PTS</span></div>
           <div class="pts-sec">Bonus</div>
           <div class="pts-row" style="grid-column:1/-1;display:flex;justify-content:space-between;align-items:center"><span>Bonus ⭐ + resultado perfecto</span><span class="pts-v">+2 PTS</span></div>
           <div class="pts-row" style="grid-column:1/-1;display:flex;justify-content:space-between;align-items:center"><span>Bonus <span style="color:#3a86ff;font-weight:900;font-size:14px;font-family:'Barlow Condensed',sans-serif">P</span> + al menos 1 penal cobrado a favor</span><span class="pts-v">+1 PT</span></div>
@@ -1207,6 +1209,69 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
             <div id="espLocked_eliminado" style="display:none;font-size:12px;color:var(--dim);padding:10px 14px;background:rgba(255,255,255,.03);border-radius:10px;border:1px solid var(--border)">Esta apuesta especial ha sido cerrada por el administrador.</div>
           </div>
 
+          <!-- Campeón -->
+          <div class="esp-row" id="espRow_campeon">
+            <div class="esp-lbl">Campeón del Mundial<span class="esp-pts">10 PTS</span></div>
+            <div id="espWrap_campeon">
+              <div class="esp-search-wrap" id="espSearchWrap_campeon">
+                <div id="espSelected_campeon" style="display:none" class="esp-search-selected">
+                  <div><div class="sel-name" id="espSelName_campeon"></div></div>
+                  <button class="sel-clear" onclick="clearEspPaisGen('campeon')">✕</button>
+                </div>
+                <div id="espInputWrap_campeon">
+                  <input class="esp-search-inp" id="espInp_campeon" placeholder="Buscá un país..." autocomplete="off"
+                    oninput="onEspPaisGenSearch('campeon',this.value)" onfocus="openEspPaisDDGen('campeon')" onblur="closeEspPaisDDGenDelay('campeon')">
+                  <div class="esp-dropdown" id="espDD_campeon">
+                    <div id="espDDList_campeon"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div id="espLocked_campeon" style="display:none;font-size:12px;color:var(--dim);padding:10px 14px;background:rgba(255,255,255,.03);border-radius:10px;border:1px solid var(--border)">Esta apuesta especial ha sido cerrada por el administrador.</div>
+          </div>
+
+          <!-- Subcampeón -->
+          <div class="esp-row" id="espRow_subcampeon">
+            <div class="esp-lbl">Subcampeón del Mundial<span class="esp-pts">8 PTS</span></div>
+            <div id="espWrap_subcampeon">
+              <div class="esp-search-wrap" id="espSearchWrap_subcampeon">
+                <div id="espSelected_subcampeon" style="display:none" class="esp-search-selected">
+                  <div><div class="sel-name" id="espSelName_subcampeon"></div></div>
+                  <button class="sel-clear" onclick="clearEspPaisGen('subcampeon')">✕</button>
+                </div>
+                <div id="espInputWrap_subcampeon">
+                  <input class="esp-search-inp" id="espInp_subcampeon" placeholder="Buscá un país..." autocomplete="off"
+                    oninput="onEspPaisGenSearch('subcampeon',this.value)" onfocus="openEspPaisDDGen('subcampeon')" onblur="closeEspPaisDDGenDelay('subcampeon')">
+                  <div class="esp-dropdown" id="espDD_subcampeon">
+                    <div id="espDDList_subcampeon"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div id="espLocked_subcampeon" style="display:none;font-size:12px;color:var(--dim);padding:10px 14px;background:rgba(255,255,255,.03);border-radius:10px;border:1px solid var(--border)">Esta apuesta especial ha sido cerrada por el administrador.</div>
+          </div>
+
+          <!-- 3er y 4to -->
+          <div class="esp-row" id="espRow_tercero">
+            <div class="esp-lbl">3er y 4to Puesto<span class="esp-pts">4 PTS</span></div>
+            <div id="espWrap_tercero">
+              <div class="esp-search-wrap" id="espSearchWrap_tercero">
+                <div id="espSelected_tercero" style="display:none" class="esp-search-selected">
+                  <div><div class="sel-name" id="espSelName_tercero"></div></div>
+                  <button class="sel-clear" onclick="clearEspPaisGen('tercero')">✕</button>
+                </div>
+                <div id="espInputWrap_tercero">
+                  <input class="esp-search-inp" id="espInp_tercero" placeholder="Buscá un país..." autocomplete="off"
+                    oninput="onEspPaisGenSearch('tercero',this.value)" onfocus="openEspPaisDDGen('tercero')" onblur="closeEspPaisDDGenDelay('tercero')">
+                  <div class="esp-dropdown" id="espDD_tercero">
+                    <div id="espDDList_tercero"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div id="espLocked_tercero" style="display:none;font-size:12px;color:var(--dim);padding:10px 14px;background:rgba(255,255,255,.03);border-radius:10px;border:1px solid var(--border)">Esta apuesta especial ha sido cerrada por el administrador.</div>
+          </div>
+
           <!-- Total goles -->
           <div class="esp-row" id="espRow_goles">
             <div class="esp-lbl">Total goles fase de grupos (±1)<span class="esp-pts">4 PTS</span></div>
@@ -1230,6 +1295,12 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
     </div>
 
     <!-- ── RESULTADOS ── -->
+    <!-- ── PRÓXIMOS PARTIDOS ── -->
+    <div id="tab-proximos" class="tab-content">
+      <div class="sec-title">Próximos Partidos</div>
+      <div id="proximosContent"></div>
+    </div>
+
     <div id="tab-resultados" class="tab-content">
       <div class="sec-title">Resultados</div>
       <div class="phase-nav">
@@ -1264,7 +1335,7 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
     <!-- ── ADMIN ── -->
     <div id="tab-admin" class="tab-content">
       <div class="sec-title">Admin</div>
-      <div class="admin-alert">⚠ Panel exclusivo — Cargar resultados oficiales</div>
+      
       <div style="margin-bottom:16px;background:#0a0a0a;border:1px solid rgba(0,255,71,.3);border-radius:12px;padding:12px;">
         <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:11px;letter-spacing:2px;color:var(--green);margin-bottom:8px;">📢 MENSAJE DEL DÍA (TICKER)</div>
         <div style="display:flex;gap:8px;align-items:center;">
@@ -3222,7 +3293,25 @@ function showLoader(ms=440){
 function launchConfetti(){
   const cv=document.getElementById("confettiCanvas"),ctx=cv.getContext("2d");
   cv.width=window.innerWidth;cv.height=window.innerHeight;cv.style.display="block";
-  const cols=["#FFFFFF","#75AADB","#3D3FE8","#00FF47","#F5E642","#4DFFD2","#ffffff","#aad4f5"];
+
+  // Detectar si hoy juega Argentina
+  const now=new Date();
+  const argNow=new Date(now.toLocaleString('en-US',{timeZone:'America/Argentina/Buenos_Aires'}));
+  const dias=['dom','lun','mar','mié','jue','vie','sáb'];
+  const meses=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+  const diaStr=dias[argNow.getDay()];
+  const diaNum=String(argNow.getDate());
+  const mesStr=meses[argNow.getMonth()];
+  const fechaHoy=`${diaStr}, ${diaNum} ${mesStr}`;
+
+  const argentinaJuegaHoy=Object.values(FIXTURE_GRUPOS).flat().some(m=>
+    m.date===fechaHoy && (m.home==='Argentina'||m.away==='Argentina')
+  );
+
+  const cols = argentinaJuegaHoy
+    ? ["#FFFFFF","#74ACDF","#FFFFFF","#74ACDF","#FFFFFF","#74ACDF","#ffffff","#5ba4d4"]
+    : ["#FFFFFF","#75AADB","#3D3FE8","#00FF47","#F5E642","#4DFFD2","#ffffff","#aad4f5"];
+
   const ps=Array.from({length:520},()=>({
     x:Math.random()*cv.width,y:-50-Math.random()*400,
     w:5+Math.random()*10,h:3+Math.random()*7,
@@ -3373,8 +3462,8 @@ function logout(){
   resultadosDB={};
   jugadoresDB=[];
   _jugadoresLoading=false;
-  espSelections={balon:null,bota:null,guante:null,joven:null,eliminado:'',goles:'',penales:''};
-  espLocks={balon:false,bota:false,guante:false,joven:false,eliminado:false,goles:false,penales:false};
+  espSelections={balon:null,bota:null,guante:null,joven:null,eliminado:'',campeon:'',subcampeon:'',tercero:'',goles:'',penales:''};
+  espLocks={balon:false,bota:false,guante:false,joven:false,eliminado:false,campeon:false,subcampeon:false,tercero:false,goles:false,penales:false};
   espDDFilters={balon:{pais:'',posicion:'',edad:''},bota:{pais:'',posicion:'',edad:''},guante:{pais:'',posicion:'',edad:''},joven:{pais:'',posicion:'',edad:''}};
   // Limpiar DOM de especiales para que no muestre datos del jugador anterior
   ['balon','bota','guante','joven'].forEach(key=>{
@@ -3385,12 +3474,14 @@ function logout(){
     if(inp)inp.style.display='block';
     if(inpEl)inpEl.value='';
   });
-  const selEliminado=document.getElementById('espSelected_eliminado');
-  const inpEliminado=document.getElementById('espInputWrap_eliminado');
-  const inpElEl=document.getElementById('espInp_eliminado');
-  if(selEliminado)selEliminado.style.display='none';
-  if(inpEliminado)inpEliminado.style.display='block';
-  if(inpElEl)inpElEl.value='';
+  ['eliminado','campeon','subcampeon','tercero'].forEach(key=>{
+    const sel=document.getElementById(`espSelected_${key}`);
+    const inp=document.getElementById(`espInputWrap_${key}`);
+    const inpEl=document.getElementById(`espInp_${key}`);
+    if(sel)sel.style.display='none';
+    if(inp)inp.style.display='block';
+    if(inpEl)inpEl.value='';
+  });
   const golesEl=document.getElementById('espInp_goles');
   const penalesEl=document.getElementById('espInp_penales');
   if(golesEl)golesEl.value='';
@@ -3415,6 +3506,7 @@ function showTab(tab,btn){
       const btnFecha=document.getElementById("btnFecha");
       selRes("fecha", btnFecha);
     }
+    if(tab==="proximos") renderProximos();
     if(tab==="ranking")renderRanking(currentPlayer);
   });
 }
@@ -3593,6 +3685,9 @@ async function loadConfig(){
       // ticker_admin tiene prioridad — es noticia urgente del día
       if(data.ticker_admin&&data.ticker_admin.trim()!==''){
         frase=data.ticker_admin.trim();
+        // Pre-cargar en el input del admin
+        const inp=document.getElementById('tickerInput');
+        if(inp&&!inp.value)inp.value=frase;
       } else {
         // Buscar texto del día actual — formato DD/MM/YYYY
         const dd=String(argNow.getDate()).padStart(2,'0');
@@ -3649,6 +3744,7 @@ async function saveTickerAdmin(val){
         const duration=Math.max(12,val.trim().length*0.35);
         track.style.animationDuration=duration+'s';
       }
+      // Mantener el texto en el input (no borrar)
       showToast('✅ Mensaje publicado');
     } else {
       if(wrap)wrap.style.display='none';
@@ -4285,8 +4381,8 @@ async function toggleBonus(id,btn){
 ═══════════════════════════════════════════ */
 let jugadoresDB = []; // cargados desde DATOS_JUGADORES sheet
 let _jugadoresLoading = false; // flag para evitar cargas paralelas y loops
-let espLocks = {balon:false, bota:false, guante:false, joven:false, eliminado:false, goles:false, penales:false};
-let espSelections = {balon:null, bota:null, guante:null, joven:null, eliminado:'', goles:'', penales:''};
+let espLocks = {balon:false, bota:false, guante:false, joven:false, eliminado:false, campeon:false, subcampeon:false, tercero:false, goles:false, penales:false};
+let espSelections = {balon:null, bota:null, guante:null, joven:null, eliminado:'', campeon:'', subcampeon:'', tercero:'', goles:'', penales:''};
 let espDDFilters = {balon:{pais:'',posicion:'',edad:''},bota:{pais:'',posicion:'',edad:''},guante:{pais:'',posicion:'',edad:''},joven:{pais:'',posicion:'',edad:''}};
 
 const ESP_DEFS = [
@@ -4294,7 +4390,10 @@ const ESP_DEFS = [
   {key:'bota',   label:'Bota de Oro',     pts:'6 PTS', tipo:'jugador'},
   {key:'guante', label:'Guante de Oro',   pts:'4 PTS', tipo:'jugador'},
   {key:'joven',  label:'Mejor Jug. Joven',pts:'4 PTS', tipo:'jugador'},
-  {key:'eliminado', label:'Primer País Eliminado', pts:'3 PTS', tipo:'texto'},
+  {key:'eliminado', label:'Primer País Eliminado', pts:'3 PTS', tipo:'pais'},
+  {key:'campeon',   label:'Campeón',              pts:'10 PTS', tipo:'pais'},
+  {key:'subcampeon',label:'Subcampeón',            pts:'8 PTS',  tipo:'pais'},
+  {key:'tercero',   label:'3er y 4to Puesto',      pts:'4 PTS',  tipo:'pais'},
   {key:'goles',  label:'Total Goles Grupos', pts:'4 PTS', tipo:'numero'},
   {key:'penales',label:'Total Penales',   pts:'4 PTS', tipo:'numero'},
 ];
@@ -4362,7 +4461,7 @@ async function loadMisEspeciales(){
         )||jugadoresDB.find(j=>j.nombre===nombre);
         espSelections[k]=jugador||{nombre,pais:'',posicion:'',edad:0};
       });
-      ['eliminado'].forEach(k=>{
+      ['eliminado','campeon','subcampeon','tercero'].forEach(k=>{
         const val=data[k];
         if(val===undefined||val===null||String(val).trim()==='')return;
         espSelections[k]=String(val).trim();
@@ -4412,30 +4511,29 @@ function renderEspSection(){
       renderEspFilters(key);
     }
   });
-  // Eliminado — dropdown de países
-  {
-    const locked=espLocks['eliminado'];
-    const wrapEl=document.getElementById('espWrap_eliminado');
-    const lockedEl=document.getElementById('espLocked_eliminado');
-    if(wrapEl&&lockedEl){
-      if(locked){
-        wrapEl.style.display='none';
-        lockedEl.style.display='block';
+  // Eliminado + Campeón + Subcampeón + Tercero — dropdowns de países
+  ['eliminado','campeon','subcampeon','tercero'].forEach(key=>{
+    const locked=espLocks[key];
+    const wrapEl=document.getElementById(`espWrap_${key}`);
+    const lockedEl=document.getElementById(`espLocked_${key}`);
+    if(!wrapEl||!lockedEl)return;
+    if(locked){
+      wrapEl.style.display='none';
+      lockedEl.style.display='block';
+    } else {
+      wrapEl.style.display='block';
+      lockedEl.style.display='none';
+      const val=espSelections[key]||'';
+      if(val){
+        document.getElementById(`espSelected_${key}`).style.display='flex';
+        document.getElementById(`espInputWrap_${key}`).style.display='none';
+        document.getElementById(`espSelName_${key}`).textContent=val;
       } else {
-        wrapEl.style.display='block';
-        lockedEl.style.display='none';
-        const val=espSelections['eliminado']||'';
-        if(val){
-          document.getElementById('espSelected_eliminado').style.display='flex';
-          document.getElementById('espInputWrap_eliminado').style.display='none';
-          document.getElementById('espSelName_eliminado').textContent=val;
-        } else {
-          document.getElementById('espSelected_eliminado').style.display='none';
-          document.getElementById('espInputWrap_eliminado').style.display='block';
-        }
+        document.getElementById(`espSelected_${key}`).style.display='none';
+        document.getElementById(`espInputWrap_${key}`).style.display='block';
       }
     }
-  }
+  });
   // Inputs numéricos
   ['goles','penales'].forEach(key=>{
     const locked=espLocks[key];
@@ -4733,6 +4831,72 @@ function clearEspPais(){
   document.getElementById('espInp_eliminado').value='';
   document.getElementById('espInp_eliminado').focus();
   saveEspField('eliminado','');
+}
+
+/* ── DROPDOWN PAÍSES GENÉRICO (Campeón, Subcampeón, 3er Puesto) ── */
+function onEspPaisGenSearch(key, query){
+  renderEspPaisGenDDList(key, query);
+  openEspPaisDDGen(key);
+}
+
+function openEspPaisDDGen(key){
+  renderEspPaisGenDDList(key, document.getElementById(`espInp_${key}`)?.value||'');
+  const dd=document.getElementById(`espDD_${key}`);
+  if(dd)dd.classList.add('open');
+}
+
+function closeEspPaisDDGenDelay(key){
+  setTimeout(()=>{
+    const dd=document.getElementById(`espDD_${key}`);
+    if(dd)dd.classList.remove('open');
+  },300);
+}
+
+function renderEspPaisGenDDList(key, query){
+  const listEl=document.getElementById(`espDDList_${key}`);
+  if(!listEl)return;
+  let paises=_getPaises();
+  if(jugadoresDB.length===0){
+    listEl.innerHTML=`<div class="esp-dd-empty">⏳ Cargando países...</div>`;
+    if(!_jugadoresLoading){
+      loadJugadores().then(()=>{
+        if(jugadoresDB.length>0) renderEspPaisGenDDList(key, query);
+        else listEl.innerHTML=`<div class="esp-dd-empty">❌ No se pudieron cargar los países.</div>`;
+      });
+    }
+    return;
+  }
+  if(query){
+    const q=normalizeStr(query);
+    paises=paises.filter(p=>normalizeStr(p).includes(q));
+  }
+  if(paises.length===0){
+    listEl.innerHTML=`<div class="esp-dd-empty">Sin resultados para "${query}"</div>`;
+    return;
+  }
+  listEl.innerHTML=paises.map(p=>`
+    <div class="esp-dd-item" onmousedown="selectEspPaisGen('${key}','${p.replace(/'/g,"\\'")}')">
+      <div class="esp-dd-name">${p}</div>
+    </div>`).join('');
+}
+
+function selectEspPaisGen(key, pais){
+  espSelections[key]=pais;
+  document.getElementById(`espSelected_${key}`).style.display='flex';
+  document.getElementById(`espInputWrap_${key}`).style.display='none';
+  document.getElementById(`espSelName_${key}`).textContent=pais;
+  document.getElementById(`espDD_${key}`).classList.remove('open');
+  saveEspField(key, pais);
+}
+
+function clearEspPaisGen(key){
+  if(espLocks[key])return;
+  espSelections[key]='';
+  document.getElementById(`espSelected_${key}`).style.display='none';
+  document.getElementById(`espInputWrap_${key}`).style.display='block';
+  document.getElementById(`espInp_${key}`).value='';
+  document.getElementById(`espInp_${key}`).focus();
+  saveEspField(key,'');
 }
 
 function renderAdminEsp(){
@@ -5124,6 +5288,94 @@ async function toggleTarjeta(id,side,btn){
   });
   renderGrupoMatches(curGrupo);
 }
+function renderProximos(){
+  const el=document.getElementById("proximosContent");
+  if(!el)return;
+
+  // Recopilar todos los partidos de grupos no jugados
+  const pendientes=[];
+  Object.keys(GROUPS).forEach(g=>{
+    getMatches(g).forEach(m=>{
+      if(!m.played) pendientes.push({...m,grupo:"Grupo "+g,fase:"Fase de Grupos"});
+    });
+  });
+
+  // Recopilar partidos eliminatorios no jugados
+  const BRACKET_PROX={
+    "dieciseis":{label:"16avos"},
+    "octavos":{label:"Octavos"},
+    "cuartos":{label:"Cuartos de Final"},
+    "semis":{label:"Semifinal"},
+    "3er":{label:"3er y 4to Puesto"},
+    "final":{label:"Final"}
+  };
+
+  // Usar el BRACKET inline de renderElimMatches
+  const BRACKET_DATA={"dieciseis":[{home:"2do Grupo A",away:"2do Grupo B",fecha:"dom, 28 jun",time:"16:00 ARG",stadium:"SoFi Stadium",ciudad:"Los Ángeles"},{home:"1ro Grupo C",away:"2do Grupo F",fecha:"lun, 29 jun",time:"14:00 ARG",stadium:"NRG Stadium",ciudad:"Houston"},{home:"1ro Grupo E",away:"3ro A/B/C/D/F",fecha:"lun, 29 jun",time:"17:30 ARG",stadium:"Gillette Stadium",ciudad:"Boston"},{home:"1ro Grupo F",away:"2do Grupo C",fecha:"lun, 29 jun",time:"22:00 ARG",stadium:"E. Azteca",ciudad:"Cdad. México"},{home:"2do Grupo E",away:"2do Grupo I",fecha:"mar, 30 jun",time:"14:00 ARG",stadium:"AT&T Stadium",ciudad:"Dallas"},{home:"1ro Grupo I",away:"3ro C/D/F/G/H",fecha:"mar, 30 jun",time:"18:00 ARG",stadium:"MetLife Stadium",ciudad:"Nueva York"},{home:"1ro Grupo A",away:"3ro C/E/F/H/I",fecha:"mar, 30 jun",time:"22:00 ARG",stadium:"E. Azteca",ciudad:"Cdad. México"},{home:"1ro Grupo L",away:"3ro E/H/I/J/K",fecha:"mié, 1 jul",time:"13:00 ARG",stadium:"M-Benz Stadium",ciudad:"Atlanta"},{home:"1ro Grupo G",away:"3ro A/E/H/I/J",fecha:"mié, 1 jul",time:"17:00 ARG",stadium:"Lumen Field",ciudad:"Seattle"},{home:"1ro Grupo D",away:"3ro B/E/F/I/J",fecha:"mié, 1 jul",time:"21:00 ARG",stadium:"Levi's Stadium",ciudad:"San Francisco"},{home:"2do Grupo K",away:"2do Grupo L",fecha:"jue, 2 jul",time:"13:00 ARG",stadium:"BMO Field",ciudad:"Toronto"},{home:"1ro Grupo H",away:"2do Grupo J",fecha:"jue, 2 jul",time:"16:00 ARG",stadium:"SoFi Stadium",ciudad:"Los Ángeles"},{home:"1ro Grupo B",away:"3ro E/F/G/I/J",fecha:"jue, 2 jul",time:"21:00 ARG",stadium:"BC Place",ciudad:"Vancouver"},{home:"2do Grupo D",away:"2do Grupo G",fecha:"vie, 3 jul",time:"15:00 ARG",stadium:"AT&T Stadium",ciudad:"Dallas"},{home:"1ro Grupo J",away:"2do Grupo H",fecha:"vie, 3 jul",time:"19:00 ARG",stadium:"Hard Rock Stadium",ciudad:"Miami"},{home:"1ro Grupo K",away:"3ro D/E/I/J/L",fecha:"vie, 3 jul",time:"22:30 ARG",stadium:"Arrowhead",ciudad:"Kansas City"}],"octavos":[{home:"Gan. M74",away:"Gan. M77",fecha:"sáb, 4 jul",time:"18:00 ARG",stadium:"Lincoln Financial Field",ciudad:"Filadelfia"},{home:"Gan. M73",away:"Gan. M75",fecha:"sáb, 4 jul",time:"14:00 ARG",stadium:"NRG Stadium",ciudad:"Houston"},{home:"Gan. M76",away:"Gan. M78",fecha:"dom, 5 jul",time:"17:00 ARG",stadium:"MetLife Stadium",ciudad:"Nueva York"},{home:"Gan. M79",away:"Gan. M80",fecha:"dom, 5 jul",time:"21:00 ARG",stadium:"E. Azteca",ciudad:"Cdad. México"},{home:"Gan. M83",away:"Gan. M84",fecha:"lun, 6 jul",time:"16:00 ARG",stadium:"AT&T Stadium",ciudad:"Dallas"},{home:"Gan. M81",away:"Gan. M82",fecha:"lun, 6 jul",time:"21:00 ARG",stadium:"Lumen Field",ciudad:"Seattle"},{home:"Gan. M86",away:"Gan. M88",fecha:"mar, 7 jul",time:"13:00 ARG",stadium:"M-Benz Stadium",ciudad:"Atlanta"},{home:"Gan. M85",away:"Gan. M87",fecha:"mar, 7 jul",time:"17:00 ARG",stadium:"BC Place",ciudad:"Vancouver"}],"cuartos":[{home:"Gan. M89",away:"Gan. M90",fecha:"jue, 9 jul",time:"21:00 ARG",stadium:"Gillette Stadium",ciudad:"Boston"},{home:"Gan. M93",away:"Gan. M94",fecha:"vie, 10 jul",time:"21:00 ARG",stadium:"SoFi Stadium",ciudad:"Los Ángeles"},{home:"Gan. M91",away:"Gan. M92",fecha:"sáb, 11 jul",time:"17:00 ARG",stadium:"Hard Rock Stadium",ciudad:"Miami"},{home:"Gan. M95",away:"Gan. M96",fecha:"sáb, 11 jul",time:"21:00 ARG",stadium:"Arrowhead",ciudad:"Kansas City"}],"semis":[{home:"Gan. M97",away:"Gan. M98",fecha:"mar, 14 jul",time:"21:00 ARG",stadium:"AT&T Stadium",ciudad:"Dallas"},{home:"Gan. M99",away:"Gan. M100",fecha:"mié, 15 jul",time:"21:00 ARG",stadium:"M-Benz Stadium",ciudad:"Atlanta"}],"3er":[{home:"Perd. SF1",away:"Perd. SF2",fecha:"sáb, 18 jul",time:"16:00 ARG",stadium:"Hard Rock Stadium",ciudad:"Miami"}],"final":[{home:"Gan. SF1",away:"Gan. SF2",fecha:"dom, 19 jul",time:"16:00 ARG",stadium:"MetLife Stadium",ciudad:"Nueva York"}]};
+
+  Object.entries(BRACKET_DATA).forEach(([fase,matches])=>{
+    const label=BRACKET_PROX[fase]?.label||fase;
+    matches.forEach((m,i)=>{
+      const mid=`elim_${fase}_${i}`;
+      const res=resultadosDB[mid];
+      if(!res||!res.played){
+        const hDisplay=resolveElimTeam(m.home)||m.home;
+        const aDisplay=resolveElimTeam(m.away)||m.away;
+        pendientes.push({
+          id:mid,home:hDisplay,away:aDisplay,
+          date:m.fecha,time:m.time.replace(' ARG',''),
+          stadium:m.stadium,city:m.ciudad,
+          fase:label,grupo:'',
+          ts:parseMatchTime(m.fecha, m.time.replace(' ARG',''))?.getTime()||99999999999
+        });
+      }
+    });
+  });
+
+  // Ordenar por timestamp
+  pendientes.sort((a,b)=>a.ts-b.ts);
+
+  if(pendientes.length===0){
+    el.innerHTML=`<div class="no-res" style="margin-top:24px">🏆 ¡Todos los partidos han sido jugados!</div>`;
+    return;
+  }
+
+  // Agrupar por fecha
+  const byDate={};
+  pendientes.forEach(m=>{
+    const key=m.date||'Sin fecha';
+    if(!byDate[key])byDate[key]=[];
+    byDate[key].push(m);
+  });
+
+  el.innerHTML=Object.entries(byDate).map(([fecha,ms])=>`
+    <div class="adm-date-header" style="margin-top:16px">${fecha}</div>
+    ${ms.map(m=>{
+      const fL=flagUrl(m.home);
+      const fR=flagUrl(m.away);
+      const argMatch=(m.home==='Argentina'||m.away==='Argentina');
+      return `<div class="match-card${argMatch?' prox-arg':''}" style="margin-bottom:10px;">
+        <div class="match-flag-area" style="height:72px;">
+          ${fL?`<div class="match-flag-l"><img src="${fL}" alt=""></div>`:''}
+          ${fR?`<div class="match-flag-r"><img src="${fR}" alt=""></div>`:''}
+          <div class="match-flag-content">
+            <div class="team-l"><div class="t-name">${m.home}</div></div>
+            <div class="match-mid">
+              <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:22px;color:var(--dim)">VS</div>
+              <div style="font-size:11px;color:var(--dim);margin-top:2px">${m.time}</div>
+            </div>
+            <div class="team-r"><div class="t-name">${m.away}</div></div>
+          </div>
+        </div>
+        <div class="match-meta">
+          <div class="ml">${m.fase}${m.grupo?' · '+m.grupo:''}</div>
+          <div class="mr">${m.stadium} · ${m.city}</div>
+        </div>
+      </div>`;
+    }).join('')}
+  `).join('');
+}
+
 function showToast(msg){
   const t=document.getElementById("toastEl");
   if(msg.includes("<")){t.innerHTML=msg;}else{t.textContent=msg;}
