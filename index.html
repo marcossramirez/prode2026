@@ -1181,7 +1181,19 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
           <div class="esp-row" id="espRow_eliminado">
             <div class="esp-lbl">Primer país eliminado<span class="esp-pts">3 PTS</span></div>
             <div id="espWrap_eliminado">
-              <input class="esp-inp" id="espInp_eliminado" placeholder="Ej: Arabia Saudita" onchange="saveEspField('eliminado',this.value)" onblur="saveEspField('eliminado',this.value)">
+              <div class="esp-search-wrap" id="espSearchWrap_eliminado">
+                <div id="espSelected_eliminado" style="display:none" class="esp-search-selected">
+                  <div><div class="sel-name" id="espSelName_eliminado"></div></div>
+                  <button class="sel-clear" onclick="clearEspPais()">✕</button>
+                </div>
+                <div id="espInputWrap_eliminado">
+                  <input class="esp-search-inp" id="espInp_eliminado" placeholder="Buscá un país..." autocomplete="off"
+                    oninput="onEspPaisSearch(this.value)" onfocus="openEspPaisDD()" onblur="closeEspPaisDDDelay()">
+                  <div class="esp-dropdown" id="espDD_eliminado">
+                    <div id="espDDList_eliminado"></div>
+                  </div>
+                </div>
+              </div>
             </div>
             <div id="espLocked_eliminado" style="display:none;font-size:12px;color:var(--dim);padding:10px 14px;background:rgba(255,255,255,.03);border-radius:10px;border:1px solid var(--border)">Esta apuesta especial ha sido cerrada por el administrador.</div>
           </div>
@@ -4308,8 +4320,32 @@ function renderEspSection(){
       renderEspFilters(key);
     }
   });
-  // Inputs de texto y número
-  ['eliminado','goles','penales'].forEach(key=>{
+  // Eliminado — dropdown de países
+  {
+    const locked=espLocks['eliminado'];
+    const wrapEl=document.getElementById('espWrap_eliminado');
+    const lockedEl=document.getElementById('espLocked_eliminado');
+    if(wrapEl&&lockedEl){
+      if(locked){
+        wrapEl.style.display='none';
+        lockedEl.style.display='block';
+      } else {
+        wrapEl.style.display='block';
+        lockedEl.style.display='none';
+        const val=espSelections['eliminado']||'';
+        if(val){
+          document.getElementById('espSelected_eliminado').style.display='flex';
+          document.getElementById('espInputWrap_eliminado').style.display='none';
+          document.getElementById('espSelName_eliminado').textContent=val;
+        } else {
+          document.getElementById('espSelected_eliminado').style.display='none';
+          document.getElementById('espInputWrap_eliminado').style.display='block';
+        }
+      }
+    }
+  }
+  // Inputs numéricos
+  ['goles','penales'].forEach(key=>{
     const locked=espLocks[key];
     const inp=document.getElementById(`espInp_${key}`);
     const wrapEl=document.getElementById(`espWrap_${key}`);
@@ -4500,6 +4536,72 @@ function saveEsp(){showToast('✓ GUARDADO');}
 /* ═══════════════════════════════════════════
    ADMIN — ESPECIALES
 ═══════════════════════════════════════════ */
+/* ── DROPDOWN PAÍSES (Primer país eliminado) ── */
+function _getPaises(){
+  // Obtiene lista única de países desde jugadoresDB
+  return [...new Set(jugadoresDB.map(j=>j.pais).filter(Boolean))].sort();
+}
+
+function onEspPaisSearch(query){
+  renderEspPaisDDList(query);
+  openEspPaisDD();
+}
+
+function openEspPaisDD(){
+  renderEspPaisDDList(document.getElementById('espInp_eliminado')?.value||'');
+  const dd=document.getElementById('espDD_eliminado');
+  if(dd)dd.classList.add('open');
+}
+
+function closeEspPaisDDDelay(){
+  setTimeout(()=>{
+    const dd=document.getElementById('espDD_eliminado');
+    if(dd)dd.classList.remove('open');
+  },200);
+}
+
+function renderEspPaisDDList(query){
+  const listEl=document.getElementById('espDDList_eliminado');
+  if(!listEl)return;
+  let paises=_getPaises();
+  if(jugadoresDB.length===0){
+    listEl.innerHTML=`<div class="esp-dd-empty">⏳ Cargando países...</div>`;
+    loadJugadores().then(()=>renderEspPaisDDList(query));
+    return;
+  }
+  if(query){
+    const q=normalizeStr(query);
+    paises=paises.filter(p=>normalizeStr(p).includes(q));
+  }
+  if(paises.length===0){
+    listEl.innerHTML=`<div class="esp-dd-empty">Sin resultados para "${query}"</div>`;
+    return;
+  }
+  listEl.innerHTML=paises.map(p=>`
+    <div class="esp-dd-item" onmousedown="selectEspPais('${p.replace(/'/g,"\\'")}')">
+      <div class="esp-dd-name">${p}</div>
+    </div>`).join('');
+}
+
+function selectEspPais(pais){
+  espSelections['eliminado']=pais;
+  document.getElementById('espSelected_eliminado').style.display='flex';
+  document.getElementById('espInputWrap_eliminado').style.display='none';
+  document.getElementById('espSelName_eliminado').textContent=pais;
+  document.getElementById('espDD_eliminado').classList.remove('open');
+  saveEspField('eliminado', pais);
+}
+
+function clearEspPais(){
+  if(espLocks['eliminado'])return;
+  espSelections['eliminado']='';
+  document.getElementById('espSelected_eliminado').style.display='none';
+  document.getElementById('espInputWrap_eliminado').style.display='block';
+  document.getElementById('espInp_eliminado').value='';
+  document.getElementById('espInp_eliminado').focus();
+  saveEspField('eliminado','');
+}
+
 function renderAdminEsp(){
   const card=document.getElementById('adminEspCard');
   if(!card)return;
@@ -4632,7 +4734,11 @@ function selAdminPhase(phase, btn){
   const adminEspPanelEl=document.getElementById('adminEspPanel');
   if(phase==='especiales'){
     if(adminMatchesEl)adminMatchesEl.style.display='none';
-    if(adminEspPanelEl){adminEspPanelEl.style.display='block';renderAdminEsp();}
+    if(adminEspPanelEl){
+      adminEspPanelEl.style.display='block';
+      // Cargar locks frescos antes de renderizar el panel
+      loadEspLocks().then(()=>renderAdminEsp());
+    }
   } else {
     if(adminMatchesEl)adminMatchesEl.style.display='block';
     if(adminEspPanelEl)adminEspPanelEl.style.display='none';
