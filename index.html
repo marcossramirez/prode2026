@@ -2938,7 +2938,12 @@ const TEAM_NAME_MAP={
   "Portugal":"Portugal","DR Congo":"Rep. D. Congo","Uzbekistan":"Uzbekistán",
   "Colombia":"Colombia","England":"Inglaterra","Croatia":"Croacia","Ghana":"Ghana",
   "Panama":"Panamá","Qatar":"Qatar","Cote d'Ivoire":"C. de Marfil",
-  "Korea Republic":"Corea del Sur","Bosnia-Herzegovina":"Bosnia y Herz."
+  "Korea Republic":"Corea del Sur","Bosnia-Herzegovina":"Bosnia y Herz.",
+  // Aliases específicos de OpenFootball (escritura distinta)
+  "Bosnia & Herzegovina":"Bosnia y Herz.",
+  "Curacao":"Curazao",
+  "Côte d'Ivoire":"C. de Marfil",
+  "Congo DR":"Rep. D. Congo"
 };
 
 const ESPNAdapter={
@@ -3012,7 +3017,11 @@ const PROVIDERS={apifootball:APIFootballAdapter,footballdata:FootballDataAdapter
 const DataService={
   _lastHash:{},
   async fetchResults(){
-    const provider=PROVIDERS[DATA_CONFIG.ACTIVE_PROVIDER]||ManualAdapter;
+    // Usuarios normales siempre leen del Sheet (ManualAdapter)
+    // Solo el admin usa APIs externas para obtener resultados en tiempo real
+    const provider = isAdmin
+      ? (PROVIDERS[DATA_CONFIG.ACTIVE_PROVIDER] || ManualAdapter)
+      : ManualAdapter;
     return await provider.fetch();
   },
   hasChanged(model){
@@ -3029,11 +3038,18 @@ const DataService={
       SyncLogger.warn("Ignorando update: partido ya finalizado",model.match_id);
       return false;
     }
+    // Preservar penal/tarjeta del resultado existente si el nuevo no los trae
     resultadosDB[model.match_id]={
       home_score:model.home_score,
       away_score:model.away_score,
       played:model.status==="final",
       in_progress:model.status==="live"||model.status==="halftime",
+      penal_home:model.penal_home??existing?.penal_home??null,
+      penal_away:model.penal_away??existing?.penal_away??null,
+      pen_home:model.penal_home??existing?.penal_home??null,
+      pen_away:model.penal_away??existing?.penal_away??null,
+      tarjeta_home:model.tarjeta_home??existing?.tarjeta_home??null,
+      tarjeta_away:model.tarjeta_away??existing?.tarjeta_away??null,
       source:model.source,
       updated:model.fetched_at
     };
@@ -3073,7 +3089,12 @@ const SyncManager={
       }
       this._retryCount=0;
       const hasLive=results.some(m=>m.status==="live"||m.status==="halftime");
-      this._scheduleNext(hasLive?DATA_CONFIG.SYNC_INTERVAL_LIVE:DATA_CONFIG.SYNC_INTERVAL_NORMAL);
+      // Admin: sincroniza más frecuente si hay partido en vivo
+      // Usuarios: siempre cada 3 min (leen del sheet)
+      const interval = isAdmin
+        ? (hasLive ? DATA_CONFIG.SYNC_INTERVAL_LIVE : DATA_CONFIG.SYNC_INTERVAL_NORMAL)
+        : DATA_CONFIG.SYNC_INTERVAL_NORMAL;
+      this._scheduleNext(interval);
       SyncLogger.info("Sync OK",{total:results.length,changed:changed.length,newFinal:newFinal.length});
     }catch(e){
       SyncLogger.error("Sync error",e.message);
