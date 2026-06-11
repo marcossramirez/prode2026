@@ -471,6 +471,8 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
 .group-table tr:last-child td{border-bottom:none;}
 .group-table tr.classified td{color:#00ff47;}
 .group-table tr.classified td:first-child{color:#00ff47;}
+.group-table tr.third td{color:var(--yellow);}
+.group-table tr.third td:first-child{color:var(--yellow);}
 .dd-btn{
   width:100%;padding:13px 18px;border-radius:14px;
   background:var(--surface2);
@@ -1209,7 +1211,7 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
           <div class="esp-row" id="espRow_goles">
             <div class="esp-lbl">Total goles fase de grupos (±1)<span class="esp-pts">4 PTS</span></div>
             <div id="espWrap_goles">
-              <input class="esp-inp" id="espInp_goles" type="number" placeholder="Ej: 120" onchange="saveEspField('goles',this.value)" onblur="saveEspField('goles',this.value)">
+              <input class="esp-inp" id="espInp_goles" type="number" placeholder="Ej: 120" onchange="saveEspField('goles',this.value)">
             </div>
             <div id="espLocked_goles" style="display:none;font-size:12px;color:var(--dim);padding:10px 14px;background:rgba(255,255,255,.03);border-radius:10px;border:1px solid var(--border)">Esta apuesta especial ha sido cerrada por el administrador.</div>
           </div>
@@ -1218,7 +1220,7 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
           <div class="esp-row" id="espRow_penales">
             <div class="esp-lbl">Total partidos definidos por penales (±1)<span class="esp-pts">4 PTS</span></div>
             <div id="espWrap_penales">
-              <input class="esp-inp" id="espInp_penales" type="number" placeholder="Ej: 4" onchange="saveEspField('penales',this.value)" onblur="saveEspField('penales',this.value)">
+              <input class="esp-inp" id="espInp_penales" type="number" placeholder="Ej: 4" onchange="saveEspField('penales',this.value)">
             </div>
             <div id="espLocked_penales" style="display:none;font-size:12px;color:var(--dim);padding:10px 14px;background:rgba(255,255,255,.03);border-radius:10px;border:1px solid var(--border)">Esta apuesta especial ha sido cerrada por el administrador.</div>
           </div>
@@ -1595,7 +1597,7 @@ async function fetchResultadosAPI(){
     // Guardar en Sheet también
     await saveResultadosToSheet();
     renderResultados();
-    buildPronDB(data);
+    // NO llamar buildPronDB aquí — los datos de la API no son pronósticos
     recalcularPuntos();
   }catch(e){
     console.warn("API-Football no disponible:",e);
@@ -1717,7 +1719,8 @@ async function loadAllAliases(){
 
 /* Polling de aliases cada 30 segundos para ver nuevos jugadores */
 function startAliasSync(){
-  setInterval(loadAllAliases, 30000);
+  if(window._aliasSyncInterval)clearInterval(window._aliasSyncInterval);
+  window._aliasSyncInterval=setInterval(loadAllAliases, 30000);
 }
 
 /* ── Envío de datos via GET (sin CORS) ── */
@@ -3312,7 +3315,8 @@ async function enterApp(player){
     navAv.style.backgroundPosition="center";
     navAv.textContent="";
   } else {
-    navAv.textContent=player.alias[0].toUpperCase();
+    const fallback=(player.alias||player.mail||"?")[0].toUpperCase();
+    navAv.textContent=fallback;
   }
   // Ocultar nombre del nav
   const navNameEl=document.getElementById("navName");
@@ -3328,7 +3332,6 @@ async function enterApp(player){
   buildGrupoDD();buildResGrupoDD();
   renderGroupTable("A");renderGrupoMatches("A");renderElimMatches("dieciseis");
   renderAdmin();
-  renderRanking(player);
 
   // Cargar ticker
   loadConfig();
@@ -3355,11 +3358,47 @@ async function enterApp(player){
 
 function logout(){
   stopSync();
+  // Cancelar alias sync intervals
+  if(window._aliasSyncInterval)clearInterval(window._aliasSyncInterval);
+  if(window._configTimer)clearTimeout(window._configTimer);
+  // Cancelar timers de debounce de pronósticos pendientes
+  Object.keys(_pronTimers).forEach(k=>{clearTimeout(_pronTimers[k]);delete _pronTimers[k];});
   localStorage.removeItem("p26_session");
   document.getElementById("appScreen").classList.remove("active");
   document.getElementById("aliasScreen").classList.remove("active");
+  // Reset de todas las variables de sesión
   currentPlayer=null;uname=null;isAdmin=false;
-  userPron={};userBonus={};
+  userPron={};userBonus={};userPenal={};userTarjeta={};
+  pronDB={};pronosticosDB=[];aliasesDB={};
+  resultadosDB={};
+  jugadoresDB=[];
+  _jugadoresLoading=false;
+  espSelections={balon:null,bota:null,guante:null,joven:null,eliminado:'',goles:'',penales:''};
+  espLocks={balon:false,bota:false,guante:false,joven:false,eliminado:false,goles:false,penales:false};
+  espDDFilters={balon:{pais:'',posicion:'',edad:''},bota:{pais:'',posicion:'',edad:''},guante:{pais:'',posicion:'',edad:''},joven:{pais:'',posicion:'',edad:''}};
+  // Limpiar DOM de especiales para que no muestre datos del jugador anterior
+  ['balon','bota','guante','joven'].forEach(key=>{
+    const sel=document.getElementById(`espSelected_${key}`);
+    const inp=document.getElementById(`espInputWrap_${key}`);
+    const inpEl=document.getElementById(`espInp_${key}`);
+    if(sel)sel.style.display='none';
+    if(inp)inp.style.display='block';
+    if(inpEl)inpEl.value='';
+  });
+  const selEliminado=document.getElementById('espSelected_eliminado');
+  const inpEliminado=document.getElementById('espInputWrap_eliminado');
+  const inpElEl=document.getElementById('espInp_eliminado');
+  if(selEliminado)selEliminado.style.display='none';
+  if(inpEliminado)inpEliminado.style.display='block';
+  if(inpElEl)inpElEl.value='';
+  const golesEl=document.getElementById('espInp_goles');
+  const penalesEl=document.getElementById('espInp_penales');
+  if(golesEl)golesEl.value='';
+  if(penalesEl)penalesEl.value='';
+  // Limpiar cache de memes para próxima sesión
+  Object.keys(_memeCache).forEach(k=>_memeCache[k]=null);
+  Object.keys(_memeQueue).forEach(k=>_memeQueue[k]=[]);
+  _memeSystemEnabled=false;
   showLoader(300).then(()=>document.getElementById("loginScreen").classList.add("active"));
 }
 
@@ -3371,7 +3410,11 @@ function showTab(tab,btn){
     document.querySelectorAll(".tab-content").forEach(t=>t.classList.remove("active"));
     document.querySelectorAll(".nav-tab").forEach(b=>b.classList.remove("active"));
     document.getElementById("tab-"+tab).classList.add("active");btn.classList.add("active");
-    if(tab==="resultados")renderResultados();
+    if(tab==="resultados"){
+      // Asegurar que la vista "Por Fecha" esté activa al entrar
+      const btnFecha=document.getElementById("btnFecha");
+      selRes("fecha", btnFecha);
+    }
     if(tab==="ranking")renderRanking(currentPlayer);
   });
 }
@@ -3427,26 +3470,29 @@ function calcMetricas(mail){
     const diffPron=Math.abs(pH-pA);
     riesgoSum+=diffPron;
 
-    // Bonus acertados
-    if(userBonus[mid]){
-      totalBonus++;
-      if(exacto)bonusAcertados++;
-    }
-    if(userPenal[mid]?.home){
-      totalBonus++;
-      if(res.penal_home)bonusAcertados++;
-    }
-    if(userPenal[mid]?.away){
-      totalBonus++;
-      if(res.penal_away)bonusAcertados++;
-    }
-    if(userTarjeta[mid]?.home){
-      totalBonus++;
-      if(res.tarjeta_home)bonusAcertados++;
-    }
-    if(userTarjeta[mid]?.away){
-      totalBonus++;
-      if(res.tarjeta_away)bonusAcertados++;
+    // Bonus — solo calculamos magia para el jugador logueado
+    const isCurrentPlayer = currentPlayer && mail === currentPlayer.mail;
+    if(isCurrentPlayer){
+      if(userBonus[mid]){
+        totalBonus++;
+        if(exacto)bonusAcertados++;
+      }
+      if(userPenal[mid]?.home){
+        totalBonus++;
+        if(res.penal_home)bonusAcertados++;
+      }
+      if(userPenal[mid]?.away){
+        totalBonus++;
+        if(res.penal_away)bonusAcertados++;
+      }
+      if(userTarjeta[mid]?.home){
+        totalBonus++;
+        if(res.tarjeta_home)bonusAcertados++;
+      }
+      if(userTarjeta[mid]?.away){
+        totalBonus++;
+        if(res.tarjeta_away)bonusAcertados++;
+      }
     }
   });
 
@@ -3575,7 +3621,8 @@ async function loadConfig(){
     }
 
     // Verificar cada minuto si cambió el estado
-    setTimeout(loadConfig, 60000);
+    if(window._configTimer)clearTimeout(window._configTimer);
+    window._configTimer=setTimeout(loadConfig, 60000);
   }catch(e){console.warn('Error cargando config:',e);}
 }
 
@@ -3623,6 +3670,11 @@ function schedulerTickerClear(){
     saveTickerAdmin('');
     const inp=document.getElementById('tickerInput');
     if(inp)inp.value='';
+    // Construir la clave del día actual correctamente
+    const dd=String(argNow.getDate()).padStart(2,'0');
+    const mo=String(argNow.getMonth()+1).padStart(2,'0');
+    const yyyy=argNow.getFullYear();
+    const fechaKey=`ticker_${dd}/${mo}/${yyyy}`;
     // Borrar texto del día en Sheet via GET
     const params=new URLSearchParams({type:'config_write',key:fechaKey,value:'',secret:SYNC_SECRET});
     fetch(`${SHEET_URL}?${params.toString()}`);
@@ -3634,8 +3686,11 @@ function buildPronDB(data){
   pronDB={};
   data.forEach(r=>{
     if(!pronDB[r.mail])pronDB[r.mail]={};
+    const h=parseInt(r.home_score);
+    const a=parseInt(r.away_score);
     pronDB[r.mail][r.match_id]={
-      home:parseInt(r.home_score),away:parseInt(r.away_score),
+      home:isNaN(h)?null:h,
+      away:isNaN(a)?null:a,
       bonus:r.bonus,penal_home:r.penal_home,penal_away:r.penal_away,
       tarjeta_home:r.tarjeta_home,tarjeta_away:r.tarjeta_away
     };
@@ -3892,7 +3947,7 @@ function renderGroupTable(grupo){
   el.style.display="block";
 
   const rows=table.map((t,i)=>{
-    const cl=i<2?"classified":"";
+    const cl=i<2?"classified":i===2?"third":"";
     return `<tr class="${cl}">
       <td>${t.name}</td>
       <td>${t.played}</td><td>${t.wins}</td><td>${t.draws}</td><td>${t.losses}</td>
@@ -3918,7 +3973,14 @@ function selPhase(ph,btn){
   document.getElementById("phGrupos").style.display=ph==="grupos"?"block":"none";
   document.getElementById("phElim").style.display=ph==="eliminacion"?"block":"none";
   document.getElementById("phEsp").style.display=ph==="especiales"?"block":"none";
-  if(ph==="especiales") renderEspSection();
+  if(ph==="especiales"){
+    // Si jugadores no cargaron o locks no inicializados, hacer carga completa
+    if(jugadoresDB.length===0 || Object.values(espLocks).every(v=>v===false)){
+      initEsp();
+    } else {
+      renderEspSection();
+    }
+  }
 }
 function buildGrupoDD(){
   document.getElementById("grupoMenu").innerHTML=Object.keys(GROUPS).map(g=>`
@@ -4222,6 +4284,7 @@ async function toggleBonus(id,btn){
    ESPECIALES — DATOS Y ESTADO
 ═══════════════════════════════════════════ */
 let jugadoresDB = []; // cargados desde DATOS_JUGADORES sheet
+let _jugadoresLoading = false; // flag para evitar cargas paralelas y loops
 let espLocks = {balon:false, bota:false, guante:false, joven:false, eliminado:false, goles:false, penales:false};
 let espSelections = {balon:null, bota:null, guante:null, joven:null, eliminado:'', goles:'', penales:''};
 let espDDFilters = {balon:{pais:'',posicion:'',edad:''},bota:{pais:'',posicion:'',edad:''},guante:{pais:'',posicion:'',edad:''},joven:{pais:'',posicion:'',edad:''}};
@@ -4246,6 +4309,8 @@ function normalizeStr(s){
 
 // Carga jugadores desde sheet DATOS_JUGADORES
 async function loadJugadores(){
+  if(_jugadoresLoading)return; // evitar llamadas paralelas
+  _jugadoresLoading=true;
   try{
     const res=await fetch(`${SHEET_URL}?type=datos_jugadores`);
     const data=await res.json();
@@ -4263,6 +4328,7 @@ async function loadJugadores(){
     })).filter(j=>j.nombre); // filtrar filas vacías
     console.log(`✅ Jugadores cargados: ${jugadoresDB.length}`);
   }catch(e){console.warn('❌ Error cargando jugadores:',e);}
+  finally{_jugadoresLoading=false;}
 }
 
 // Carga estado de locks de especiales
@@ -4313,6 +4379,9 @@ async function loadMisEspeciales(){
 
 // Inicializa la sección de especiales
 async function initEsp(){
+  // Asegurar que jugadoresDB esté cargado ANTES de cargar las selecciones
+  // para que los chips muestren país, posición y edad correctamente
+  if(jugadoresDB.length===0) await loadJugadores();
   await loadEspLocks();
   await loadMisEspeciales();
   renderEspSection();
@@ -4390,7 +4459,8 @@ function showEspSelected(key, jugador){
   const selEl=document.getElementById(`espSelected_${key}`);
   const inpWrapEl=document.getElementById(`espInputWrap_${key}`);
   document.getElementById(`espSelName_${key}`).textContent=jugador.nombre;
-  document.getElementById(`espSelMeta_${key}`).textContent=
+  const metaEl=document.getElementById(`espSelMeta_${key}`);
+  if(metaEl) metaEl.textContent=
     [jugador.pais, jugador.posicion, jugador.edad?`${jugador.edad} años`:''].filter(Boolean).join(' · ');
   selEl.style.display='flex';
   inpWrapEl.style.display='none';
@@ -4524,10 +4594,16 @@ function renderEspDDList(key, query){
   // Si los jugadores no cargaron todavía
   if(jugadoresDB.length===0){
     listEl.innerHTML=`<div class="esp-dd-empty">⏳ Cargando jugadores...</div>`;
-    loadJugadores().then(()=>{
-      renderEspFilters(key);
-      renderEspDDList(key, query);
-    });
+    if(!_jugadoresLoading){
+      loadJugadores().then(()=>{
+        if(jugadoresDB.length>0){
+          renderEspFilters(key);
+          renderEspDDList(key, query);
+        } else {
+          listEl.innerHTML=`<div class="esp-dd-empty">❌ No se pudieron cargar los jugadores. Recargá la página.</div>`;
+        }
+      });
+    }
     return;
   }
   const lista=filterJugadoresForKey(key, query, espDDFilters[key]);
@@ -4535,11 +4611,13 @@ function renderEspDDList(key, query){
     listEl.innerHTML=`<div class="esp-dd-empty">${query?`Sin resultados para "${query}"`:'Sin jugadores disponibles'}</div>`;
     return;
   }
-  listEl.innerHTML=lista.map(j=>`
-    <div class="esp-dd-item" onmousedown="selectEspJugador('${key}','${j.nombre.replace(/'/g,"\\'")}')">
+  listEl.innerHTML=lista.map(j=>{
+    const nombreEscaped=j.nombre.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;');
+    return `<div class="esp-dd-item" onmousedown="selectEspJugador('${key}','${nombreEscaped}')">
       <div class="esp-dd-name">${j.nombre}</div>
       <div class="esp-dd-meta">${[j.pais,j.posicion,j.edad?j.edad+' años':''].filter(Boolean).join(' · ')}</div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
 function selectEspJugador(key, nombre){
@@ -4557,6 +4635,7 @@ function selectEspJugador(key, nombre){
 
 async function saveEspJugador(key, nombre){
   if(!currentPlayer)return;
+  if(espLocks[key]){showToast('🔒 Esta apuesta está cerrada');return;}
   // Validación backend también se hará en el Apps Script
   await postToSheet({
     type:'especial',
@@ -4581,8 +4660,6 @@ async function saveEspField(key, val){
   });
   showToast('✓ Especial guardado');
 }
-
-function saveEsp(){showToast('✓ GUARDADO');}
 
 /* ═══════════════════════════════════════════
    ADMIN — ESPECIALES
@@ -4617,7 +4694,12 @@ function renderEspPaisDDList(query){
   let paises=_getPaises();
   if(jugadoresDB.length===0){
     listEl.innerHTML=`<div class="esp-dd-empty">⏳ Cargando países...</div>`;
-    loadJugadores().then(()=>renderEspPaisDDList(query));
+    if(!_jugadoresLoading){
+      loadJugadores().then(()=>{
+        if(jugadoresDB.length>0) renderEspPaisDDList(query);
+        else listEl.innerHTML=`<div class="esp-dd-empty">❌ No se pudieron cargar los países. Recargá la página.</div>`;
+      });
+    }
     return;
   }
   if(query){
@@ -4865,7 +4947,7 @@ function renderAdmin(){
         <button class="btn-save" onclick="saveAdminResult('${m.id}')">GUARDAR</button>
       </div>
     </div>`;
-    });
+    }).join("");
   });
   document.getElementById("adminMatches").innerHTML=html;
 }
@@ -4878,8 +4960,11 @@ async function saveAdminRes(mid, side, val){
 
 async function saveAdminPen(mid, side, val){
   if(!resultadosDB[mid])resultadosDB[mid]={};
-  const key=side==="home"?"pen_home":"pen_away";
-  resultadosDB[mid][key]=val===''?null:parseInt(val);
+  const key=side==="home"?"penal_home":"penal_away";
+  const penKey=side==="home"?"pen_home":"pen_away";
+  const parsed=val===''?null:parseInt(val);
+  resultadosDB[mid][key]=parsed;
+  resultadosDB[mid][penKey]=parsed; // alias para compatibilidad
 }
 
 async function saveAdminResult(mid){
@@ -4889,14 +4974,17 @@ async function saveAdminResult(mid){
   }
   res.played=true;
   res.source="admin";
+  // Normalizar penales — resultadosDB puede tener pen_home o penal_home
+  const ph=res.penal_home??res.pen_home??null;
+  const pa=res.penal_away??res.pen_away??null;
   await postToSheet({
     type:"resultado_grupo",
     match_id:mid,
     home_score:res.home_score,
     away_score:res.away_score,
     played:true,
-    pen_home:res.pen_home||null,
-    pen_away:res.pen_away||null,
+    penal_home:ph,   // campo correcto para el Apps Script
+    penal_away:pa,
     tarjeta_home:res.tarjeta_home||false,
     tarjeta_away:res.tarjeta_away||false,
     source:"admin",
@@ -4932,11 +5020,12 @@ async function savePronosticoElim(mid, side, val){
   const drawn=isDrawn(userPron[mid]);
 
   document.querySelectorAll('.pen-inp').forEach(inp=>{
-    if(inp.getAttribute('onchange')&&inp.getAttribute('onchange').includes(`'${mid}'`)){
+    const ch=inp.getAttribute('onchange')||'';
+    if(ch.includes(`'${mid}'`)){
       inp.disabled=!drawn;
       if(!drawn){
         inp.value='';
-        if(inp.getAttribute('onchange').includes("'home'"))
+        if(ch.includes("'home'"))
           userPron[mid].pen_home=null;
         else
           userPron[mid].pen_away=null;
