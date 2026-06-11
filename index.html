@@ -729,6 +729,13 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
   border:1px solid var(--border);background:transparent;color:var(--dim);transition:all .15s;
 }
 .esp-dd-filter.active{background:var(--green);border-color:var(--green);color:var(--black);}
+.esp-dd-filter-sel{
+  padding:4px 8px;border-radius:20px;font-size:10px;font-weight:700;
+  letter-spacing:1px;text-transform:uppercase;cursor:pointer;
+  border:1px solid var(--border);background:var(--surface2);color:var(--white);
+  outline:none;max-width:130px;
+}
+.esp-dd-filter-sel:focus{border-color:var(--green);}
 .esp-dd-item{
   padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--border);
   transition:background .12s;
@@ -4389,13 +4396,15 @@ function clearEspSearch(key){
 // Filtrar jugadores según tipo de apuesta
 function filterJugadoresForKey(key, query, filters){
   let lista=[...jugadoresDB];
-  // Filtros de elegibilidad por tipo
+  // Filtros de elegibilidad por tipo (siempre aplicados)
   if(key==='guante') lista=lista.filter(j=>j.elegible_guante);
   if(key==='joven')  lista=lista.filter(j=>j.elegible_joven);
-  if(key==='bota')   lista=lista.filter(j=>!j.elegible_guante); // excluir arqueros
-  // Filtros de UI
+  if(key==='bota')   lista=lista.filter(j=>!j.elegible_guante);
+  // Filtro de país (UI)
   if(filters.pais) lista=lista.filter(j=>j.pais===filters.pais);
-  if(filters.posicion) lista=lista.filter(j=>j.posicion===filters.posicion);
+  // Filtro de posición (UI) — no aplica en guante (ya filtrado arriba)
+  if(filters.posicion && key!=='guante') lista=lista.filter(j=>j.posicion===filters.posicion);
+  // Filtro edad joven — solo para joven
   if(filters.edad==='joven') lista=lista.filter(j=>j.elegible_joven);
   // Búsqueda por texto
   if(query){
@@ -4408,7 +4417,7 @@ function filterJugadoresForKey(key, query, filters){
     const otros=lista.filter(j=>!normalizeStr(j.posicion).includes('delantero'));
     lista=[...delanteros,...otros];
   }
-  return lista.slice(0,30);
+  return lista.slice(0,50);
 }
 
 // Obtiene listas únicas de países y posiciones para filtros
@@ -4428,17 +4437,41 @@ function renderEspFilters(key){
   if(!filtersEl)return;
   const f=espDDFilters[key];
   let html='';
-  // Filtro posición (solo si hay varias)
-  posiciones.forEach(pos=>{
-    const active=f.posicion===pos?'active':'';
-    html+=`<button class="esp-dd-filter ${active}" onclick="setEspFilter('${key}','posicion','${active?'':pos}')">${pos}</button>`;
-  });
-  // Filtro edad joven (solo balon y bota)
-  if(key==='balon'||key==='bota'){
-    const active=f.edad==='joven'?'active':'';
-    html+=`<button class="esp-dd-filter ${active}" onclick="setEspFilter('${key}','edad','${active?'':'joven'}')">≤21</button>`;
+
+  // Filtro de país — todas las apuestas de jugador
+  if(paises.length>1){
+    // Selector de país compacto
+    html+=`<select class="esp-dd-filter-sel" onchange="setEspFilterNoClose('${key}','pais',this.value)">
+      <option value="">🌍 País</option>
+      ${paises.map(p=>`<option value="${p}" ${f.pais===p?'selected':''}>${p}</option>`).join('')}
+    </select>`;
   }
-  filtersEl.innerHTML=html||'<span style="font-size:10px;color:var(--dim);padding:2px 4px">Todos</span>';
+
+  // Filtro posición — solo balon, bota, joven (no guante: ya filtrado automáticamente)
+  if(key!=='guante' && posiciones.length>1){
+    posiciones.forEach(pos=>{
+      const active=f.posicion===pos?'active':'';
+      html+=`<button class="esp-dd-filter ${active}" onmousedown="event.preventDefault();setEspFilterNoClose('${key}','posicion','${active?'':pos}')">${pos}</button>`;
+    });
+  }
+
+  // Filtro ≤21 — solo para joven
+  if(key==='joven'){
+    const active=f.edad==='joven'?'active':'';
+    html+=`<button class="esp-dd-filter ${active}" onmousedown="event.preventDefault();setEspFilterNoClose('${key}','edad','${active?'':'joven'}')">≤21</button>`;
+  }
+
+  filtersEl.innerHTML=html||'';
+}
+
+function setEspFilterNoClose(key, tipo, val){
+  // Aplica filtro SIN cerrar el dropdown
+  espDDFilters[key][tipo]=val;
+  renderEspFilters(key);
+  renderEspDDList(key, document.getElementById(`espInp_${key}`)?.value||'');
+  // Mantener el dropdown abierto
+  const dd=document.getElementById(`espDD_${key}`);
+  if(dd)dd.classList.add('open');
 }
 
 function setEspFilter(key, tipo, val){
@@ -4454,16 +4487,19 @@ function onEspSearch(key, query){
 }
 
 function openEspDD(key){
+  renderEspFilters(key);
   renderEspDDList(key, document.getElementById(`espInp_${key}`)?.value||'');
   const dd=document.getElementById(`espDD_${key}`);
   if(dd)dd.classList.add('open');
 }
 
 function closeEspDDDelay(key){
+  // En touch (Android) el onblur se dispara antes del touchend/click del item
+  // Usamos 300ms para dar tiempo suficiente al evento onmousedown/touchstart
   setTimeout(()=>{
     const dd=document.getElementById(`espDD_${key}`);
     if(dd)dd.classList.remove('open');
-  },200);
+  },300);
 }
 
 function renderEspDDList(key, query){
@@ -4472,7 +4508,6 @@ function renderEspDDList(key, query){
   // Si los jugadores no cargaron todavía
   if(jugadoresDB.length===0){
     listEl.innerHTML=`<div class="esp-dd-empty">⏳ Cargando jugadores...</div>`;
-    // Reintentar carga y re-renderizar cuando lleguen
     loadJugadores().then(()=>{
       renderEspFilters(key);
       renderEspDDList(key, query);
@@ -4557,7 +4592,7 @@ function closeEspPaisDDDelay(){
   setTimeout(()=>{
     const dd=document.getElementById('espDD_eliminado');
     if(dd)dd.classList.remove('open');
-  },200);
+  },300);
 }
 
 function renderEspPaisDDList(query){
