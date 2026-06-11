@@ -1622,13 +1622,15 @@ async function loadResultadosFromSheet(){
     data.forEach(r=>{
       const fixture=Object.values(FIXTURE_GRUPOS).flat().find(f=>f.home===r.home&&f.away===r.away);
       const ts=fixture?parseMatchTime(fixture.date,fixture.time)?.getTime()||0:0;
+      const ph=r.penal_home==="TRUE"||r.penal_home===true;
+      const pa=r.penal_away==="TRUE"||r.penal_away===true;
       resultadosDB[r.match_id]={
         home:r.home,away:r.away,
         home_score:parseInt(r.home_score)||0,
         away_score:parseInt(r.away_score)||0,
         played:r.played==="TRUE"||r.played===true,
-        penal_home:r.penal_home==="TRUE"||r.penal_home===true,
-        penal_away:r.penal_away==="TRUE"||r.penal_away===true,
+        penal_home:ph, pen_home:ph,   // ambos nombres para compatibilidad
+        penal_away:pa, pen_away:pa,
         tarjeta_home:r.tarjeta_home==="TRUE"||r.tarjeta_home===true,
         tarjeta_away:r.tarjeta_away==="TRUE"||r.tarjeta_away===true,
         ts
@@ -1674,7 +1676,6 @@ async function savePronostico(matchId,side,val){
 
 async function loadMisPronosticos(){
   if(!currentPlayer)return;
-  // Solo cargar desde Sheet — sin localStorage
   try{
     const res=await fetch(`${SHEET_URL}?type=pronosticos`);
     const data=await res.json();
@@ -1693,6 +1694,8 @@ async function loadMisPronosticos(){
       if(p.tarjeta_away==="TRUE"||p.tarjeta_away===true)userTarjeta[p.match_id].away=true;
     });
     pronosticosDB=data;
+    // Poblar pronDB con TODOS los pronósticos para que calcMetricas funcione
+    buildPronDB(data);
     renderGrupoMatches(curGrupo);
   }catch(e){console.warn("Error cargando pronósticos:",e);}
 }
@@ -1792,12 +1795,18 @@ let _memeActive = false;
 let _memeSystemEnabled = false;
 
 // Descubre todas las URLs válidas de una carpeta probando 01, 02, 03...
-// hasta que falle. Guarda el resultado en cache.
+// hasta que falle o llegue al límite. Guarda el resultado en cache.
+const MEME_MAX_SCAN = 50; // límite de seguridad
 function _discoverMemes(cat) {
   if (_memeCache[cat] !== null) return Promise.resolve(_memeCache[cat]);
   return new Promise(resolve => {
     const found = [];
     function tryIdx(idx) {
+      if (idx > MEME_MAX_SCAN) {
+        _memeCache[cat] = found;
+        resolve(found);
+        return;
+      }
       _tryExtensions(cat, idx, 0)
         .then(url => { found.push(url); tryIdx(idx + 1); })
         .catch(() => {
@@ -1872,7 +1881,7 @@ function showMemeOnLogin() {
 
 function recalcularPuntos(){
   PLAYERS.forEach(p=>{
-    if(!p.alias)return;
+    if(!p.alias && !p.mail)return; // solo excluir si no hay ningún identificador
     const misPron=pronosticosDB.filter(pr=>pr.mail===p.mail);
     let total=0,aciertos=0,gAci=0,gErr=0,jugados=0;
     misPron.forEach(pr=>{
@@ -3150,22 +3159,7 @@ async function fetchESPN(){
   }
 }
 
-function startSync(){
-  fetchESPN();
-  // Admin: cada 60s durante partidos, cada 3min en reposo
-  syncInterval=setInterval(()=>{
-    const hasLive=Object.values(resultadosDB).some(r=>r.in_progress);
-    fetchESPN();
-    if(hasLive){
-      // re-schedule más frecuente si hay partidos en vivo
-      clearInterval(syncInterval);
-      syncInterval=setInterval(fetchESPN,60*1000);
-    }
-  },3*60*1000);
-}
-function stopSync(){
-  if(syncInterval)clearInterval(syncInterval);
-}
+// startSync y stopSync están definidas arriba usando SyncManager
 
 /* ═══════════════════════════════════════════
    INTRO / LOADER
@@ -3860,7 +3854,7 @@ function renderRanking(player){
     const isMe=p.mail===player.mail;
     const pf=driveImg(p.foto_perfil);
     const bn=driveImg(p.banner);
-    const displayName=p.alias||`<span style="color:rgba(255,255,255,.2);font-size:20px">—</span>`;
+    const displayName=p.alias||`<span style="color:rgba(255,255,255,.4);font-size:11px">${p.mail.split('@')[0]}</span>`;
 
     let tEl;
     if(p.trend>0)tEl=`<span style="color:#00FF47;font-size:15px">▲</span><span style="color:#00FF47;font-weight:700">${p.trend}</span>`;
@@ -3974,6 +3968,16 @@ function selResElim(id,lbl){
   curResElim=id;document.getElementById("resElimLbl").textContent=lbl;
   document.querySelectorAll("#resElimMenu .dd-item").forEach(el=>el.classList.toggle("sel",el.textContent.trim()===lbl));
   closeAllDD();
+}
+
+function selRes(vista, btn){
+  document.querySelectorAll("#tab-resultados .phase-btn").forEach(b=>b.classList.remove("active"));
+  if(btn)btn.classList.add("active");
+  document.getElementById("vFecha").style.display  = vista==="fecha"  ? "block" : "none";
+  document.getElementById("vGrupos").style.display = vista==="grupos" ? "block" : "none";
+  document.getElementById("vElim").style.display   = vista==="elim"   ? "block" : "none";
+  if(vista==="fecha")  renderResultados();
+  if(vista==="grupos") renderResGruposContent(curResGrupo||"A");
 }
 
 function getMatches(g){
@@ -4280,17 +4284,28 @@ async function loadMisEspeciales(){
   try{
     const res=await fetch(`${SHEET_URL}?type=especiales&mail=${encodeURIComponent(currentPlayer.mail)}`);
     const data=await res.json();
-    if(data){
-      ['balon','bota','guante','joven','eliminado','goles','penales'].forEach(k=>{
-        if(data[k]!==undefined&&data[k]!==null&&data[k]!==''){
-          if(['balon','bota','guante','joven'].includes(k)){
-            // buscar jugador por nombre
-            const jugador=jugadoresDB.find(j=>j.nombre===data[k]);
-            espSelections[k]=jugador||{nombre:data[k],pais:'',posicion:'',edad:0};
-          } else {
-            espSelections[k]=data[k];
-          }
-        }
+    if(data && typeof data==='object' && !Array.isArray(data)){
+      ['balon','bota','guante','joven'].forEach(k=>{
+        const val=data[k];
+        // Ignorar vacíos, null, undefined
+        if(val===undefined||val===null||String(val).trim()==='')return;
+        const nombre=String(val).trim();
+        // Buscar jugador por nombre (insensible a tildes/mayúsculas)
+        const jugador=jugadoresDB.find(j=>
+          normalizeStr(j.nombre)===normalizeStr(nombre)
+        )||jugadoresDB.find(j=>j.nombre===nombre);
+        espSelections[k]=jugador||{nombre,pais:'',posicion:'',edad:0};
+      });
+      ['eliminado'].forEach(k=>{
+        const val=data[k];
+        if(val===undefined||val===null||String(val).trim()==='')return;
+        espSelections[k]=String(val).trim();
+      });
+      ['goles','penales'].forEach(k=>{
+        const val=data[k];
+        if(val===undefined||val===null||String(val).trim()==='')return;
+        const num=parseInt(val);
+        if(!isNaN(num))espSelections[k]=String(num);
       });
     }
   }catch(e){console.warn('Error cargando especiales:',e);}
