@@ -1946,7 +1946,31 @@ function _pickFromCache(cat) {
   return list[_memeQueue[cat].pop()];
 }
 
-function showMeme(cat, label) {
+// Muestra el meme solo la primera vez que el jugador entra después de un cambio de posición
+// Guarda en el sheet (campo meme_visto en Ranking_Estado) la pos_actual ya vista
+async function _mostrarMemeSiCambio(player, rankData) {
+  if (!_checkMemeSystemEnabled()) return;
+  const r = rankData.find(r => r.mail === player.mail);
+  if (!r || !r.pos_actual) { showMemeOnLogin(); return; }
+
+  // Si meme_visto === pos_actual → ya vio el meme para esta posición → no mostrar
+  const posVista = r.meme_visto || 0;
+  if (posVista === r.pos_actual) return;
+
+  // Mostrar meme
+  showMemeOnLogin();
+
+  // Marcar como visto en el sheet
+  try {
+    await postToSheet({
+      type: 'meme_visto',
+      mail: player.mail,
+      pos_actual: r.pos_actual
+    });
+  } catch(e) {}
+}
+
+
   if (_memeActive) return;
   _memeActive = true;
   _discoverMemes(cat).then(list => {
@@ -3465,14 +3489,22 @@ async function enterApp(player){
     vid.currentTime=0;vid.play().catch(()=>{});
   }
 
-  // ── Cargar ranking (para el meme) y resto en paralelo ────────
-  let rankData=[];
-  try{
-    const r=await fetch(`${SHEET_URL}?type=ranking`);
-    rankData=await r.json()||[];
-  }catch(e){}
+  // ── Cargar TODO en paralelo mientras corre el video ──────────
+  const [rankRes] = await Promise.allSettled([
+    fetch(`${SHEET_URL}?type=ranking`).then(r=>r.json()).catch(()=>[]),
+    loadAllAliases(),
+    loadMisPronosticos(),
+    loadResultadosFromSheet(),
+    loadJugadores()
+  ]);
 
-  // Aplicar ranking a PLAYERS ya (trend listo para el meme)
+  // Aplicar alias al player actual
+  if(aliasesDB[player.mail]){player.alias=aliasesDB[player.mail];uname=player.alias;}
+  PLAYERS.forEach(p=>{if(aliasesDB[p.mail])p.alias=aliasesDB[p.mail];});
+  currentPlayer=player;
+
+  // Aplicar ranking del sheet a PLAYERS (pts + trend para meme)
+  const rankData = rankRes.status==='fulfilled' ? (rankRes.value||[]) : [];
   if(rankData.length>0){
     rankData.forEach(r=>{
       const p=PLAYERS.find(pl=>pl.mail===r.mail);
@@ -3480,40 +3512,27 @@ async function enterApp(player){
         p.pts=r.pts||0;
         p._lastPos=r.pos_actual||0;
         p.trend=r.pos_anterior>0&&r.pos_actual>0?(r.pos_anterior-r.pos_actual):0;
-        if(r.alias)p.alias=r.alias;
+        if(r.alias&&!aliasesDB[r.mail])p.alias=r.alias;
       }
     });
+  } else {
+    recalcularPuntos();
+    PLAYERS.forEach(p=>{p.trend=0;});
   }
 
-  // Cargar resto en paralelo (no esperamos — el video cubre la carga)
-  Promise.allSettled([
-    loadAllAliases(),
-    loadMisPronosticos(),
-    loadResultadosFromSheet(),
-    loadJugadores()
-  ]).then(()=>{
-    if(aliasesDB[player.mail]){player.alias=aliasesDB[player.mail];uname=player.alias;}
-    PLAYERS.forEach(p=>{if(aliasesDB[p.mail])p.alias=aliasesDB[p.mail];});
-    currentPlayer=player;
-    renderRanking(player);
-    renderGrupoMatches(curGrupo);
-    renderResultados();
-    initEsp();
-  });
-
-  // ── Esperar a que termine el video (máx 3s) ──────────────────
+  // ── Esperar video — lo dejamos correr, máx 5s ────────────────
   await new Promise(resolve=>{
     const done=()=>{
       if(ov){
-        ov.style.transition="opacity .5s";ov.style.opacity="0";
-        setTimeout(()=>{ov.style.display="none";ov.style.transition="";ov.classList.remove("playing");resolve();},500);
+        ov.style.transition="opacity .6s";ov.style.opacity="0";
+        setTimeout(()=>{ov.style.display="none";ov.style.transition="";ov.classList.remove("playing");resolve();},600);
       }else resolve();
     };
-    if(vid){vid.addEventListener("ended",done,{once:true});setTimeout(done,3000);}
-    else setTimeout(resolve,500);
+    if(vid){vid.addEventListener("ended",done,{once:true});setTimeout(done,5000);}
+    else setTimeout(resolve,300);
   });
 
-  // ── Mostrar app — todo ya cargado ─────────────────────────────
+  // ── Mostrar app — datos ya listos ────────────────────────────
   document.getElementById("loginScreen").classList.remove("active");
   document.getElementById("appScreen").classList.add("active");
 
@@ -3528,11 +3547,15 @@ async function enterApp(player){
   buildGrupoDD();buildResGrupoDD();
   renderGroupTable("A");renderGrupoMatches("A");renderElimMatches("dieciseis");
   renderAdmin();
+  renderRanking(player);
+  renderGrupoMatches(curGrupo);
+  renderResultados();
+  initEsp();
   loadConfig();
   schedulerTickerClear();
 
-  // Meme primero, luego papelitos
-  showMemeOnLogin();
+  // Meme solo si cambió la posición desde la última vez que lo vio
+  _mostrarMemeSiCambio(player, rankData);
   setTimeout(()=>launchConfetti(),200);
 
   startSync();
