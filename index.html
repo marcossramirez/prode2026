@@ -59,19 +59,37 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
 #memeOverlay{
   position:fixed;inset:0;z-index:2000;
   display:flex;align-items:center;justify-content:center;
-  background:rgba(0,0,0,.72);
+  background:rgba(0,0,0,.65);
   opacity:0;pointer-events:none;
   transition:opacity .3s ease;
+  cursor:pointer;
 }
 #memeOverlay.show{opacity:1;pointer-events:auto;}
-#memeOverlay img{
-  max-width:600px;width:90vw;max-height:80vh;object-fit:contain;
-  border-radius:16px;
+#memeCard{
+  display:flex;flex-direction:column;align-items:center;gap:12px;
+  background:rgba(18,18,28,.92);
+  border:1.5px solid rgba(255,255,255,.12);
+  border-radius:20px;
+  padding:18px 18px 14px;
+  max-width:min(340px,88vw);
+  width:100%;
+  box-shadow:0 8px 40px rgba(0,0,0,.7);
   transform:scale(.85);
   transition:transform .3s cubic-bezier(.34,1.56,.64,1);
-  box-shadow:0 8px 40px rgba(0,0,0,.6);
 }
-#memeOverlay.show img{transform:scale(1);}
+#memeOverlay.show #memeCard{transform:scale(1);}
+#memeLabel{
+  font-family:'Barlow Condensed',sans-serif;
+  font-weight:900;font-size:22px;letter-spacing:1px;
+  text-align:center;text-transform:uppercase;
+  color:#fff;line-height:1.1;
+}
+#memeOverlay img{
+  width:100%;aspect-ratio:1/1;object-fit:cover;
+  border-radius:14px;
+  box-shadow:0 4px 20px rgba(0,0,0,.5);
+  display:block;
+}
 
 /* ══════════════════════════════
    SCREENS
@@ -919,7 +937,7 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
 <canvas id="confettiCanvas"></canvas>
 
 <!-- MEME OVERLAY -->
-<div id="memeOverlay"><img id="memeImg" src="" alt="meme"></div>
+<div id="memeOverlay"><div id="memeCard"><div id="memeLabel"></div><img id="memeImg" src="" alt="meme"></div></div>
 
 <!-- ═══ LOGIN ═══ -->
 <div id="loginScreen" class="screen">
@@ -1710,6 +1728,7 @@ async function loadResultadosFromSheet(){
       };
     });
     renderResultados();
+    renderGroupTable(curGrupo||"A"); // actualizar tabla de grupos con resultados del sheet
     recalcularPuntos();
   }catch(e){console.warn("Error cargando resultados del sheet:",e);}
 }
@@ -1721,15 +1740,20 @@ const _pronTimers={};
 async function savePronostico(matchId,side,val){
   if(!currentPlayer)return;
   if(!userPron[matchId])userPron[matchId]={};
-  // Aceptar vacío como null para borrar
   const parsed=val===""||val===null?null:parseInt(val);
   if(parsed!==null&&isNaN(parsed))return;
   userPron[matchId][side]=parsed;
-  // Cancelar timer anterior y esperar 1.5s antes de guardar
   if(_pronTimers[matchId])clearTimeout(_pronTimers[matchId]);
   _pronTimers[matchId]=setTimeout(async()=>{
     const h=userPron[matchId].home??null;
     const a=userPron[matchId].away??null;
+    // Si solo uno de los dos tiene valor → no guardar, avisar
+    const hTiene=h!==null&&h!==undefined;
+    const aTiene=a!==null&&a!==undefined;
+    if((hTiene&&!aTiene)||(!hTiene&&aTiene)){
+      showToast("⚠️ Pronóstico incompleto — ingresá ambos resultados");
+      return;
+    }
     await postToSheet({
       type:"pronostico",
       mail:currentPlayer.mail,
@@ -1921,7 +1945,7 @@ function _pickFromCache(cat) {
   return list[_memeQueue[cat].pop()];
 }
 
-function showMeme(cat) {
+function showMeme(cat, label) {
   if (_memeActive) return;
   _memeActive = true;
   _discoverMemes(cat).then(list => {
@@ -1929,28 +1953,48 @@ function showMeme(cat) {
     const url = _pickFromCache(cat);
     if (!url) { _memeActive = false; return; }
     const overlay = document.getElementById("memeOverlay");
-    const img = document.getElementById("memeImg");
+    const img     = document.getElementById("memeImg");
+    const lbl     = document.getElementById("memeLabel");
     if (!overlay || !img) { _memeActive = false; return; }
-    img.src = url;
-    overlay.classList.add("show");
-    setTimeout(() => {
+
+    if (lbl) lbl.textContent = label || "";
+
+    const closeMeme = () => {
+      overlay.removeEventListener("click", closeMeme);
       overlay.classList.remove("show");
-      setTimeout(() => { img.src = ""; _memeActive = false; }, 320);
-    }, 3000);
+      setTimeout(() => { img.src = ""; img.onload = null; _memeActive = false; }, 320);
+    };
+
+    img.onload = () => {
+      overlay.classList.add("show");
+      overlay.addEventListener("click", closeMeme);
+      setTimeout(closeMeme, 5000);
+    };
+    img.onerror = () => { _memeActive = false; };
+    img.src = url;
   }).catch(() => { _memeActive = false; });
 }
 
 function _checkMemeSystemEnabled() {
   if (_memeSystemEnabled) return true;
-  const hasPoints = PLAYERS.some(p => (p.pts || 0) > 0);
-  if (hasPoints) _memeSystemEnabled = true;
+  const hayResultados = Object.values(resultadosDB).some(r => r.played);
+  if (hayResultados) _memeSystemEnabled = true;
   return _memeSystemEnabled;
 }
 
-// Llamar tras login para mostrar meme inicial (mantiene)
 function showMemeOnLogin() {
   if (!_checkMemeSystemEnabled()) return;
-  showMeme(MEME_CATS.mantiene);
+  if (!currentPlayer) return;
+  const p = PLAYERS.find(pl => pl.mail === currentPlayer.mail);
+  if (!p) { showMeme(MEME_CATS.mantiene, "Te mantenés en la tabla"); return; }
+  const trend = p.trend || 0;
+  if (trend > 0) {
+    showMeme(MEME_CATS.sube, "¡Subiste en la tabla!");
+  } else if (trend < 0) {
+    showMeme(MEME_CATS.baja, "¡Bajaste en la tabla!");
+  } else {
+    showMeme(MEME_CATS.mantiene, "Te mantenés en la tabla");
+  }
 }
 
 function recalcularPuntos(){
