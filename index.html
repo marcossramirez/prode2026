@@ -3710,6 +3710,22 @@ async function loadConfig(){
         const inp=document.getElementById('tickerInput');
         if(inp&&!inp.value)inp.value=frase;
       } else {
+
+    // Mostrar alerta de sync solo al admin
+    if(isAdmin && data.sync_alert && data.sync_alert.trim()!==''){
+      let alertEl=document.getElementById('syncAlertBanner');
+      if(!alertEl){
+        alertEl=document.createElement('div');
+        alertEl.id='syncAlertBanner';
+        alertEl.style.cssText='position:fixed;bottom:70px;left:50%;transform:translateX(-50%);background:#E8292A;color:#fff;padding:10px 20px;border-radius:10px;font-size:13px;font-weight:700;z-index:9999;max-width:90vw;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,.4)';
+        document.body.appendChild(alertEl);
+      }
+      alertEl.textContent=data.sync_alert.trim();
+      alertEl.style.display='block';
+    } else {
+      const alertEl=document.getElementById('syncAlertBanner');
+      if(alertEl)alertEl.style.display='none';
+    }
         // Buscar texto del día actual — formato DD/MM/YYYY
         const dd=String(argNow.getDate()).padStart(2,'0');
         const mo=String(argNow.getMonth()+1).padStart(2,'0');
@@ -5064,18 +5080,18 @@ function selAdminPhase(phase, btn){
   }
 }
 
+// IDs de partidos desbloqueados manualmente por el admin
+const _adminUnlocked = new Set();
+
 function renderAdmin(){
-  // Partidos según fase seleccionada
   const all=[];
   if(currentAdminPhase==='grupos'){
     "ABCDEFGHIJKL".split("").forEach(g=>all.push(...getMatches(g)));
   } else {
-    // Fase eliminatoria — usar BRACKET_R32 + fases siguientes
     all.push(...getElimMatches());
   }
   all.sort((a,b)=>a.ts-b.ts);
 
-  // Agrupar por fecha
   const byDate={};
   all.forEach(m=>{
     const key=m.date;
@@ -5087,54 +5103,140 @@ function renderAdmin(){
   Object.entries(byDate).forEach(([date,matches])=>{
     html+=`<div class="adm-date-header">${date}</div>`;
     html+=matches.map(m=>{
-    const res=resultadosDB[m.id];
-    const played=res?.played;
-    const rH=played?res.home_score:null;
-    const rA=played?res.away_score:null;
-    const hWin=rH>rA, aWin=rA>rH;
-    const hCol=played?(hWin?"#00ff47":aWin?"#ff4444":"var(--white)"):"var(--white)";
-    const aCol=played?(aWin?"#00ff47":hWin?"#ff4444":"var(--white)"):"var(--white)";
-    const fLurl=flagUrl(m.home);
-    const fRurl=flagUrl(m.away);
-    const hasPen=res?.pen_home!=null&&res?.pen_away!=null;
-    const penSection=`<div style="display:flex;align-items:center;justify-content:center;gap:6px;margin-top:4px;">
-      <input class="pen-inp" type="number" min="0" max="20" placeholder="–"
-        value="${res?.pen_home??''}" oninput="onScoreInput(this)"
-        onchange="saveAdminPen('${m.id}','home',this.value)">
-      <span style="font-size:10px;color:var(--dim);letter-spacing:1px">PENS</span>
-      <input class="pen-inp" type="number" min="0" max="20" placeholder="–"
-        value="${res?.pen_away??''}" oninput="onScoreInput(this)"
-        onchange="saveAdminPen('${m.id}','away',this.value)">
-    </div>`;
-    return `<div class="match-card" style="margin-bottom:12px;">
-      <div class="match-flag-area" style="height:100px;">
-        ${fLurl?`<div class="match-flag-l"><img src="${fLurl}" alt=""></div>`:""}
-        ${fRurl?`<div class="match-flag-r"><img src="${fRurl}" alt=""></div>`:""}
-        <div class="match-flag-content">
-          <div class="team-l"><div class="t-name">${m.home}</div></div>
-          <div class="match-mid" style="display:flex;flex-direction:column;align-items:center;gap:4px;">
-            <div style="display:flex;align-items:center;gap:6px;">
-              <input class="adm-inp s-inp" type="number" min="0" max="99" placeholder="–"
-                value="${rH??''}" oninput="onScoreInput(this)"
-                onchange="saveAdminRes('${m.id}','home',this.value)">
-              <span style="color:var(--dim);font-weight:900;font-size:18px">–</span>
-              <input class="adm-inp s-inp" type="number" min="0" max="99" placeholder="–"
-                value="${rA??''}" oninput="onScoreInput(this)"
-                onchange="saveAdminRes('${m.id}','away',this.value)">
+      const res=resultadosDB[m.id]||{};
+      const played=res.played===true;
+      const isElim=currentAdminPhase==='eliminacion';
+
+      // ── Estado de bloqueo ──
+      // Bloqueado si: partido jugado Y no está desbloqueado manualmente
+      const locked = played && !_adminUnlocked.has(m.id);
+
+      const rH=res.home_score!=null?res.home_score:'';
+      const rA=res.away_score!=null?res.away_score:'';
+      const ph=res.penal_home!=null?res.penal_home:'';
+      const pa=res.penal_away!=null?res.penal_away:'';
+      const th=res.tarjeta_home===true;
+      const ta=res.tarjeta_away===true;
+
+      const hWin=played&&res.home_score>res.away_score;
+      const aWin=played&&res.away_score>res.home_score;
+      const hCol=played?(hWin?"#00ff47":aWin?"#ff4444":"var(--white)"):"var(--white)";
+      const aCol=played?(aWin?"#00ff47":hWin?"#ff4444":"var(--white)"):"var(--white)";
+
+      const fLurl=flagUrl(m.home);
+      const fRurl=flagUrl(m.away);
+
+      // ── Sección penales (solo en eliminatoria) ──
+      const penSection = isElim ? `
+        <div style="display:flex;align-items:center;justify-content:center;gap:6px;margin-top:4px;">
+          <input class="pen-inp" type="number" min="0" max="20" placeholder="–"
+            value="${ph}" oninput="onScoreInput(this)"
+            onchange="saveAdminPen('${m.id}','home',this.value)"
+            ${locked?'disabled':''}>
+          <span style="font-size:10px;color:var(--dim);letter-spacing:1px">PENS</span>
+          <input class="pen-inp" type="number" min="0" max="20" placeholder="–"
+            value="${pa}" oninput="onScoreInput(this)"
+            onchange="saveAdminPen('${m.id}','away',this.value)"
+            ${locked?'disabled':''}>
+        </div>` : '';
+
+      // ── Bonus tarjeta y penal (todos los partidos) ──
+      // + definición por penales solo en eliminatoria
+      const bonusSection=`
+        <div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-top:6px;padding:4px 0;flex-wrap:wrap;">
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--dim);cursor:${locked?'not-allowed':'pointer'}">
+            <input type="checkbox" ${th?'checked':''} ${locked?'disabled':''}
+              onchange="saveAdminTarjeta('${m.id}','home',this.checked)"
+              style="accent-color:#ff4444;width:14px;height:14px;">
+            🟥 Local
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--dim);cursor:${locked?'not-allowed':'pointer'}">
+            <input type="checkbox" ${res.penal_home===true?'checked':''} ${locked?'disabled':''}
+              onchange="saveAdminBoolPen('${m.id}','home',this.checked)"
+              style="accent-color:#3a86ff;width:14px;height:14px;">
+            ⚽ Local
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--dim);cursor:${locked?'not-allowed':'pointer'}">
+            <input type="checkbox" ${res.penal_away===true?'checked':''} ${locked?'disabled':''}
+              onchange="saveAdminBoolPen('${m.id}','away',this.checked)"
+              style="accent-color:#3a86ff;width:14px;height:14px;">
+            ⚽ Visit.
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--dim);cursor:${locked?'not-allowed':'pointer'}">
+            <input type="checkbox" ${ta?'checked':''} ${locked?'disabled':''}
+              onchange="saveAdminTarjeta('${m.id}','away',this.checked)"
+              style="accent-color:#ff4444;width:14px;height:14px;">
+            🟥 Visit.
+          </label>
+        </div>`;
+
+      // ── Candado ──
+      const lockBtn = played ? `
+        <button onclick="toggleAdminLock('${m.id}')" title="${locked?'Desbloquear para editar':'Bloquear'}"
+          style="background:none;border:none;cursor:pointer;font-size:18px;padding:4px 8px;opacity:0.7;transition:opacity .2s"
+          onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.7">
+          ${locked?'🔒':'🔓'}
+        </button>` : '';
+
+      return `<div class="match-card" style="margin-bottom:12px;${locked?'opacity:0.75;':''}">
+        <div class="match-flag-area" style="height:100px;">
+          ${fLurl?`<div class="match-flag-l"><img src="${fLurl}" alt=""></div>`:""}
+          ${fRurl?`<div class="match-flag-r"><img src="${fRurl}" alt=""></div>`:""}
+          <div class="match-flag-content">
+            <div class="team-l"><div class="t-name" style="color:${hCol}">${m.home}</div></div>
+            <div class="match-mid" style="display:flex;flex-direction:column;align-items:center;gap:2px;">
+              <div style="display:flex;align-items:center;gap:6px;">
+                <input class="adm-inp s-inp" type="number" min="0" max="99" placeholder="–"
+                  value="${rH}" oninput="onScoreInput(this)"
+                  onchange="saveAdminRes('${m.id}','home',this.value)"
+                  ${locked?'disabled':''}>
+                <span style="color:var(--dim);font-weight:900;font-size:18px">–</span>
+                <input class="adm-inp s-inp" type="number" min="0" max="99" placeholder="–"
+                  value="${rA}" oninput="onScoreInput(this)"
+                  onchange="saveAdminRes('${m.id}','away',this.value)"
+                  ${locked?'disabled':''}>
+              </div>
+              ${penSection}
+              ${bonusSection}
             </div>
-            ${penSection}
+            <div class="team-r"><div class="t-name" style="color:${aCol}">${m.away}</div></div>
           </div>
-          <div class="team-r"><div class="t-name">${m.away}</div></div>
         </div>
-      </div>
-      <div class="match-meta" style="display:flex;align-items:center;justify-content:space-between;padding:6px 12px;">
-        <div class="ml">${m.time} | ${m.stadium} | ${m.city}</div>
-        <button class="btn-save" onclick="saveAdminResult('${m.id}')">GUARDAR</button>
-      </div>
-    </div>`;
+        <div class="match-meta" style="display:flex;align-items:center;justify-content:space-between;padding:6px 12px;">
+          <div class="ml">${m.time} | ${m.stadium} | ${m.city}</div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            ${lockBtn}
+            ${locked?'':`<button class="btn-save" onclick="saveAdminResult('${m.id}')">GUARDAR</button>`}
+          </div>
+        </div>
+      </div>`;
     }).join("");
   });
   document.getElementById("adminMatches").innerHTML=html;
+}
+
+function toggleAdminLock(mid){
+  if(_adminUnlocked.has(mid)){
+    _adminUnlocked.delete(mid);
+  } else {
+    _adminUnlocked.add(mid);
+  }
+  renderAdmin();
+}
+
+function saveAdminTarjeta(mid, side, val){
+  if(!resultadosDB[mid])resultadosDB[mid]={};
+  const key=side==='home'?'tarjeta_home':'tarjeta_away';
+  resultadosDB[mid][key]=val===true||val==='true'?true:false;
+}
+
+function saveAdminBoolPen(mid, side, val){
+  if(!resultadosDB[mid])resultadosDB[mid]={};
+  const key=side==='home'?'penal_home':'penal_away';
+  const penKey=side==='home'?'pen_home':'pen_away';
+  const v=val===true||val==='true'?true:false;
+  resultadosDB[mid][key]=v;
+  resultadosDB[mid][penKey]=v;
 }
 
 async function saveAdminRes(mid, side, val){
@@ -5159,7 +5261,6 @@ async function saveAdminResult(mid){
   }
   res.played=true;
   res.source="admin";
-  // Normalizar penales — resultadosDB puede tener pen_home o penal_home
   const ph=res.penal_home??res.pen_home??null;
   const pa=res.penal_away??res.pen_away??null;
   await postToSheet({
@@ -5168,13 +5269,15 @@ async function saveAdminResult(mid){
     home_score:res.home_score,
     away_score:res.away_score,
     played:true,
-    penal_home:ph,   // campo correcto para el Apps Script
+    penal_home:ph,
     penal_away:pa,
     tarjeta_home:res.tarjeta_home||false,
     tarjeta_away:res.tarjeta_away||false,
     source:"admin",
     secret:SYNC_SECRET
   });
+  // Volver a bloquear después de guardar
+  _adminUnlocked.delete(mid);
   recalcularPuntos();
   renderAdmin();
   renderResultados();
