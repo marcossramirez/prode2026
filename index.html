@@ -3409,14 +3409,13 @@ async function confirmAlias(){
 
 async function enterApp(player){
   uname=player.alias;isAdmin=!!player.isAdmin;
-  // Guardar sesión
   localStorage.setItem("p26_session",player.mail);
 
-  // Mostrar app inmediatamente sin esperar al Sheet
+  // Mostrar app
   document.getElementById("loginScreen").classList.remove("active");
   document.getElementById("appScreen").classList.add("active");
 
-  // Nav avatar — sin nombre, solo imagen
+  // Nav avatar (con alias del player ya cargado desde datos_jugadores)
   const navAv=document.getElementById("navAv");
   const pfUrl=driveImg(player.foto_perfil);
   if(pfUrl){
@@ -3425,43 +3424,73 @@ async function enterApp(player){
     navAv.style.backgroundPosition="center";
     navAv.textContent="";
   } else {
-    const fallback=(player.alias||player.mail||"?")[0].toUpperCase();
-    navAv.textContent=fallback;
+    navAv.textContent=(player.alias||player.mail||"?")[0].toUpperCase();
   }
-  // Ocultar nombre del nav
   const navNameEl=document.getElementById("navName");
   if(navNameEl)navNameEl.style.display="none";
-
   if(isAdmin)document.getElementById("adminTab").style.display="inline-block";
   launchConfetti();
 
-  // Meme de bienvenida (solo si ya hay puntos reales)
-  setTimeout(()=>showMemeOnLogin(), 800);
-
-  // Render inmediato con datos locales
+  // Render de matches (datos locales)
   buildGrupoDD();buildResGrupoDD();
   renderGroupTable("A");renderGrupoMatches("A");renderElimMatches("dieciseis");
   renderAdmin();
 
-  // Cargar ticker
+  // Skeleton mientras cargamos
+  const rankRowsEl=document.getElementById("rankRows");
+  if(rankRowsEl)rankRowsEl.innerHTML=`<tr><td colspan="4" style="text-align:center;color:var(--dim);padding:20px;font-size:13px;">Cargando...</td></tr>`;
+
   loadConfig();
   schedulerTickerClear();
 
-  // Cargar datos del Sheet en paralelo (no bloquea la UI)
-  Promise.all([loadAllAliases(), loadMisPronosticos(), loadResultadosFromSheet(), loadJugadores()])
-    .then(()=>{
-      renderRanking(currentPlayer||player);
-      renderGrupoMatches(curGrupo);
-      renderResultados();
-      initEsp(); // Inicializar especiales después de tener jugadores
+  // ── Cargar en paralelo: ranking guardado + alias actualizados + mis pronósticos + resultados ──
+  const [rankData] = await Promise.allSettled([
+    fetch(`${SHEET_URL}?type=ranking`).then(r=>r.json()).catch(()=>[]),
+    loadAllAliases(),
+    loadMisPronosticos(),
+    loadResultadosFromSheet(),
+    loadJugadores()
+  ]);
+
+  // Aplicar alias desde sheet a player actual
+  if(aliasesDB[player.mail]){
+    player.alias=aliasesDB[player.mail];
+    uname=player.alias;
+  }
+  currentPlayer=player;
+
+  // ── Aplicar ranking guardado del sheet a PLAYERS ──────────────
+  const ranking = rankData.status==='fulfilled' ? (rankData.value||[]) : [];
+  if(ranking.length > 0){
+    // Poblar pts, pos_actual, pos_anterior desde el sheet
+    ranking.forEach(r=>{
+      const p=PLAYERS.find(pl=>pl.mail===r.mail);
+      if(p){
+        p.pts=r.pts||0;
+        p._lastPos=r.pos_actual||0;
+        // trend: cuántos puestos subió/bajó respecto a pos_anterior
+        const posAnt=r.pos_anterior||0;
+        p.trend=posAnt>0&&r.pos_actual>0 ? (posAnt - r.pos_actual) : 0;
+        // Aplicar alias actualizado
+        if(r.alias && !aliasesDB[r.mail]) p.alias=r.alias;
+      }
     });
+  } else {
+    // Sin datos en sheet aún → calcular en frontend y dejar trend en 0
+    recalcularPuntos();
+    PLAYERS.forEach(p=>{ p.trend=0; });
+  }
 
-  // Forzar re-render del ranking después de 1 segundo (por si los aliases tardaron)
-  setTimeout(()=>{
-    if(currentPlayer)renderRanking(currentPlayer);
-  }, 1000);
+  // Aplicar aliases a todos los PLAYERS
+  PLAYERS.forEach(p=>{ if(aliasesDB[p.mail])p.alias=aliasesDB[p.mail]; });
 
-  // Sincronización continua
+  // Render final — una sola vez, con todos los datos listos
+  renderRanking(player);
+  renderGrupoMatches(curGrupo);
+  renderResultados();
+  initEsp();
+
+  setTimeout(()=>showMemeOnLogin(), 500);
   startSync();
   startAliasSync();
 }
@@ -5140,34 +5169,17 @@ function renderAdmin(){
             ${locked?'disabled':''}>
         </div>` : '';
 
-      // ── Bonus tarjeta y penal (todos los partidos) ──
-      // + definición por penales solo en eliminatoria
+      // ── Bonus tarjeta (🟥) y penal (P) — todos los partidos ──
       const bonusSection=`
-        <div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-top:6px;padding:4px 0;flex-wrap:wrap;">
-          <label style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--dim);cursor:${locked?'not-allowed':'pointer'}">
-            <input type="checkbox" ${th?'checked':''} ${locked?'disabled':''}
-              onchange="saveAdminTarjeta('${m.id}','home',this.checked)"
-              style="accent-color:#ff4444;width:14px;height:14px;">
-            🟥 Local
-          </label>
-          <label style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--dim);cursor:${locked?'not-allowed':'pointer'}">
-            <input type="checkbox" ${res.penal_home===true?'checked':''} ${locked?'disabled':''}
-              onchange="saveAdminBoolPen('${m.id}','home',this.checked)"
-              style="accent-color:#3a86ff;width:14px;height:14px;">
-            ⚽ Local
-          </label>
-          <label style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--dim);cursor:${locked?'not-allowed':'pointer'}">
-            <input type="checkbox" ${res.penal_away===true?'checked':''} ${locked?'disabled':''}
-              onchange="saveAdminBoolPen('${m.id}','away',this.checked)"
-              style="accent-color:#3a86ff;width:14px;height:14px;">
-            ⚽ Visit.
-          </label>
-          <label style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--dim);cursor:${locked?'not-allowed':'pointer'}">
-            <input type="checkbox" ${ta?'checked':''} ${locked?'disabled':''}
-              onchange="saveAdminTarjeta('${m.id}','away',this.checked)"
-              style="accent-color:#ff4444;width:14px;height:14px;">
-            🟥 Visit.
-          </label>
+        <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-top:6px;padding:4px 0;">
+          <button class="red-card-btn${th?' on-tarjeta':''}" ${locked?'disabled':''} title="Tarjeta roja local"
+            onclick="saveAdminTarjeta('${m.id}','home',this)"></button>
+          <button class="penalty-p${res.penal_home===true?' on-penal':''}" ${locked?'disabled':''} title="Penal local"
+            onclick="saveAdminBoolPen('${m.id}','home',this)">P</button>
+          <button class="penalty-p${res.penal_away===true?' on-penal':''}" ${locked?'disabled':''} title="Penal visitante"
+            onclick="saveAdminBoolPen('${m.id}','away',this)">P</button>
+          <button class="red-card-btn${ta?' on-tarjeta':''}" ${locked?'disabled':''} title="Tarjeta roja visitante"
+            onclick="saveAdminTarjeta('${m.id}','away',this)"></button>
         </div>`;
 
       // ── Candado ──
@@ -5224,19 +5236,22 @@ function toggleAdminLock(mid){
   renderAdmin();
 }
 
-function saveAdminTarjeta(mid, side, val){
+function saveAdminTarjeta(mid, side, btn){
   if(!resultadosDB[mid])resultadosDB[mid]={};
   const key=side==='home'?'tarjeta_home':'tarjeta_away';
-  resultadosDB[mid][key]=val===true||val==='true'?true:false;
+  const current=resultadosDB[mid][key]===true;
+  resultadosDB[mid][key]=!current;
+  btn.classList.toggle('on-tarjeta',!current);
 }
 
-function saveAdminBoolPen(mid, side, val){
+function saveAdminBoolPen(mid, side, btn){
   if(!resultadosDB[mid])resultadosDB[mid]={};
-  const key=side==='home'?'penal_home':'penal_away';
-  const penKey=side==='home'?'pen_home':'pen_away';
-  const v=val===true||val==='true'?true:false;
-  resultadosDB[mid][key]=v;
-  resultadosDB[mid][penKey]=v;
+  const keyPenal=side==='home'?'penal_home':'penal_away';
+  const keyPen=side==='home'?'pen_home':'pen_away';
+  const current=resultadosDB[mid][keyPenal]===true;
+  resultadosDB[mid][keyPenal]=!current;
+  resultadosDB[mid][keyPen]=!current;
+  btn.classList.toggle('on-penal',!current);
 }
 
 async function saveAdminRes(mid, side, val){
