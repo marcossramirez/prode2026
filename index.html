@@ -1063,7 +1063,7 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
           <div class="pts-sec">Podio Final</div>
           <div class="pts-row"><span>Campeón</span><span class="pts-v">10 PTS</span></div>
           <div class="pts-row"><span>Subcampeón</span><span class="pts-v">8 PTS</span></div>
-          <div class="pts-row"><span>3er y 4to puesto</span><span class="pts-v">4 PTS</span></div>
+          <div class="pts-row"><span>Tercer Puesto</span><span class="pts-v">4 PTS</span></div>
           <div class="pts-sec">Especiales</div>
           <div class="pts-row"><span>Balón de Oro</span><span class="pts-v">4 PTS</span></div>
           <div class="pts-row"><span>Bota de Oro</span><span class="pts-v">6 PTS</span></div>
@@ -1117,7 +1117,7 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
 <div class="dd-item" onclick="selElim('octavos','Octavos')">Octavos</div>
 <div class="dd-item" onclick="selElim('cuartos','Cuartos de Final')">Cuartos de Final</div>
 <div class="dd-item" onclick="selElim('semis','Semifinal')">Semifinal</div>
-<div class="dd-item" onclick="selElim('3er','3er y 4to Puesto')">3er y 4to Puesto</div>
+<div class="dd-item" onclick="selElim('3er','Tercer Puesto')">Tercer Puesto</div>
 <div class="dd-item" onclick="selElim('final','Final')">Final</div>
           </div>
         </div>
@@ -1271,7 +1271,7 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
 
           <!-- 3er y 4to -->
           <div class="esp-row" id="espRow_tercero">
-            <div class="esp-lbl">3er y 4to Puesto<span class="esp-pts">4 PTS</span></div>
+            <div class="esp-lbl">Tercer Puesto<span class="esp-pts">4 PTS</span></div>
             <div id="espWrap_tercero">
               <div class="esp-search-wrap" id="espSearchWrap_tercero">
                 <div id="espSelected_tercero" style="display:none" class="esp-search-selected">
@@ -1294,7 +1294,9 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
           <div class="esp-row" id="espRow_goles">
             <div class="esp-lbl">Total goles fase de grupos (±1)<span class="esp-pts">4 PTS</span></div>
             <div id="espWrap_goles">
-              <input class="esp-inp" id="espInp_goles" type="number" placeholder="Ej: 120" onchange="saveEspField('goles',this.value)">
+              <input class="esp-inp" id="espInp_goles" type="number" placeholder="Ej: 120"
+                oninput="this.style.borderColor=this.value?'var(--green)':'';this.style.boxShadow=this.value?'0 0 0 2px rgba(0,255,71,.18)':'';"
+                onchange="saveEspField('goles',this.value);this.style.borderColor=this.value?'var(--green)':'';this.style.boxShadow=this.value?'0 0 0 2px rgba(0,255,71,.18)':'';">
             </div>
             <div id="espLocked_goles" style="display:none;font-size:12px;color:var(--dim);padding:10px 14px;background:rgba(255,255,255,.03);border-radius:10px;border:1px solid var(--border)">Esta apuesta especial ha sido cerrada por el administrador.</div>
           </div>
@@ -1303,7 +1305,9 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
           <div class="esp-row" id="espRow_penales">
             <div class="esp-lbl">Total partidos definidos por penales (±1)<span class="esp-pts">4 PTS</span></div>
             <div id="espWrap_penales">
-              <input class="esp-inp" id="espInp_penales" type="number" placeholder="Ej: 4" onchange="saveEspField('penales',this.value)">
+              <input class="esp-inp" id="espInp_penales" type="number" placeholder="Ej: 4"
+                oninput="this.style.borderColor=this.value?'var(--green)':'';this.style.boxShadow=this.value?'0 0 0 2px rgba(0,255,71,.18)':'';"
+                onchange="saveEspField('penales',this.value);this.style.borderColor=this.value?'var(--green)':'';this.style.boxShadow=this.value?'0 0 0 2px rgba(0,255,71,.18)':'';">
             </div>
             <div id="espLocked_penales" style="display:none;font-size:12px;color:var(--dim);padding:10px 14px;background:rgba(255,255,255,.03);border-radius:10px;border:1px solid var(--border)">Esta apuesta especial ha sido cerrada por el administrador.</div>
           </div>
@@ -1342,7 +1346,7 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
 <div class="dd-item" onclick="selResElim('octavos','Octavos')">Octavos</div>
 <div class="dd-item" onclick="selResElim('cuartos','Cuartos de Final')">Cuartos de Final</div>
 <div class="dd-item" onclick="selResElim('semis','Semifinal')">Semifinal</div>
-<div class="dd-item" onclick="selResElim('3er','3er y 4to Puesto')">3er y 4to Puesto</div>
+<div class="dd-item" onclick="selResElim('3er','Tercer Puesto')">Tercer Puesto</div>
 <div class="dd-item" onclick="selResElim('final','Final')">Final</div>
           </div>
         </div>
@@ -1550,7 +1554,7 @@ const ELIM_PHASES=[
   {id:"octavos",label:"Octavos",count:8},
   {id:"cuartos",label:"Cuartos de Final",count:4},
   {id:"semis",label:"Semifinal",count:2},
-  {id:"3er",label:"3er y 4to Puesto",count:1},
+  {id:"3er",label:"Tercer Puesto",count:1},
   {id:"final",label:"Final",count:1}
 ];
 const REGISTRY=[
@@ -4546,7 +4550,7 @@ const ESP_DEFS = [
   {key:'eliminado', label:'Primer País Eliminado', pts:'3 PTS', tipo:'pais'},
   {key:'campeon',   label:'Campeón',              pts:'10 PTS', tipo:'pais'},
   {key:'subcampeon',label:'Subcampeón',            pts:'8 PTS',  tipo:'pais'},
-  {key:'tercero',   label:'3er y 4to Puesto',      pts:'4 PTS',  tipo:'pais'},
+  {key:'tercero',   label:'Tercer Puesto',      pts:'4 PTS',  tipo:'pais'},
   {key:'goles',  label:'Total Goles Grupos', pts:'4 PTS', tipo:'numero'},
   {key:'penales',label:'Total Penales',   pts:'4 PTS', tipo:'numero'},
 ];
@@ -4702,6 +4706,14 @@ function renderEspSection(){
       lockedEl.style.display='none';
       inp.disabled=false;
       inp.value=espSelections[key]||'';
+      // Aplicar borde verde si ya tiene valor guardado
+      if(inp.value){
+        inp.style.borderColor='var(--green)';
+        inp.style.boxShadow='0 0 0 2px rgba(0,255,71,.18)';
+      } else {
+        inp.style.borderColor='';
+        inp.style.boxShadow='';
+      }
     }
   });
 }
@@ -5276,7 +5288,7 @@ function renderAdmin(){
           ${locked?'🔒':'🔓'}
         </button>` : '<span style="display:inline-block;width:28px;"></span>';
 
-      return `<div class="match-card" style="margin-bottom:12px;${locked?'opacity:0.82;':''}">
+      return `<div class="match-card" style="margin-bottom:12px;${locked?'opacity:0.95;':''}">
         <div class="match-flag-area" style="height:100px;">
           ${fLurl?`<div class="match-flag-l"><img src="${fLurl}" alt=""></div>`:""}
           ${fRurl?`<div class="match-flag-r"><img src="${fRurl}" alt=""></div>`:""}
@@ -5301,7 +5313,9 @@ function renderAdmin(){
           </div>
         </div>
         <div class="match-meta" style="display:flex;align-items:center;justify-content:space-between;padding:6px 12px;">
-          <div class="ml">${m.time} | ${m.stadium} | ${m.city}</div>
+          <div class="ml" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+            <span id="admTime_${m.id}" style="cursor:pointer;font-size:12px;color:var(--dim);" onclick="editAdminTime('${m.id}','${m.time}','${m.date}')">${m.time} | ${m.stadium} | ${m.city} ✏️</span>
+          </div>
           ${locked?'':`<button class="btn-save" style="padding:5px 12px;font-size:12px;min-width:0;" onclick="saveAdminResult('${m.id}')">GUARDAR</button>`}
         </div>
       </div>`;
@@ -5317,6 +5331,32 @@ function toggleAdminLock(mid){
     _adminUnlocked.add(mid);
   }
   renderAdmin();
+}
+
+// ── Editar hora/fecha del partido desde admin ──
+async function editAdminTime(mid, currentTime, currentDate){
+  const newTime = prompt(`Hora del partido (actual: ${currentTime}):\nEjemplo: 20:00 ARG`, currentTime);
+  if(!newTime || newTime.trim() === currentTime.trim()) return;
+  const newDate = prompt(`Fecha del partido (actual: ${currentDate}):\nEjemplo: lun, 3 jun`, currentDate);
+  if(newDate === null) return;
+  const timeVal = newTime.trim();
+  const dateVal = (newDate || currentDate).trim();
+  // Guardar en sheet
+  await postToSheet({
+    type:'actualizar_horario',
+    match_id: mid,
+    time: timeVal,
+    date: dateVal,
+    secret: SYNC_SECRET
+  });
+  // Actualizar resultadosDB localmente
+  if(!resultadosDB[mid]) resultadosDB[mid]={};
+  resultadosDB[mid].time = timeVal;
+  resultadosDB[mid].date = dateVal;
+  showToast(`✅ Horario actualizado: ${dateVal} ${timeVal}`);
+  renderAdmin();
+  renderGrupoMatches(curGrupo);
+  renderResultados();
 }
 
 function saveAdminTarjeta(mid, side, btn){
@@ -5530,7 +5570,7 @@ function renderProximos(){
     "octavos":{label:"Octavos"},
     "cuartos":{label:"Cuartos de Final"},
     "semis":{label:"Semifinal"},
-    "3er":{label:"3er y 4to Puesto"},
+    "3er":{label:"Tercer Puesto"},
     "final":{label:"Final"}
   };
 
