@@ -1688,7 +1688,7 @@ async function fetchResultadosAPI(){
     await saveResultadosToSheet();
     renderResultados();
     // NO llamar buildPronDB aquí — los datos de la API no son pronósticos
-    recalcularPuntos();
+    // ranking ya actualizado por el sheet vía syncResultadosAuto
   }catch(e){
     console.warn("API-Football no disponible:",e);
     // Fallback: cargar desde Sheet
@@ -1730,7 +1730,7 @@ async function loadResultadosFromSheet(){
     });
     renderResultados();
     renderGroupTable(curGrupo||"A"); // actualizar tabla de grupos con resultados del sheet
-    recalcularPuntos();
+    // Ranking leído del sheet en enterApp — no recalcular en browser
   }catch(e){console.warn("Error cargando resultados del sheet:",e);}
 }
 
@@ -3148,7 +3148,7 @@ const SyncManager={
         }
       });
       if(changed.length>0){
-        recalcularPuntos();
+        // ranking actualizado por sheet; solo re-renderizar
         renderGrupoMatches(curGrupo);
         if(newFinal.length>0&&isAdmin){
           await saveResultadosToSheet();
@@ -3307,7 +3307,7 @@ async function fetchESPN(){
     });
 
     if(changed){
-      recalcularPuntos();
+      // ranking actualizado por sheet; solo re-renderizar
       renderGrupoMatches(curGrupo);
       if(newFinished.length>0){
         await saveResultadosToSheet();
@@ -4038,6 +4038,27 @@ function getEstilo(riesgo){
   if(riesgo>=40)return"EQUILIBRADO";
   if(riesgo>=20)return"CALCULADOR";
   return"CONSERVADOR";
+}
+
+// ── Refrescar ranking desde el sheet (sin recalcular en browser) ──
+async function refreshRankingFromSheet() {
+  try {
+    const res = await fetch(`${SHEET_URL}?type=ranking`);
+    const rankData = await res.json() || [];
+    if (rankData.length > 0) {
+      rankData.forEach(r => {
+        const p = PLAYERS.find(pl => pl.mail === r.mail);
+        if (p) {
+          p.pts = r.pts || 0;
+          p._lastPos = r.pos_actual || 0;
+          p.trend = r.pos_anterior > 0 && r.pos_actual > 0
+            ? (r.pos_anterior - r.pos_actual) : 0;
+          if (r.alias && !aliasesDB[r.mail]) p.alias = r.alias;
+        }
+      });
+      if (currentPlayer) renderRanking(currentPlayer);
+    }
+  } catch(e) { console.warn('refreshRankingFromSheet error:', e); }
 }
 
 function renderRanking(player){
@@ -5316,7 +5337,9 @@ async function saveAdminResult(mid){
   });
   // Volver a bloquear después de guardar
   _adminUnlocked.delete(mid);
-  recalcularPuntos();
+  // ranking recalculado por Apps Script al guardar resultado
+  // refrescar desde sheet para que la tabla se actualice
+  refreshRankingFromSheet();
   renderAdmin();
   renderResultados();
   showToast("✅ Resultado guardado");
