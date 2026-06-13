@@ -3439,14 +3439,12 @@ function handleLogin(){
   localStorage.setItem("p26_email",email);
   currentPlayer=player;
   if(!player.alias){
-    showLoader(300).then(()=>{
-      document.getElementById("loginScreen").classList.remove("active");
-      document.getElementById("aliasScreen").classList.add("active");
-    });
+    document.getElementById("loginScreen").classList.remove("active");
+    document.getElementById("aliasScreen").classList.add("active");
   } else {
     // Re-guardar alias en Sheet por si se borró
     saveAlias(player.mail, player.alias);
-    showLoader(500).then(()=>enterApp(player));
+    enterApp(player);
   }
 }
 
@@ -3458,7 +3456,7 @@ async function confirmAlias(){
   localStorage.setItem("p26_alias_"+currentPlayer.mail,alias);
   await saveAlias(currentPlayer.mail,alias);
   document.getElementById("aliasScreen").classList.remove("active");
-  showLoader(400).then(()=>enterApp(currentPlayer));
+  enterApp(currentPlayer);
 }
 
 async function enterApp(player){
