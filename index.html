@@ -1819,6 +1819,44 @@ function startAliasSync(){
   window._aliasSyncInterval=setInterval(loadAllAliases, 30000);
 }
 
+/* ── Auto-update: detecta nueva versión y recarga la página ── */
+const _APP_VERSION = '1.0.0'; // se compara contra Config → app_version del sheet
+let _versionCheckInterval = null;
+
+async function checkAppVersion() {
+  try {
+    const res = await fetch(`${SHEET_URL}?type=version&_=${Date.now()}`);
+    const data = await res.json();
+    const serverVersion = data && data.version ? String(data.version).trim() : null;
+    if (!serverVersion) return;
+    if (serverVersion !== _APP_VERSION) {
+      // Nueva versión detectada → avisar y recargar
+      console.log(`Nueva versión detectada: ${serverVersion} (actual: ${_APP_VERSION})`);
+      showToast('🔄 Se instaló una nueva versión. Actualizando…');
+      if (_versionCheckInterval) clearInterval(_versionCheckInterval);
+      setTimeout(() => {
+        // Limpiar caché y recargar
+        if ('caches' in window) {
+          caches.keys().then(names => names.forEach(n => caches.delete(n)));
+        }
+        window.location.reload(true);
+      }, 2500);
+    }
+  } catch(e) {
+    // Silencioso — no interrumpir el uso normal
+  }
+}
+
+function startVersionCheck() {
+  if (_versionCheckInterval) clearInterval(_versionCheckInterval);
+  // Chequear versión cada 45 segundos
+  _versionCheckInterval = setInterval(checkAppVersion, 45000);
+  // Primera verificación a los 10 segundos de entrar
+  setTimeout(checkAppVersion, 10000);
+}
+
+
+
 /* ── Envío de datos via GET (sin CORS) ── */
 async function postToSheet(data){
   try{
@@ -3521,11 +3559,12 @@ async function enterApp(player){
 
   startSync();
   startAliasSync();
+  startVersionCheck();
 }
 function logout(){
   stopSync();
-  // Cancelar alias sync intervals
   if(window._aliasSyncInterval)clearInterval(window._aliasSyncInterval);
+  if(_versionCheckInterval){clearInterval(_versionCheckInterval);_versionCheckInterval=null;}
   if(window._configTimer)clearTimeout(window._configTimer);
   // Cancelar timers de debounce de pronósticos pendientes
   Object.keys(_pronTimers).forEach(k=>{clearTimeout(_pronTimers[k]);delete _pronTimers[k];});
