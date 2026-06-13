@@ -1971,6 +1971,7 @@ async function _mostrarMemeSiCambio(player, rankData) {
 }
 
 
+function showMeme(cat, label) {
   if (_memeActive) return;
   _memeActive = true;
   _discoverMemes(cat).then(list => {
