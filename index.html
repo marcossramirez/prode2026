@@ -3342,10 +3342,8 @@ window.addEventListener("DOMContentLoaded",()=>{
         if(savedAlias)player.alias=savedAlias.toUpperCase();
         if(player.alias){
           currentPlayer=player;
-          // Asegurar que intro overlay esté oculto
-          const ov2=document.getElementById("introOverlay");
-          if(ov2){ov2.style.display="none";ov2.style.opacity="0";}
-          // Siempre re-guardar alias en Sheet (por si se borró)
+          // Mostrar login mientras carga para evitar pantalla negra
+          document.getElementById("loginScreen").classList.add("active");
           saveAlias(player.mail, player.alias);
           enterApp(player);
           return;
@@ -3357,14 +3355,10 @@ window.addEventListener("DOMContentLoaded",()=>{
     }
   }
 
-  // Sin sesión: mostrar intro video y login
-  const vid=document.getElementById("introVideo"),ov=document.getElementById("introOverlay");
-  if(ov){ov.style.display="flex";ov.style.opacity="1";}
-  const end=()=>{ov.style.transition="opacity .5s";ov.style.opacity="0";setTimeout(()=>{ov.style.display="none";ov.style.transition="";showLogin();},500);};
-  if(vid)vid.addEventListener("ended",end);
-  setTimeout(end,2200);
+  // Sin sesión: mostrar login directamente
   const se=localStorage.getItem("p26_email")||"";
   if(se)document.getElementById("emailInput").value=se;
+  showLogin();
 });
 function showLogin(){document.getElementById("loginScreen").classList.add("active");}
 
@@ -3432,16 +3426,7 @@ function launchConfetti(){
    AUTH
 ═══════════════════════════════════════════ */
 function loginGoogle(){
-  const ov=document.getElementById("introOverlay");
-  const vid=document.getElementById("introVideo");
-  ov.style.display="flex";ov.style.opacity="1";
-  ov.classList.add("playing");
-  vid.currentTime=0;vid.play().catch(()=>{});
-  setTimeout(()=>{
-    ov.style.transition="opacity .5s";ov.style.opacity="0";
-    setTimeout(()=>{ov.style.display="none";ov.style.transition="";ov.classList.remove("playing");
-    showToast("Ingresá tu mail registrado");},500);
-  },2200);
+  showToast("Ingresá tu mail registrado");
 }
 
 function handleLogin(){
