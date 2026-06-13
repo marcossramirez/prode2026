@@ -3480,17 +3480,26 @@ async function enterApp(player){
   uname=player.alias;isAdmin=!!player.isAdmin;
   localStorage.setItem("p26_session",player.mail);
 
-  // ── Mostrar video de intro mientras cargan los datos ──────────
+  // ── Video e intro overlay ─────────────────────────────────
   const ov=document.getElementById("introOverlay");
   const vid=document.getElementById("introVideo");
-  if(ov&&vid){
+
+  // Promesa del video (máx 5s, o si falla → resuelve igual)
+  const videoPromise = new Promise(resolve=>{
+    if(!ov||!vid){ resolve(); return; }
     ov.style.display="flex";ov.style.opacity="1";
     ov.classList.add("playing");
-    vid.currentTime=0;vid.play().catch(()=>{});
-  }
+    const onEnd=()=>resolve();
+    const onErr=()=>resolve();
+    vid.addEventListener("ended",onEnd,{once:true});
+    vid.addEventListener("error",onErr,{once:true});
+    setTimeout(resolve,5000); // máx 5s pase lo que pase
+    vid.currentTime=0;
+    vid.play().catch(()=>resolve()); // si no puede reproducir → resuelve igual
+  });
 
-  // ── Cargar TODO en paralelo mientras corre el video ──────────
-  const [rankRes] = await Promise.allSettled([
+  // ── Datos en paralelo ─────────────────────────────────────
+  const dataPromise = Promise.allSettled([
     fetch(`${SHEET_URL}?type=ranking`).then(r=>r.json()).catch(()=>[]),
     loadAllAliases(),
     loadMisPronosticos(),
@@ -3498,13 +3507,22 @@ async function enterApp(player){
     loadJugadores()
   ]);
 
-  // Aplicar alias al player actual
+  // ── Esperar a los DOS juntos ──────────────────────────────
+  const [,[rankRes]] = await Promise.all([videoPromise, dataPromise]);
+
+  // Fade out del video
+  if(ov){
+    ov.style.transition="opacity .5s";ov.style.opacity="0";
+    await new Promise(r=>setTimeout(r,500));
+    ov.style.display="none";ov.style.transition="";ov.classList.remove("playing");
+  }
+
+  // ── Aplicar datos ─────────────────────────────────────────
   if(aliasesDB[player.mail]){player.alias=aliasesDB[player.mail];uname=player.alias;}
   PLAYERS.forEach(p=>{if(aliasesDB[p.mail])p.alias=aliasesDB[p.mail];});
   currentPlayer=player;
 
-  // Aplicar ranking del sheet a PLAYERS (pts + trend para meme)
-  const rankData = rankRes.status==='fulfilled' ? (rankRes.value||[]) : [];
+  const rankData=rankRes&&rankRes.status==='fulfilled'?(rankRes.value||[]):[];
   if(rankData.length>0){
     rankData.forEach(r=>{
       const p=PLAYERS.find(pl=>pl.mail===r.mail);
@@ -3520,19 +3538,7 @@ async function enterApp(player){
     PLAYERS.forEach(p=>{p.trend=0;});
   }
 
-  // ── Esperar video — lo dejamos correr, máx 5s ────────────────
-  await new Promise(resolve=>{
-    const done=()=>{
-      if(ov){
-        ov.style.transition="opacity .6s";ov.style.opacity="0";
-        setTimeout(()=>{ov.style.display="none";ov.style.transition="";ov.classList.remove("playing");resolve();},600);
-      }else resolve();
-    };
-    if(vid){vid.addEventListener("ended",done,{once:true});setTimeout(done,5000);}
-    else setTimeout(resolve,300);
-  });
-
-  // ── Mostrar app — datos ya listos ────────────────────────────
+  // ── Mostrar app con todo listo ────────────────────────────
   document.getElementById("loginScreen").classList.remove("active");
   document.getElementById("appScreen").classList.add("active");
 
@@ -3554,14 +3560,12 @@ async function enterApp(player){
   loadConfig();
   schedulerTickerClear();
 
-  // Meme solo si cambió la posición desde la última vez que lo vio
-  _mostrarMemeSiCambio(player, rankData);
+  _mostrarMemeSiCambio(player,rankData);
   setTimeout(()=>launchConfetti(),200);
 
   startSync();
   startAliasSync();
 }
-
 function logout(){
   stopSync();
   // Cancelar alias sync intervals
