@@ -1738,6 +1738,34 @@ async function loadResultadosFromSheet(){
   }catch(e){console.warn("Error cargando resultados del sheet:",e);}
 }
 
+// ── Carga fechas/horarios/sedes de los partidos desde la hoja Partidos_Grupos ──
+// match_id en el sheet tiene formato "<Letra><índice>" (ej: "A0","A1"...,"L5"),
+// que coincide con g+idx generado por getMatches(). Actualiza FIXTURE_GRUPOS in-place.
+async function loadFixturesFromSheet(){
+  try{
+    const res=await fetch(`${SHEET_URL}?type=partidos`);
+    const data=await res.json();
+    data.forEach(p=>{
+      const mid=String(p.match_id||"").trim();
+      if(!mid)return;
+      const grupo=mid[0];
+      const idx=parseInt(mid.slice(1));
+      const fixtures=FIXTURE_GRUPOS[grupo];
+      if(!fixtures||!fixtures[idx])return;
+      const f=fixtures[idx];
+      if(p.date)f.date=p.date;
+      if(p.time)f.time=p.time;
+      if(p.stadium)f.stadium=p.stadium;
+      if(p.city)f.city=p.city;
+      // Validar consistencia equipos (no sobreescribir home/away, solo loguear si difiere)
+      if(p.home&&p.away&&(p.home!==f.home||p.away!==f.away)){
+        console.warn(`Fixture ${mid}: equipos del sheet (${p.home} vs ${p.away}) no coinciden con hardcode (${f.home} vs ${f.away})`);
+      }
+    });
+  }catch(e){console.warn("Error cargando fechas de partidos del sheet:",e);}
+}
+
+
 /* ═══════════════════════════════════════════
    GOOGLE SHEETS — pronósticos y aliases
 ═══════════════════════════════════════════ */
@@ -3505,6 +3533,9 @@ async function confirmAlias(){
 async function enterApp(player){
   uname=player.alias;isAdmin=!!player.isAdmin;
   localStorage.setItem("p26_session",player.mail);
+
+  // ── Cargar fechas/horarios desde el sheet primero (sincrónico, afecta a los demás) ──
+  await loadFixturesFromSheet();
 
   // ── Cargar TODO en paralelo ───────────────────────────────
   const [rankRes] = await Promise.allSettled([
