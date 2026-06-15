@@ -5648,7 +5648,7 @@ function renderProximos(){
       // Determinar si es partido eliminatorio (tiene penales)
       const isElim=m.id&&m.id.startsWith('elim_');
       return `<div class="match-card${argMatch?' prox-arg':''}${lk?' locked':''}" style="margin-bottom:10px;">
-        <div class="match-flag-area" style="height:72px;">
+        <div class="match-flag-area">
           ${fL?`<div class="match-flag-l"><img src="${fL}" alt=""></div>`:''}
           ${fR?`<div class="match-flag-r"><img src="${fR}" alt=""></div>`:''}
           <div class="match-flag-content">
