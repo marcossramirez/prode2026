@@ -5142,8 +5142,8 @@ function rCard(m){
   </div>`:"";
   return `<div class="match-card" style="margin-bottom:12px;">
     <div class="match-flag-area" style="height:80px;">
-      ${fLurl?`<div class="match-flag-l"><img src="${fLurl}" alt=""></div>`:""}
-      ${fRurl?`<div class="match-flag-r"><img src="${fRurl}" alt=""></div>`:""}
+      ${fLurl?`<div class="match-flag-l" style="opacity:.5"><img src="${fLurl}" alt=""></div>`:""}
+      ${fRurl?`<div class="match-flag-r" style="opacity:.5"><img src="${fRurl}" alt=""></div>`:""}
       <div class="match-flag-content">
         <div class="team-l"><div class="t-name">${m.home}</div></div>
         <div class="match-mid" style="display:flex;flex-direction:column;align-items:center;gap:2px;">
@@ -5289,12 +5289,16 @@ function renderAdmin(){
       const bonusSection=`
         <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-top:6px;padding:4px 0;">
           <button class="red-card-btn${th?' on-tarjeta':''}" ${locked?'disabled':''} title="Tarjeta roja local"
+            style="${locked&&th?'opacity:1':locked?'opacity:.2':''}"
             onclick="saveAdminTarjeta('${m.id}','home',this)"></button>
           <button class="penalty-p${res.penal_home===true?' on-penal':''}" ${locked?'disabled':''} title="Penal local"
+            style="${locked&&res.penal_home===true?'opacity:1;color:#3a86ff':locked?'opacity:.2':''}"
             onclick="saveAdminBoolPen('${m.id}','home',this)">P</button>
           <button class="penalty-p${res.penal_away===true?' on-penal':''}" ${locked?'disabled':''} title="Penal visitante"
+            style="${locked&&res.penal_away===true?'opacity:1;color:#3a86ff':locked?'opacity:.2':''}"
             onclick="saveAdminBoolPen('${m.id}','away',this)">P</button>
           <button class="red-card-btn${ta?' on-tarjeta':''}" ${locked?'disabled':''} title="Tarjeta roja visitante"
+            style="${locked&&ta?'opacity:1':locked?'opacity:.2':''}"
             onclick="saveAdminTarjeta('${m.id}','away',this)"></button>
         </div>`;
 
@@ -5305,10 +5309,10 @@ function renderAdmin(){
           ${locked?'🔒':'🔓'}
         </button>` : '<span style="display:inline-block;width:28px;"></span>';
 
-      return `<div class="match-card" style="margin-bottom:12px;${locked?'opacity:0.95;':''}">
+      return `<div class="match-card" style="margin-bottom:12px;">
         <div class="match-flag-area" style="height:100px;">
-          ${fLurl?`<div class="match-flag-l"><img src="${fLurl}" alt=""></div>`:""}
-          ${fRurl?`<div class="match-flag-r"><img src="${fRurl}" alt=""></div>`:""}
+          ${fLurl?`<div class="match-flag-l" style="${played?'opacity:.5':''};"><img src="${fLurl}" alt=""></div>`:""}
+          ${fRurl?`<div class="match-flag-r" style="${played?'opacity:.5':''};"><img src="${fRurl}" alt=""></div>`:""}
           <div class="match-flag-content">
             <div class="team-l"><div class="t-name" style="color:${hCol}">${m.home}</div></div>
             <div class="match-mid" style="display:flex;flex-direction:column;align-items:center;gap:2px;">
@@ -5316,11 +5320,13 @@ function renderAdmin(){
                 <input class="adm-inp s-inp" type="number" min="0" max="99" placeholder="–"
                   value="${rH}" oninput="onScoreInput(this)"
                   onchange="saveAdminRes('${m.id}','home',this.value)"
+                  style="${locked?'opacity:1;color:var(--white);-webkit-text-fill-color:var(--white);font-weight:900':''}"
                   ${locked?'disabled':''}>
                 ${lockBtn}
                 <input class="adm-inp s-inp" type="number" min="0" max="99" placeholder="–"
                   value="${rA}" oninput="onScoreInput(this)"
                   onchange="saveAdminRes('${m.id}','away',this.value)"
+                  style="${locked?'opacity:1;color:var(--white);-webkit-text-fill-color:var(--white);font-weight:900':''}"
                   ${locked?'disabled':''}>
               </div>
               ${penSection}
@@ -5577,7 +5583,7 @@ function renderProximos(){
   const pendientes=[];
   Object.keys(GROUPS).forEach(g=>{
     getMatches(g).forEach(m=>{
-      if(!m.played) pendientes.push({...m,grupo:"Grupo "+g,fase:"Fase de Grupos"});
+      if(!m.played) pendientes.push({...m,grupo:"Grupo "+g,fase:"Fase de Grupos",locked:m.locked});
     });
   });
 
@@ -5607,6 +5613,7 @@ function renderProximos(){
           date:m.fecha,time:m.time.replace(' ARG',''),
           stadium:m.stadium,city:m.ciudad,
           fase:label,grupo:'',
+          locked:isMatchLocked(m.fecha, m.time.replace(' ARG',''), false),
           ts:parseMatchTime(m.fecha, m.time.replace(' ARG',''))?.getTime()||99999999999
         });
       }
@@ -5635,15 +5642,37 @@ function renderProximos(){
       const fL=flagUrl(m.home);
       const fR=flagUrl(m.away);
       const argMatch=(m.home==='Argentina'||m.away==='Argentina');
-      return `<div class="match-card${argMatch?' prox-arg':''}" style="margin-bottom:10px;">
+      const lk=m.locked;
+      const bon=userBonus[m.id];
+      const pr=userPron[m.id]||{};
+      // Determinar si es partido eliminatorio (tiene penales)
+      const isElim=m.id&&m.id.startsWith('elim_');
+      return `<div class="match-card${argMatch?' prox-arg':''}${lk?' locked':''}" style="margin-bottom:10px;">
         <div class="match-flag-area" style="height:72px;">
           ${fL?`<div class="match-flag-l"><img src="${fL}" alt=""></div>`:''}
           ${fR?`<div class="match-flag-r"><img src="${fR}" alt=""></div>`:''}
           <div class="match-flag-content">
             <div class="team-l"><div class="t-name">${m.home}</div></div>
             <div class="match-mid">
-              <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:22px;color:var(--dim)">VS</div>
-              <div style="font-size:11px;color:var(--dim);margin-top:2px">${m.time}</div>
+              <div class="score-row">
+                <input class="s-inp" type="number" min="0" max="99" value="${pr.home??''}" placeholder="–"
+                  ${lk?"disabled":""} onchange="savePronostico('${m.id}','home',this.value)">
+                <span class="${lk?'s-lock':'s-vs'}">${lk?'🔒':'VS'}</span>
+                <input class="s-inp" type="number" min="0" max="99" value="${pr.away??''}" placeholder="–"
+                  ${lk?"disabled":""} onchange="savePronostico('${m.id}','away',this.value)">
+              </div>
+              <div class="bonus-row">
+                <div class="match-card-action">
+                  <button class="red-card-btn${userTarjeta[m.id]?.home?' on-tarjeta':''}" onclick="toggleTarjeta('${m.id}','home',this)" ${lk?"disabled":""} title="Bonus tarjeta roja local"></button>
+                  <button class="penalty-p${userPenal[m.id]?.home?' on-penal':''}" onclick="togglePenal('${m.id}','home',this)" ${lk?"disabled":""} title="Bonus penal local">P</button>
+                </div>
+                <button class="bonus-btn${bon?' on':''}" onclick="toggleBonus('${m.id}',this)"
+                  ${lk?"disabled":""} title="Bonus por partido">⭐</button>
+                <div class="match-card-action">
+                  <button class="penalty-p${userPenal[m.id]?.away?' on-penal':''}" onclick="togglePenal('${m.id}','away',this)" ${lk?"disabled":""} title="Bonus penal visitante">P</button>
+                  <button class="red-card-btn${userTarjeta[m.id]?.away?' on-tarjeta':''}" onclick="toggleTarjeta('${m.id}','away',this)" ${lk?"disabled":""} title="Bonus tarjeta roja visitante"></button>
+                </div>
+              </div>
             </div>
             <div class="team-r"><div class="t-name">${m.away}</div></div>
           </div>
