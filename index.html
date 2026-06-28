@@ -5723,12 +5723,28 @@ function renderProximos(){
           <div class="match-flag-content">
             <div class="team-l"><div class="t-name">${m.home}</div></div>
             <div class="match-mid">
-              <div class="score-row">
+              <div class="score-row" style="align-items:center;gap:4px;">
+                ${isElim?`<div class="pen-wrap">
+                  <input class="pen-inp" type="number" min="0" max="20"
+                    value="${pr.pen_home??''}" placeholder="–"
+                    ${(lk||!isDrawn(pr))?"disabled":""}
+                    oninput="onScoreInput(this)" onchange="savePenalElim('${m.id}','home',this.value)"
+                    title="Goles en penales">
+                  <span class="pen-label">PENS</span>
+                </div>`:''}
                 <input class="s-inp" type="number" min="0" max="99" value="${pr.home??''}" placeholder="–"
-                  ${lk?"disabled":""} onchange="savePronostico('${m.id}','home',this.value)">
+                  ${lk?"disabled":""} onchange="${isElim?`savePronosticoElim('${m.id}','home',this.value)`:`savePronostico('${m.id}','home',this.value)`}">
                 <span class="${lk?'s-lock':'s-vs'}">${lk?'🔒':'VS'}</span>
                 <input class="s-inp" type="number" min="0" max="99" value="${pr.away??''}" placeholder="–"
-                  ${lk?"disabled":""} onchange="savePronostico('${m.id}','away',this.value)">
+                  ${lk?"disabled":""} onchange="${isElim?`savePronosticoElim('${m.id}','away',this.value)`:`savePronostico('${m.id}','away',this.value)`}">
+                ${isElim?`<div class="pen-wrap">
+                  <input class="pen-inp" type="number" min="0" max="20"
+                    value="${pr.pen_away??''}" placeholder="–"
+                    ${(lk||!isDrawn(pr))?"disabled":""}
+                    oninput="onScoreInput(this)" onchange="savePenalElim('${m.id}','away',this.value)"
+                    title="Goles en penales">
+                  <span class="pen-label">PENS</span>
+                </div>`:''}
               </div>
               <div class="bonus-row">
                 <div class="match-card-action">
