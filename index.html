@@ -3115,6 +3115,27 @@ const ManualAdapter={
     const res=await fetch(`${SHEET_URL}?type=resultados`);
     if(!res.ok)throw new Error("Sheet HTTP "+res.status);
     const data=await res.json();
+    // ✅ FIX ADICIONAL: también cargar resultados de eliminatoria
+    try{
+      const resElim=await fetch(`${SHEET_URL}?type=resultados_elim`);
+      if(resElim.ok){
+        const dataElim=await resElim.json();
+        dataElim.forEach(r=>{
+          const status=(r.played==="TRUE"||r.played===true)?"final":"scheduled";
+          resultadosDB[r.match_id]={
+            home:r.home,away:r.away,
+            home_score:parseInt(r.home_score)||0,
+            away_score:parseInt(r.away_score)||0,
+            played:r.played==="TRUE"||r.played===true,
+            penal_home:r.penal_home==="TRUE"||r.penal_home===true,
+            penal_away:r.penal_away==="TRUE"||r.penal_away===true,
+            tarjeta_home:r.tarjeta_home==="TRUE"||r.tarjeta_home===true,
+            tarjeta_away:r.tarjeta_away==="TRUE"||r.tarjeta_away===true,
+            ts:0
+          };
+        });
+      }
+    }catch(e){console.warn("Error cargando resultados_elim:",e);}
     return data.map(r=>{
       const status=(r.played==="TRUE"||r.played===true)?"final":"scheduled";
       return makeMatchModel(r.match_id,r.home_score,r.away_score,status,null,"manual");
@@ -4406,9 +4427,18 @@ function resolveElimTeam(label){
       const classified=getClassified();
       const bracket=resolveR32Bracket();
       if(bracket){
+        // Buscar en el bracket resuelto qué partido tiene este label como away
         for(const match of Object.values(bracket)){
-          if(match.away?.type==="3rd"&&match.awayTeam){
-            // Buscar qué slot corresponde a este label
+          // El label viene como "3ro A/B/C/D/F" — comparar con el away original del BRACKET_R32
+          // El match del bracket tiene homeTeam y awayTeam con name
+          // Necesitamos encontrar qué slot de bracket corresponde a este label
+          // Buscamos el partido R32 cuyo away.groups coincide con los grupos del label
+          const grupos=label.replace('3ro ','').split('/').sort().join('');
+          if(match.away&&match.away.type==='3rd'&&match.away.groups){
+            const matchGrupos=match.away.groups.slice().sort().join('');
+            if(matchGrupos===grupos&&match.awayTeam){
+              return match.awayTeam.name||label;
+            }
           }
         }
       }
@@ -5177,14 +5207,18 @@ function renderResGruposContent(g){
 let currentAdminPhase='grupos';
 
 // ── Obtener partidos eliminatorios para admin ──
+// ✅ FIX BUG #1: BRACKET_DATA con estructura correcta por fase (igual al usado en renderElimMatches)
+const BRACKET_DATA_GLOBAL={"dieciseis":[{home:"2do Grupo A",away:"2do Grupo B",fecha:"dom, 28 jun",time:"16:00 ARG",stadium:"SoFi Stadium",ciudad:"Los Ángeles"},{home:"1ro Grupo C",away:"2do Grupo F",fecha:"lun, 29 jun",time:"14:00 ARG",stadium:"NRG Stadium",ciudad:"Houston"},{home:"1ro Grupo E",away:"3ro A/B/C/D/F",fecha:"lun, 29 jun",time:"17:30 ARG",stadium:"Gillette Stadium",ciudad:"Boston"},{home:"1ro Grupo F",away:"2do Grupo C",fecha:"lun, 29 jun",time:"22:00 ARG",stadium:"E. Azteca",ciudad:"Cdad. México"},{home:"2do Grupo E",away:"2do Grupo I",fecha:"mar, 30 jun",time:"14:00 ARG",stadium:"AT&T Stadium",ciudad:"Dallas"},{home:"1ro Grupo I",away:"3ro C/D/F/G/H",fecha:"mar, 30 jun",time:"18:00 ARG",stadium:"MetLife Stadium",ciudad:"Nueva York"},{home:"1ro Grupo A",away:"3ro C/E/F/H/I",fecha:"mar, 30 jun",time:"22:00 ARG",stadium:"E. Azteca",ciudad:"Cdad. México"},{home:"1ro Grupo L",away:"3ro E/H/I/J/K",fecha:"mié, 1 jul",time:"13:00 ARG",stadium:"M-Benz Stadium",ciudad:"Atlanta"},{home:"1ro Grupo G",away:"3ro A/E/H/I/J",fecha:"mié, 1 jul",time:"17:00 ARG",stadium:"Lumen Field",ciudad:"Seattle"},{home:"1ro Grupo D",away:"3ro B/E/F/I/J",fecha:"mié, 1 jul",time:"21:00 ARG",stadium:"Levi's Stadium",ciudad:"San Francisco"},{home:"2do Grupo K",away:"2do Grupo L",fecha:"jue, 2 jul",time:"13:00 ARG",stadium:"BMO Field",ciudad:"Toronto"},{home:"1ro Grupo H",away:"2do Grupo J",fecha:"jue, 2 jul",time:"16:00 ARG",stadium:"SoFi Stadium",ciudad:"Los Ángeles"},{home:"1ro Grupo B",away:"3ro E/F/G/I/J",fecha:"jue, 2 jul",time:"21:00 ARG",stadium:"BC Place",ciudad:"Vancouver"},{home:"2do Grupo D",away:"2do Grupo G",fecha:"vie, 3 jul",time:"15:00 ARG",stadium:"AT&T Stadium",ciudad:"Dallas"},{home:"1ro Grupo J",away:"2do Grupo H",fecha:"vie, 3 jul",time:"19:00 ARG",stadium:"Hard Rock Stadium",ciudad:"Miami"},{home:"1ro Grupo K",away:"3ro D/E/I/J/L",fecha:"vie, 3 jul",time:"22:30 ARG",stadium:"Arrowhead",ciudad:"Kansas City"}],"octavos":[{home:"Gan. M74",away:"Gan. M77",fecha:"sáb, 4 jul",time:"18:00 ARG",stadium:"Lincoln Financial Field",ciudad:"Filadelfia"},{home:"Gan. M73",away:"Gan. M75",fecha:"sáb, 4 jul",time:"14:00 ARG",stadium:"NRG Stadium",ciudad:"Houston"},{home:"Gan. M76",away:"Gan. M78",fecha:"dom, 5 jul",time:"17:00 ARG",stadium:"MetLife Stadium",ciudad:"Nueva York"},{home:"Gan. M79",away:"Gan. M80",fecha:"dom, 5 jul",time:"21:00 ARG",stadium:"E. Azteca",ciudad:"Cdad. México"},{home:"Gan. M83",away:"Gan. M84",fecha:"lun, 6 jul",time:"16:00 ARG",stadium:"AT&T Stadium",ciudad:"Dallas"},{home:"Gan. M81",away:"Gan. M82",fecha:"lun, 6 jul",time:"21:00 ARG",stadium:"Lumen Field",ciudad:"Seattle"},{home:"Gan. M86",away:"Gan. M88",fecha:"mar, 7 jul",time:"13:00 ARG",stadium:"M-Benz Stadium",ciudad:"Atlanta"},{home:"Gan. M85",away:"Gan. M87",fecha:"mar, 7 jul",time:"17:00 ARG",stadium:"BC Place",ciudad:"Vancouver"}],"cuartos":[{home:"Gan. M89",away:"Gan. M90",fecha:"jue, 9 jul",time:"21:00 ARG",stadium:"Gillette Stadium",ciudad:"Boston"},{home:"Gan. M93",away:"Gan. M94",fecha:"vie, 10 jul",time:"21:00 ARG",stadium:"SoFi Stadium",ciudad:"Los Ángeles"},{home:"Gan. M91",away:"Gan. M92",fecha:"sáb, 11 jul",time:"17:00 ARG",stadium:"Hard Rock Stadium",ciudad:"Miami"},{home:"Gan. M95",away:"Gan. M96",fecha:"sáb, 11 jul",time:"21:00 ARG",stadium:"Arrowhead",ciudad:"Kansas City"}],"semis":[{home:"Gan. M97",away:"Gan. M98",fecha:"mar, 14 jul",time:"21:00 ARG",stadium:"AT&T Stadium",ciudad:"Dallas"},{home:"Gan. M99",away:"Gan. M100",fecha:"mié, 15 jul",time:"21:00 ARG",stadium:"M-Benz Stadium",ciudad:"Atlanta"}],"3er":[{home:"Perd. SF1",away:"Perd. SF2",fecha:"sáb, 18 jul",time:"16:00 ARG",stadium:"Hard Rock Stadium",ciudad:"Miami"}],"final":[{home:"Gan. SF1",away:"Gan. SF2",fecha:"dom, 19 jul",time:"16:00 ARG",stadium:"MetLife Stadium",ciudad:"Nueva York"}]};
+
 function getElimMatches(){
   const phases=['dieciseis','octavos','cuartos','semis','3er','final'];
   const phaseNames={'dieciseis':'16avos','octavos':'Octavos','cuartos':'Cuartos','semis':'Semifinal','3er':'3er Puesto','final':'Final'};
   const all=[];
   phases.forEach(ph=>{
-    const matches=BRACKET_R32[ph]||[];
+    // ✅ FIX: usar BRACKET_DATA_GLOBAL en vez de BRACKET_R32[ph] (que siempre era undefined)
+    const matches=BRACKET_DATA_GLOBAL[ph]||[];
     matches.forEach((m,i)=>{
-      const mid=`elim_${ph}_${i}`; // igual que renderElimMatches
+      const mid=`elim_${ph}_${i}`;
       const res=resultadosDB[mid]||null;
       const homeDisplay=resolveElimTeam(m.home);
       const awayDisplay=resolveElimTeam(m.away);
@@ -5490,7 +5524,27 @@ async function savePronosticoElim(mid, side, val){
     return;
   }
 
-  await savePronostico(mid, side, val);
+  // ✅ FIX: guardar directamente con postToSheet incluyendo todos los campos
+  const h=userPron[mid].home??null;
+  const a=userPron[mid].away??null;
+  if((h!==null&&a===null)||(h===null&&a!==null)){
+    showToast("⚠️ Ingresá ambos resultados");
+    return;
+  }
+  await postToSheet({
+    type:"pronostico",
+    mail:currentPlayer.mail,
+    alias:currentPlayer.alias,
+    match_id:mid,
+    home_score:h,
+    away_score:a,
+    bonus:userBonus[mid]||false,
+    penal_home:userPenal[mid]?.home||false,
+    penal_away:userPenal[mid]?.away||false,
+    tarjeta_home:userTarjeta[mid]?.home||false,
+    tarjeta_away:userTarjeta[mid]?.away||false
+  });
+  showToast(h===null&&a===null?"✓ Pronóstico borrado":"✓ Pronóstico guardado");
 }
 
 // ── Guardar goles de penales en eliminatoria ──
@@ -5523,7 +5577,22 @@ async function savePenalElim(mid, side, val){
     return;
   }
 
-  await savePronostico(mid, side, val);
+  // ✅ FIX BUG #3: guardar pronóstico completo con pen_home y pen_away incluidos
+  await postToSheet({
+    type:"pronostico",
+    mail:currentPlayer.mail,
+    alias:currentPlayer.alias,
+    match_id:mid,
+    home_score:userPron[mid].home??null,
+    away_score:userPron[mid].away??null,
+    bonus:userBonus[mid]||false,
+    penal_home:userPenal[mid]?.home||false,
+    penal_away:userPenal[mid]?.away||false,
+    tarjeta_home:userTarjeta[mid]?.home||false,
+    tarjeta_away:userTarjeta[mid]?.away||false,
+    pen_home:ph,
+    pen_away:pa
+  });
   showToast("✓ Penales guardados");
 }
 
