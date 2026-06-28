@@ -5147,12 +5147,13 @@ function rCard(m){
   const fLurl=flagUrl(m.home);
   const fRurl=flagUrl(m.away);
   const res=resultadosDB[m.id]||{};
-  // Penales si aplica
-  const hasPen=res.pen_home!=null&&res.pen_away!=null&&res.pen_home!==res.pen_away;
+  // Penales si aplica — solo mostrar si son números reales (goles de penales), no booleanos
+  const penH=res.pen_home, penA=res.pen_away;
+  const hasPen=typeof penH==='number'&&typeof penA==='number'&&penH!==penA;
   const penRow=hasPen?`<div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:4px;">
-    <span style="color:${hCol};font-weight:900;font-size:14px">${res.pen_home}</span>
+    <span style="color:${hCol};font-weight:900;font-size:14px">${penH}</span>
     <span style="color:var(--dim);font-size:10px;letter-spacing:1px">PENS</span>
-    <span style="color:${aCol};font-weight:900;font-size:14px">${res.pen_away}</span>
+    <span style="color:${aCol};font-weight:900;font-size:14px">${penA}</span>
   </div>`:"";
   // ── Bonus iconos: mostrar si se registraron ──
   const hasTarjH=res.tarjeta_home===true||res.tarjeta_home==="TRUE";
