@@ -4465,7 +4465,8 @@ function renderElimMatches(phId){
     const mid=`elim_${phId}_${i}`;
     const pr=userPron[mid]||{};
     const res=resultadosDB[mid]||null;
-    const lk=!!(res&&res.played);
+    // ✅ FIX: usar isMatchLocked con fecha/hora igual que en fase de grupos
+    const lk=isMatchLocked(m.fecha, m.time, !!(res&&res.played));
     const bon=userBonus[mid];
     const homeResolved=resolveElimTeam(m.home);
     const awayResolved=resolveElimTeam(m.away);
@@ -5131,7 +5132,10 @@ async function toggleEspLock(key){
 
 function renderResultados(){
   const all=[];
+  // Fase de grupos
   Object.keys(GROUPS).forEach(g=>getMatches(g).filter(m=>m.played).forEach(m=>all.push(m)));
+  // ✅ FIX: también incluir resultados de eliminatoria
+  getElimMatches().filter(m=>m.played).forEach(m=>all.push(m));
   all.sort((a,b)=>b.ts-a.ts);
   document.getElementById("vFecha").innerHTML=
     all.length>0?all.map(rCard).join(""):`<div class="no-res">Todavía no hay partidos terminados.</div>`;
