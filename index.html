@@ -4324,6 +4324,7 @@ function selResElim(id,lbl){
   curResElim=id;document.getElementById("resElimLbl").textContent=lbl;
   document.querySelectorAll("#resElimMenu .dd-item").forEach(el=>el.classList.toggle("sel",el.textContent.trim()===lbl));
   closeAllDD();
+  renderResElimContent(id); // ✅ FIX: renderizar al cambiar de fase
 }
 
 function selRes(vista, btn){
@@ -4334,6 +4335,23 @@ function selRes(vista, btn){
   document.getElementById("vElim").style.display   = vista==="elim"   ? "block" : "none";
   if(vista==="fecha")  renderResultados();
   if(vista==="grupos") renderResGruposContent(curResGrupo||"A");
+  if(vista==="elim")   renderResElimContent(curResElim||"dieciseis");
+}
+
+// ✅ FIX: función para renderizar resultados de eliminatoria por fase
+function renderResElimContent(phId){
+  const BRACKET_PHASES={
+    dieciseis:'16avos', octavos:'Octavos', cuartos:'Cuartos',
+    semis:'Semifinal', '3er':'3er Puesto', final:'Final'
+  };
+  const played = getElimMatches().filter(m=>m.played && m.ronda===BRACKET_PHASES[phId]);
+  const el = document.getElementById("resElimContent");
+  if(!el) return;
+  if(played.length===0){
+    el.innerHTML=`<div class="no-res">No hay resultados para esta fase todavía.</div>`;
+    return;
+  }
+  el.innerHTML=played.map(rCard).join("");
 }
 
 function getMatches(g){
