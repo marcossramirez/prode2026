@@ -1629,11 +1629,7 @@ let syncInterval=null;
 /* ═══════════════════════════════════════════
    UTILS
 ═══════════════════════════════════════════ */
-function torneoStarted(){return new Date()>=TORNEO_START;}
 function isGrupoMatch(id){return typeof id==="string"&&/^[A-L]\d+$/.test(id);}
-function countBonus(){return Object.values(userBonus).filter(v=>v===true).length;}
-function countPenal(side){return Object.values(userPenal).filter(v=>v&&v[side]).length;}
-function countTarjeta(side){return Object.values(userTarjeta).filter(v=>v&&v[side]).length;}
 function countBonusGrupos(){return Object.entries(userBonus).filter(([k,v])=>isGrupoMatch(k)&&v===true).length;}
 function countBonusElim(){return Object.entries(userBonus).filter(([k,v])=>!isGrupoMatch(k)&&v===true).length;}
 function countPenalGrupos(){let n=0;Object.entries(userPenal).forEach(([k,v])=>{if(isGrupoMatch(k)){if(v&&v.home)n++;if(v&&v.away)n++;}});return n;}
@@ -1662,44 +1658,6 @@ function driveImg(url){if(!url||url==="URL_drive")return null;return url;}
 /* ═══════════════════════════════════════════
    API-FOOTBALL — resultados en tiempo real
 ═══════════════════════════════════════════ */
-async function fetchResultadosAPI(){
-  try{
-    // Usamos un proxy CORS para API-Football
-    const url=`https://v3.football.api-sports.io/fixtures?league=1&season=2026&status=FT`;
-    const res=await fetch(url,{
-      headers:{
-        "x-rapidapi-key":API_FOOTBALL_KEY,
-        "x-rapidapi-host":"v3.football.api-sports.io"
-      }
-    });
-    if(!res.ok)return;
-    const data=await res.json();
-    if(!data.response)return;
-    data.response.forEach(f=>{
-      const mid=`api_${f.fixture.id}`;
-      resultadosDB[mid]={
-        home:f.teams.home.name,
-        away:f.teams.away.name,
-        home_score:f.goals.home,
-        away_score:f.goals.away,
-        played:f.fixture.status.short==="FT",
-        date:f.fixture.date,
-        stadium:f.fixture.venue.name,
-        city:f.fixture.venue.city
-      };
-    });
-    // Guardar en Sheet también
-    await saveResultadosToSheet();
-    renderResultados();
-    // NO llamar buildPronDB aquí — los datos de la API no son pronósticos
-    // ranking ya actualizado por el sheet vía syncResultadosAuto
-  }catch(e){
-    console.warn("API-Football no disponible:",e);
-    // Fallback: cargar desde Sheet
-    await loadResultadosFromSheet();
-  }
-}
-
 async function saveResultadosToSheet(){
   // Cualquier cliente puede guardar usando la clave secreta
   try{
@@ -1877,10 +1835,6 @@ async function postToSheet(data){
 
 async function saveAlias(mail,alias){
   await postToSheet({type:"alias",mail,alias});
-}
-
-async function savePronosticoSheet(mail,alias,match_id,home_score,away_score,bonus){
-  await postToSheet({type:"pronostico",mail,alias,match_id,home_score,away_score,bonus});
 }
 
 /* ═══════════════════════════════════════════
@@ -2213,12 +2167,6 @@ const ESPN_NAME_MAP={
 };
 
 
-function modelIsComplete(m){
-  if(!m)return false;
-  if(m.status!=="final")return true;
-  return m.penal_home!==null&&m.penal_away!==null&&
-         m.tarjeta_home!==null&&m.tarjeta_away!==null;
-}
 let _matchIndex=null;
 
 /* ═══════════════════════════════════════════════════════════════
@@ -2895,23 +2843,6 @@ function resolveR32Bracket(){
 }
 
 // ── Guardar clasificados en Sheet ──
-async function saveClassifiedToSheet(){
-  if(!isAdmin)return;
-  try{
-    const classified=getClassified();
-    const bracket=resolveR32Bracket();
-    await postToSheet({
-      type:"clasificados",
-      firsts:Object.fromEntries(Object.entries(classified.firsts).map(([g,t])=>[g,t.name])),
-      seconds:Object.fromEntries(Object.entries(classified.seconds).map(([g,t])=>[g,t.name])),
-      best8thirds:classified.best8thirds.map(t=>({name:t.name,group:t.group})),
-      bracket:bracket?Object.fromEntries(Object.entries(bracket).map(([id,m])=>[id,{
-        home:m.homeTeam?.name,away:m.awayTeam?.name
-      }])):null
-    });
-  }catch(e){SyncLogger.error("Error guardando clasificados",e.message);}
-}
-
 
 function getMatchIndex(){
   if(_matchIndex)return _matchIndex;
@@ -3147,6 +3078,9 @@ const ManualAdapter={
             home_score:parseInt(r.home_score)||0,
             away_score:parseInt(r.away_score)||0,
             played:r.played==="TRUE"||r.played===true,
+            pen_home:typeof r.pen_home==='number'?r.pen_home:(parseInt(r.pen_home)||0),
+            pen_away:typeof r.pen_away==='number'?r.pen_away:(parseInt(r.pen_away)||0),
+            pen_winner:r.pen_home>r.pen_away?'home':r.pen_away>r.pen_home?'away':null,
             penal_home:r.penal_home==="TRUE"||r.penal_home===true,
             penal_away:r.penal_away==="TRUE"||r.penal_away===true,
             tarjeta_home:r.tarjeta_home==="TRUE"||r.tarjeta_home===true,
@@ -3300,111 +3234,6 @@ function logESPN(msg,data){
   espnLog.unshift(entry);
   if(espnLog.length>100)espnLog.pop();
   console.log("[ESPN]",msg,data||"");
-}
-
-async function fetchESPN(){
-  if(!isAdmin){
-    // Usuarios normales solo cargan desde Sheet
-    await loadResultadosFromSheet();
-    return;
-  }
-  try{
-    logESPN("Fetching ESPN...");
-    const res=await fetch(ESPN_URL+"?limit=200");
-    if(!res.ok)throw new Error("HTTP "+res.status);
-    const data=await res.json();
-    const events=data.events||[];
-    logESPN("Eventos recibidos",events.length);
-    
-    const matchIdx=getMatchIndex();
-    let changed=false;
-    let newFinished=[];
-
-    events.forEach(ev=>{
-      try{
-        const comp=ev.competitions?.[0];
-        if(!comp)return;
-        
-        // Equipos
-        const homeComp=comp.competitors?.find(c=>c.homeAway==="home");
-        const awayComp=comp.competitors?.find(c=>c.homeAway==="away");
-        if(!homeComp||!awayComp)return;
-        
-        const espnHome=homeComp.team?.displayName||homeComp.team?.name||"";
-        const espnAway=awayComp.team?.displayName||awayComp.team?.name||"";
-        const proHome=TEAM_NAME_MAP[espnHome]||espnHome;
-        const proAway=TEAM_NAME_MAP[espnAway]||espnAway;
-        
-        if(!proHome||!proAway){
-          logESPN("Sin mapeo",{espnHome,espnAway});
-          return;
-        }
-        
-        const mid=matchIdx[proHome+"|||"+proAway];
-        if(!mid){
-          logESPN("Sin match_id",{proHome,proAway});
-          return;
-        }
-        
-        // Estado
-        const status=comp.status?.type?.name||"";
-        const finished=status==="STATUS_FINAL"||status==="STATUS_FULL_TIME";
-        const inProgress=status==="STATUS_IN_PROGRESS"||status==="STATUS_HALFTIME";
-        
-        // Marcador
-        const hScore=parseInt(homeComp.score)||0;
-        const aScore=parseInt(awayComp.score)||0;
-        
-        // Detectar cambio
-        const scoreKey=mid+":"+hScore+"-"+aScore+":"+finished;
-        if(lastScores[mid]===scoreKey)return; // sin cambio
-        
-        // Si ya está marcado como jugado en DB, no sobreescribir
-        if(resultadosDB[mid]?.played&&!finished){
-          logESPN("Partido ya finalizado, ignorando update",mid);
-          return;
-        }
-        
-        const prev=resultadosDB[mid];
-        resultadosDB[mid]={
-          home_score:hScore,
-          away_score:aScore,
-          played:finished,
-          in_progress:inProgress,
-          espn_id:ev.id,
-          updated:new Date().toISOString()
-        };
-        
-        lastScores[mid]=scoreKey;
-        changed=true;
-        
-        if(finished&&(!prev||!prev.played)){
-          newFinished.push({mid,proHome,proAway,hScore,aScore});
-          logESPN("Partido finalizado",{mid,proHome,proAway,hScore,aScore});
-        } else if(inProgress){
-          logESPN("En curso",{mid,proHome,proAway,hScore,aScore});
-        }
-      }catch(e){
-        logESPN("Error procesando evento",e.message);
-      }
-    });
-
-    if(changed){
-      // ranking actualizado por sheet; solo re-renderizar
-      renderGrupoMatches(curGrupo);
-      if(newFinished.length>0){
-        await saveResultadosToSheet();
-        newFinished.forEach(m=>{
-          showToast("✅ "+m.proHome+" "+m.hScore+"-"+m.aScore+" "+m.proAway);
-        });
-      }
-    }
-    logESPN("Sync OK",{changed,newFinished:newFinished.length});
-  }catch(e){
-    logESPN("Error ESPN",e.message);
-    // Fallback: cargar desde Sheet
-    await loadResultadosFromSheet();
-  }
 }
 
 // startSync y stopSync están definidas arriba usando SyncManager
@@ -4030,90 +3859,6 @@ function renderSpiderSvg(metricas, color){
   </svg>`;
 }
 
-function renderSpider(metricas){
-  if(!metricas)return'<div style="color:var(--dim);font-size:11px;text-align:center;padding:8px;">Jugá más partidos para ver tus métricas</div>';
-  
-  const labels=["Precisión","Efectividad","Riesgo","Intuición","Magia"];
-  const values=[metricas.precision,metricas.efectividad,metricas.riesgo,metricas.intuicion,metricas.magia];
-  const N=5;
-  const cx=70,cy=70,r=55;
-  const angleStep=(2*Math.PI)/N;
-  const startAngle=-Math.PI/2;
-
-  // Puntos del polígono del jugador
-  const pts=values.map((v,i)=>{
-    const angle=startAngle+i*angleStep;
-    const dist=(v/100)*r;
-    return{x:cx+dist*Math.cos(angle),y:cy+dist*Math.sin(angle)};
-  });
-  const polyPts=pts.map(p=>`${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
-
-  // Ejes y grillas
-  let axes='', grid='', labelsHtml='';
-  [0.25,0.5,0.75,1].forEach(pct=>{
-    const gridPts=Array.from({length:N},(_, i)=>{
-      const angle=startAngle+i*angleStep;
-      const dist=pct*r;
-      return`${(cx+dist*Math.cos(angle)).toFixed(1)},${(cy+dist*Math.sin(angle)).toFixed(1)}`;
-    }).join(' ');
-    grid+=`<polygon points="${gridPts}" fill="none" stroke="rgba(255,255,255,.1)" stroke-width="0.5"/>`;
-  });
-
-  Array.from({length:N},(_,i)=>{
-    const angle=startAngle+i*angleStep;
-    const ex=cx+r*Math.cos(angle), ey=cy+r*Math.sin(angle);
-    axes+=`<line x1="${cx}" y1="${cy}" x2="${ex.toFixed(1)}" y2="${ey.toFixed(1)}" stroke="rgba(255,255,255,.15)" stroke-width="0.8"/>`;
-    // Labels
-    const lx=cx+(r+14)*Math.cos(angle), ly=cy+(r+14)*Math.sin(angle);
-    const anchor=lx<cx-5?'end':lx>cx+5?'start':'middle';
-    labelsHtml+=`<text x="${lx.toFixed(1)}" y="${(ly+3).toFixed(1)}" text-anchor="${anchor}" fill="rgba(255,255,255,.6)" font-size="7" font-family="Barlow Condensed,sans-serif" font-weight="700">${labels[i]}</text>`;
-    // Valor
-    const vx=cx+(r*values[i]/100)*Math.cos(angle)*0.7, vy=cy+(r*values[i]/100)*Math.sin(angle)*0.7;
-  });
-
-  // Valores en los vértices
-  const valLabels=pts.map((p,i)=>{
-    const angle=startAngle+i*angleStep;
-    const vx=cx+(r*values[i]/100+8)*Math.cos(angle);
-    const vy=cy+(r*values[i]/100+8)*Math.sin(angle);
-    return`<text x="${vx.toFixed(1)}" y="${(vy+3).toFixed(1)}" text-anchor="middle" fill="#00ff47" font-size="7.5" font-family="Barlow Condensed,sans-serif" font-weight="900">${values[i]}%</text>`;
-  }).join('');
-
-  const svg=`<svg width="140" height="140" viewBox="0 0 140 140">
-    ${grid}${axes}
-    <polygon points="${polyPts}" fill="rgba(0,255,71,.15)" stroke="#00ff47" stroke-width="1.5" stroke-linejoin="round"/>
-    ${labelsHtml}${valLabels}
-  </svg>`;
-
-  // Panel derecho
-  const panel=`<div style="display:flex;flex-direction:column;gap:6px;justify-content:center;font-family:'Barlow Condensed',sans-serif;">
-    <div style="font-size:11px;color:var(--dim);letter-spacing:1px;text-transform:uppercase;margin-bottom:2px;">STATS</div>
-    <div style="display:flex;align-items:center;gap:6px;">
-      <span style="color:#00ff47;font-size:11px;">▲</span>
-      <span style="font-size:13px;font-weight:700;color:var(--white)">${metricas.pctGanados}%</span>
-      <span style="font-size:10px;color:var(--dim)">ganados</span>
-    </div>
-    <div style="display:flex;align-items:center;gap:6px;">
-      <span style="color:#ff4444;font-size:11px;">▼</span>
-      <span style="font-size:13px;font-weight:700;color:var(--white)">${metricas.pctPerdidos}%</span>
-      <span style="font-size:10px;color:var(--dim)">perdidos</span>
-    </div>
-    <div style="display:flex;align-items:center;gap:6px;">
-      <span style="font-size:11px;">🔥</span>
-      <span style="font-size:13px;font-weight:700;color:var(--white)">${metricas.pg}</span>
-      <span style="font-size:10px;color:var(--dim)">sin perder</span>
-    </div>
-    <div style="margin-top:4px;padding:4px 6px;background:rgba(0,255,71,.08);border-radius:6px;border:1px solid rgba(0,255,71,.2);">
-      <div style="font-size:9px;color:var(--dim);letter-spacing:1px;">ESTILO</div>
-      <div style="font-size:12px;font-weight:900;color:#00ff47;">${getEstilo(metricas.riesgo)}</div>
-    </div>
-  </div>`;
-
-  return`<div style="display:flex;align-items:center;gap:8px;padding:8px 0;">
-    ${svg}${panel}
-  </div>`;
-}
-
 
 
 function getEstilo(riesgo){
@@ -4363,7 +4108,7 @@ function getMatches(g){
       id:mid,home:f.home,away:f.away,
       date:f.date,time:f.time,stadium:f.stadium,city:f.city,
       played:!!(res&&res.played),
-      result:res&&res.played?{home:res.home_score,away:res.away_score}:null,
+      result:res&&res.played?{home:res.home_score,away:res.away_score,pen_home:res.pen_home||0,pen_away:res.pen_away||0,pen_winner:res.pen_winner||null}:null,
       locked:isMatchLocked(f.date, f.time, !!(res&&res.played)),
       ts:parseMatchTime(f.date, f.time)?.getTime()||0
     };
@@ -4892,12 +4637,6 @@ function setEspFilterNoClose(key, tipo, val){
   if(dd)dd.classList.add('open');
 }
 
-function setEspFilter(key, tipo, val){
-  espDDFilters[key][tipo]=val;
-  renderEspFilters(key);
-  renderEspDDList(key, document.getElementById(`espInp_${key}`)?.value||'');
-}
-
 function onEspSearch(key, query){
   renderEspFilters(key);
   renderEspDDList(key, query);
@@ -5183,15 +4922,21 @@ function renderResultados(){
 function rCard(m){
   if(!m.result)return"";
   const rH=m.result.home, rA=m.result.away;
-  const hWin=rH>rA, aWin=rA>rH;
+  const res0=resultadosDB[m.id]||{};
+  // Si hay penales (empate en 90'), usar pen_winner para colorear
+  const penWinner=res0.pen_winner||null;
+  const hWin=rH>rA||(rH===rA&&penWinner==='home');
+  const aWin=rA>rH||(rH===rA&&penWinner==='away');
   const hCol=hWin?"#00ff47":aWin?"#ff4444":"var(--white)";
   const aCol=aWin?"#00ff47":hWin?"#ff4444":"var(--white)";
   const fLurl=flagUrl(m.home);
   const fRurl=flagUrl(m.away);
   const res=resultadosDB[m.id]||{};
   // Penales si aplica — solo mostrar si son números reales (goles de penales), no booleanos
-  const penH=res.pen_home, penA=res.pen_away;
-  const hasPen=typeof penH==='number'&&typeof penA==='number'&&penH!==penA;
+  const penH=m.result?.pen_home||res.pen_home||0;
+  const penA=m.result?.pen_away||res.pen_away||0;
+  // Mostrar penales si hay definición por tanda
+  const hasPen=(penH>0||penA>0)&&penH!==penA;
   const penRow=hasPen?`<div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:4px;">
     <span style="color:${hCol};font-weight:900;font-size:14px">${penH}</span>
     <span style="color:var(--dim);font-size:10px;letter-spacing:1px">PENS</span>
@@ -5273,7 +5018,7 @@ function getElimMatches(){
         fLurl, fRurl,
         date:m.fecha, time:m.time, stadium:m.stadium, city:m.ciudad,
         played:!!(res&&res.played),
-        result:res&&res.played?{home:res.home_score,away:res.away_score}:null,
+        result:res&&res.played?{home:res.home_score,away:res.away_score,pen_home:res.pen_home||0,pen_away:res.pen_away||0,pen_winner:res.pen_winner||null}:null,
         ts:parseMatchTime(m.fecha,m.time)?.getTime()||0,
         ronda:phaseNames[ph]
       });
