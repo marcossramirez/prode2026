@@ -5072,7 +5072,7 @@ function renderAdmin(){
     html+=matches.map(m=>{
       const res=resultadosDB[m.id]||{};
       const played=res.played===true;
-      const isElim=currentAdminPhase==='eliminacion';
+      const isElim=currentAdminPhase==='elim';
 
       // ── Estado de bloqueo ──
       // Bloqueado si: partido jugado Y no está desbloqueado manualmente
