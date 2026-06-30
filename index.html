@@ -3046,50 +3046,7 @@ const ManualAdapter={
     const res=await fetch(`${SHEET_URL}?type=resultados`);
     if(!res.ok)throw new Error("Sheet HTTP "+res.status);
     const data=await res.json();
-    // ✅ FIX: también cargar resultados de eliminatoria con IDs del frontend
-    try{
-      const resElim=await fetch(`${SHEET_URL}?type=resultados_elim`);
-      if(resElim.ok){
-        const dataElim=await resElim.json();
-        // Mapa inverso: IDs del sheet → IDs del frontend
-        const ELIM_ID_REVERSE={
-          'elim_R32_3':'elim_dieciseis_0','elim_R32_9':'elim_dieciseis_1',
-          'elim_R32_1':'elim_dieciseis_2','elim_R32_4':'elim_dieciseis_3',
-          'elim_R32_10':'elim_dieciseis_4','elim_R32_2':'elim_dieciseis_5',
-          'elim_R32_11':'elim_dieciseis_6','elim_R32_12':'elim_dieciseis_7',
-          'elim_R32_8':'elim_dieciseis_8','elim_R32_7':'elim_dieciseis_9',
-          'elim_R32_5':'elim_dieciseis_10','elim_R32_6':'elim_dieciseis_11',
-          'elim_R32_15':'elim_dieciseis_12','elim_R32_14':'elim_dieciseis_13',
-          'elim_R32_13':'elim_dieciseis_14','elim_R32_16':'elim_dieciseis_15',
-          'elim_R16_1':'elim_octavos_0','elim_R16_2':'elim_octavos_1',
-          'elim_R16_3':'elim_octavos_2','elim_R16_4':'elim_octavos_3',
-          'elim_R16_5':'elim_octavos_4','elim_R16_6':'elim_octavos_5',
-          'elim_R16_7':'elim_octavos_6','elim_R16_8':'elim_octavos_7',
-          'elim_QF_1':'elim_cuartos_0','elim_QF_2':'elim_cuartos_1',
-          'elim_QF_3':'elim_cuartos_2','elim_QF_4':'elim_cuartos_3',
-          'elim_SF_1':'elim_semis_0','elim_SF_2':'elim_semis_1',
-          'elim_3PL':'elim_3er_0','elim_FIN':'elim_final_0'
-        };
-        dataElim.forEach(r=>{
-          // Traducir ID del sheet al ID del frontend
-          const frontendId=ELIM_ID_REVERSE[r.match_id]||r.match_id;
-          resultadosDB[frontendId]={
-            home:r.home,away:r.away,
-            home_score:parseInt(r.home_score)||0,
-            away_score:parseInt(r.away_score)||0,
-            played:r.played==="TRUE"||r.played===true,
-            pen_home:typeof r.pen_home==='number'?r.pen_home:(parseInt(r.pen_home)||0),
-            pen_away:typeof r.pen_away==='number'?r.pen_away:(parseInt(r.pen_away)||0),
-            pen_winner:r.pen_home>r.pen_away?'home':r.pen_away>r.pen_home?'away':null,
-            penal_home:r.penal_home==="TRUE"||r.penal_home===true,
-            penal_away:r.penal_away==="TRUE"||r.penal_away===true,
-            tarjeta_home:r.tarjeta_home==="TRUE"||r.tarjeta_home===true,
-            tarjeta_away:r.tarjeta_away==="TRUE"||r.tarjeta_away===true,
-            ts:0
-          };
-        });
-      }
-    }catch(e){console.warn("Error cargando resultados_elim:",e);}
+    // Nota: resultados_elim se carga en cargarResultadosElim() desde DataService.fetchResults()
     return data.map(r=>{
       const status=(r.played==="TRUE"||r.played===true)?"final":"scheduled";
       return makeMatchModel(r.match_id,r.home_score,r.away_score,status,null,"manual");
@@ -3100,6 +3057,51 @@ const ManualAdapter={
 // ── Provider registry: agregar futuros providers acá ──
 const PROVIDERS={apifootball:APIFootballAdapter,footballdata:FootballDataAdapter,espn:ESPNAdapter,openfootball:OpenFootballAdapter,manual:ManualAdapter};
 
+// ── Carga de resultados eliminatoria — siempre desde el Sheet ──
+// Se ejecuta independientemente del provider activo
+async function cargarResultadosElim(){
+  try{
+    const resElim=await fetch(`${SHEET_URL}?type=resultados_elim`);
+    if(!resElim.ok) return;
+    const dataElim=await resElim.json();
+    const ELIM_ID_REVERSE_MAP={
+      'elim_R32_3':'elim_dieciseis_0','elim_R32_9':'elim_dieciseis_1',
+      'elim_R32_1':'elim_dieciseis_2','elim_R32_4':'elim_dieciseis_3',
+      'elim_R32_10':'elim_dieciseis_4','elim_R32_2':'elim_dieciseis_5',
+      'elim_R32_11':'elim_dieciseis_6','elim_R32_12':'elim_dieciseis_7',
+      'elim_R32_8':'elim_dieciseis_8','elim_R32_7':'elim_dieciseis_9',
+      'elim_R32_5':'elim_dieciseis_10','elim_R32_6':'elim_dieciseis_11',
+      'elim_R32_15':'elim_dieciseis_12','elim_R32_14':'elim_dieciseis_13',
+      'elim_R32_13':'elim_dieciseis_14','elim_R32_16':'elim_dieciseis_15',
+      'elim_R16_1':'elim_octavos_0','elim_R16_2':'elim_octavos_1',
+      'elim_R16_3':'elim_octavos_2','elim_R16_4':'elim_octavos_3',
+      'elim_R16_5':'elim_octavos_4','elim_R16_6':'elim_octavos_5',
+      'elim_R16_7':'elim_octavos_6','elim_R16_8':'elim_octavos_7',
+      'elim_QF_1':'elim_cuartos_0','elim_QF_2':'elim_cuartos_1',
+      'elim_QF_3':'elim_cuartos_2','elim_QF_4':'elim_cuartos_3',
+      'elim_SF_1':'elim_semis_0','elim_SF_2':'elim_semis_1',
+      'elim_3PL':'elim_3er_0','elim_FIN':'elim_final_0'
+    };
+    dataElim.forEach(r=>{
+      const frontendId=ELIM_ID_REVERSE_MAP[r.match_id]||r.match_id;
+      resultadosDB[frontendId]={
+        home:r.home,away:r.away,
+        home_score:parseInt(r.home_score)||0,
+        away_score:parseInt(r.away_score)||0,
+        played:r.played===\"TRUE\"||r.played===true,
+        pen_home:typeof r.pen_home==='number'?r.pen_home:(parseInt(r.pen_home)||0),
+        pen_away:typeof r.pen_away==='number'?r.pen_away:(parseInt(r.pen_away)||0),
+        pen_winner:r.pen_home>r.pen_away?'home':r.pen_away>r.pen_home?'away':null,
+        penal_home:r.penal_home===\"TRUE\"||r.penal_home===true,
+        penal_away:r.penal_away===\"TRUE\"||r.penal_away===true,
+        tarjeta_home:r.tarjeta_home===\"TRUE\"||r.tarjeta_home===true,
+        tarjeta_away:r.tarjeta_away===\"TRUE\"||r.tarjeta_away===true,
+        ts:0
+      };
+    });
+  }catch(e){console.warn('Error cargando resultados_elim:',e);}
+}
+
 // ── DataService: única interfaz que usa el prode ──
 const DataService={
   _lastHash:{},
@@ -3109,6 +3111,9 @@ const DataService={
     const provider = isAdmin
       ? (PROVIDERS[DATA_CONFIG.ACTIVE_PROVIDER] || ManualAdapter)
       : ManualAdapter;
+    // Siempre cargar resultados de eliminatoria desde el Sheet,
+    // independientemente del provider activo
+    await cargarResultadosElim();
     return await provider.fetch();
   },
   hasChanged(model){
