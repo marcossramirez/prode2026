@@ -3088,14 +3088,14 @@ async function cargarResultadosElim(){
         home:r.home,away:r.away,
         home_score:parseInt(r.home_score)||0,
         away_score:parseInt(r.away_score)||0,
-        played:r.played===\"TRUE\"||r.played===true,
+        played:r.played==="TRUE"||r.played===true,
         pen_home:typeof r.pen_home==='number'?r.pen_home:(parseInt(r.pen_home)||0),
         pen_away:typeof r.pen_away==='number'?r.pen_away:(parseInt(r.pen_away)||0),
         pen_winner:r.pen_home>r.pen_away?'home':r.pen_away>r.pen_home?'away':null,
-        penal_home:r.penal_home===\"TRUE\"||r.penal_home===true,
-        penal_away:r.penal_away===\"TRUE\"||r.penal_away===true,
-        tarjeta_home:r.tarjeta_home===\"TRUE\"||r.tarjeta_home===true,
-        tarjeta_away:r.tarjeta_away===\"TRUE\"||r.tarjeta_away===true,
+        penal_home:r.penal_home==="TRUE"||r.penal_home===true,
+        penal_away:r.penal_away==="TRUE"||r.penal_away===true,
+        tarjeta_home:r.tarjeta_home==="TRUE"||r.tarjeta_home===true,
+        tarjeta_away:r.tarjeta_away==="TRUE"||r.tarjeta_away===true,
         ts:0
       };
     });
