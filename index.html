@@ -3259,12 +3259,6 @@ const ESPN_URL="https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/
 let lastScores={}; // para detectar cambios
 let espnLog=[]; // log de auditoría
 
-function logESPN(msg,data){
-  const entry={ts:new Date().toISOString(),msg,data};
-  espnLog.unshift(entry);
-  if(espnLog.length>100)espnLog.pop();
-  console.log("[ESPN]",msg,data||"");
-}
 
 // startSync y stopSync están definidas arriba usando SyncManager
 
@@ -3891,13 +3885,6 @@ function renderSpiderSvg(metricas, color){
 
 
 
-function getEstilo(riesgo){
-  if(riesgo>=80)return"KAMIKAZE";
-  if(riesgo>=60)return"ATREVIDO";
-  if(riesgo>=40)return"EQUILIBRADO";
-  if(riesgo>=20)return"CALCULADOR";
-  return"CONSERVADOR";
-}
 
 // ── Refrescar ranking desde el sheet (sin recalcular en browser) ──
 async function refreshRankingFromSheet() {
@@ -5515,9 +5502,11 @@ async function toggleTarjeta(id,side,btn){
   });
   renderGrupoMatches(curGrupo);
 }
-function renderProximos(){
+async function renderProximos(){
   const el=document.getElementById("proximosContent");
   if(!el)return;
+  // Asegurar que bracketDB esté cargado antes de renderizar
+  if(Object.keys(bracketDB).length===0) await cargarBracketDB();
 
   // Recopilar todos los partidos de grupos no jugados
   const pendientes=[];
@@ -5538,7 +5527,7 @@ function renderProximos(){
   };
 
   // Usar el BRACKET inline de renderElimMatches
-  const BRACKET_DATA={"dieciseis":[{home:"2do Grupo A",away:"2do Grupo B",fecha:"dom, 28 jun",time:"16:00 ARG",stadium:"SoFi Stadium",ciudad:"Los Ángeles"},{home:"1ro Grupo C",away:"2do Grupo F",fecha:"lun, 29 jun",time:"14:00 ARG",stadium:"NRG Stadium",ciudad:"Houston"},{home:"1ro Grupo E",away:"3ro A/B/C/D/F",fecha:"lun, 29 jun",time:"17:30 ARG",stadium:"Gillette Stadium",ciudad:"Boston"},{home:"1ro Grupo F",away:"2do Grupo C",fecha:"lun, 29 jun",time:"22:00 ARG",stadium:"E. Azteca",ciudad:"Cdad. México"},{home:"2do Grupo E",away:"2do Grupo I",fecha:"mar, 30 jun",time:"14:00 ARG",stadium:"AT&T Stadium",ciudad:"Dallas"},{home:"1ro Grupo I",away:"3ro C/D/F/G/H",fecha:"mar, 30 jun",time:"18:00 ARG",stadium:"MetLife Stadium",ciudad:"Nueva York"},{home:"1ro Grupo A",away:"3ro C/E/F/H/I",fecha:"mar, 30 jun",time:"22:00 ARG",stadium:"E. Azteca",ciudad:"Cdad. México"},{home:"1ro Grupo L",away:"3ro E/H/I/J/K",fecha:"mié, 1 jul",time:"13:00 ARG",stadium:"M-Benz Stadium",ciudad:"Atlanta"},{home:"1ro Grupo G",away:"3ro A/E/H/I/J",fecha:"mié, 1 jul",time:"17:00 ARG",stadium:"Lumen Field",ciudad:"Seattle"},{home:"1ro Grupo D",away:"3ro B/E/F/I/J",fecha:"mié, 1 jul",time:"21:00 ARG",stadium:"Levi's Stadium",ciudad:"San Francisco"},{home:"2do Grupo K",away:"2do Grupo L",fecha:"jue, 2 jul",time:"13:00 ARG",stadium:"BMO Field",ciudad:"Toronto"},{home:"1ro Grupo H",away:"2do Grupo J",fecha:"jue, 2 jul",time:"16:00 ARG",stadium:"SoFi Stadium",ciudad:"Los Ángeles"},{home:"1ro Grupo B",away:"3ro E/F/G/I/J",fecha:"jue, 2 jul",time:"21:00 ARG",stadium:"BC Place",ciudad:"Vancouver"},{home:"2do Grupo D",away:"2do Grupo G",fecha:"vie, 3 jul",time:"15:00 ARG",stadium:"AT&T Stadium",ciudad:"Dallas"},{home:"1ro Grupo J",away:"2do Grupo H",fecha:"vie, 3 jul",time:"19:00 ARG",stadium:"Hard Rock Stadium",ciudad:"Miami"},{home:"1ro Grupo K",away:"3ro D/E/I/J/L",fecha:"vie, 3 jul",time:"22:30 ARG",stadium:"Arrowhead",ciudad:"Kansas City"}],"octavos":[{home:"Gan. M74",away:"Gan. M77",fecha:"sáb, 4 jul",time:"18:00 ARG",stadium:"Lincoln Financial Field",ciudad:"Filadelfia"},{home:"Gan. M73",away:"Gan. M75",fecha:"sáb, 4 jul",time:"14:00 ARG",stadium:"NRG Stadium",ciudad:"Houston"},{home:"Gan. M76",away:"Gan. M78",fecha:"dom, 5 jul",time:"17:00 ARG",stadium:"MetLife Stadium",ciudad:"Nueva York"},{home:"Gan. M79",away:"Gan. M80",fecha:"dom, 5 jul",time:"21:00 ARG",stadium:"E. Azteca",ciudad:"Cdad. México"},{home:"Gan. M83",away:"Gan. M84",fecha:"lun, 6 jul",time:"16:00 ARG",stadium:"AT&T Stadium",ciudad:"Dallas"},{home:"Gan. M81",away:"Gan. M82",fecha:"lun, 6 jul",time:"21:00 ARG",stadium:"Lumen Field",ciudad:"Seattle"},{home:"Gan. M86",away:"Gan. M88",fecha:"mar, 7 jul",time:"13:00 ARG",stadium:"M-Benz Stadium",ciudad:"Atlanta"},{home:"Gan. M85",away:"Gan. M87",fecha:"mar, 7 jul",time:"17:00 ARG",stadium:"BC Place",ciudad:"Vancouver"}],"cuartos":[{home:"Gan. M89",away:"Gan. M90",fecha:"jue, 9 jul",time:"21:00 ARG",stadium:"Gillette Stadium",ciudad:"Boston"},{home:"Gan. M93",away:"Gan. M94",fecha:"vie, 10 jul",time:"21:00 ARG",stadium:"SoFi Stadium",ciudad:"Los Ángeles"},{home:"Gan. M91",away:"Gan. M92",fecha:"sáb, 11 jul",time:"17:00 ARG",stadium:"Hard Rock Stadium",ciudad:"Miami"},{home:"Gan. M95",away:"Gan. M96",fecha:"sáb, 11 jul",time:"21:00 ARG",stadium:"Arrowhead",ciudad:"Kansas City"}],"semis":[{home:"Gan. M97",away:"Gan. M98",fecha:"mar, 14 jul",time:"21:00 ARG",stadium:"AT&T Stadium",ciudad:"Dallas"},{home:"Gan. M99",away:"Gan. M100",fecha:"mié, 15 jul",time:"21:00 ARG",stadium:"M-Benz Stadium",ciudad:"Atlanta"}],"3er":[{home:"Perd. SF1",away:"Perd. SF2",fecha:"sáb, 18 jul",time:"16:00 ARG",stadium:"Hard Rock Stadium",ciudad:"Miami"}],"final":[{home:"Gan. SF1",away:"Gan. SF2",fecha:"dom, 19 jul",time:"16:00 ARG",stadium:"MetLife Stadium",ciudad:"Nueva York"}]};
+  const BRACKET_DATA=BRACKET_DATA_GLOBAL;
 
   Object.entries(BRACKET_DATA).forEach(([fase,matches])=>{
     const label=BRACKET_PROX[fase]?.label||fase;
@@ -5546,8 +5535,10 @@ function renderProximos(){
       const mid=`elim_${fase}_${i}`;
       const res=resultadosDB[mid];
       if(!res||!res.played){
-        const hDisplay=resolveElimTeam(m.home)||m.home;
-        const aDisplay=resolveElimTeam(m.away)||m.away;
+        // Para octavos en adelante usar bracketDB (equipos reales del sheet)
+        const usesBracket = fase !== 'dieciseis';
+        const hDisplay=(usesBracket ? resolveElimTeamFromBracket(m.home) : resolveElimTeam(m.home))||m.home;
+        const aDisplay=(usesBracket ? resolveElimTeamFromBracket(m.away) : resolveElimTeam(m.away))||m.away;
         pendientes.push({
           id:mid,home:hDisplay,away:aDisplay,
           date:m.fecha,time:m.time.replace(' ARG',''),
