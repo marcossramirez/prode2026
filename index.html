@@ -1614,6 +1614,7 @@ function isMatchLocked(date, time, played){
    ESTADO GLOBAL
 ═══════════════════════════════════════════ */
 let uname=null,isAdmin=false,currentPlayer=null;
+let bracketDB={}; // match_id → {home, away} del Bracket sheet (equipos reales)
 let userBonus={},userPron={};
 let userPenal={},userTarjeta={};  // {matchId: {home:bool, away:bool}}
 // Límites de bonus por fase
@@ -3057,6 +3058,30 @@ const ManualAdapter={
 // ── Provider registry: agregar futuros providers acá ──
 const PROVIDERS={apifootball:APIFootballAdapter,footballdata:FootballDataAdapter,espn:ESPNAdapter,openfootball:OpenFootballAdapter,manual:ManualAdapter};
 
+// ── Carga del Bracket con equipos reales — siempre desde el Sheet ──
+async function cargarBracketDB(){
+  try{
+    const resp=await fetch(`${SHEET_URL}?type=bracket`);
+    if(!resp.ok) return;
+    const data=await resp.json();
+    bracketDB={};
+    data.forEach(m=>{
+      if(m.home||m.away){
+        bracketDB[m.match_id]={
+          home:m.home||'',
+          away:m.away||'',
+          played:m.played||false,
+          home_score:m.home_score||0,
+          away_score:m.away_score||0,
+          pen_home:m.pen_home||0,
+          pen_away:m.pen_away||0,
+          winner:m.winner||''
+        };
+      }
+    });
+  }catch(e){console.warn('Error cargando bracketDB:',e);}
+}
+
 // ── Carga de resultados eliminatoria — siempre desde el Sheet ──
 // Se ejecuta independientemente del provider activo
 async function cargarResultadosElim(){
@@ -3111,9 +3136,9 @@ const DataService={
     const provider = isAdmin
       ? (PROVIDERS[DATA_CONFIG.ACTIVE_PROVIDER] || ManualAdapter)
       : ManualAdapter;
-    // Siempre cargar resultados de eliminatoria desde el Sheet,
+    // Siempre cargar resultados de eliminatoria y bracket desde el Sheet,
     // independientemente del provider activo
-    await cargarResultadosElim();
+    await Promise.all([cargarResultadosElim(), cargarBracketDB()]);
     return await provider.fetch();
   },
   hasChanged(model){
@@ -5003,20 +5028,73 @@ let currentAdminPhase='grupos';
 // ✅ FIX BUG #1: BRACKET_DATA con estructura correcta por fase (igual al usado en renderElimMatches)
 const BRACKET_DATA_GLOBAL={"dieciseis":[{home:"2do Grupo A",away:"2do Grupo B",fecha:"dom, 28 jun",time:"16:00 ARG",stadium:"SoFi Stadium",ciudad:"Los Ángeles"},{home:"1ro Grupo C",away:"2do Grupo F",fecha:"lun, 29 jun",time:"14:00 ARG",stadium:"NRG Stadium",ciudad:"Houston"},{home:"1ro Grupo E",away:"3ro A/B/C/D/F",fecha:"lun, 29 jun",time:"17:30 ARG",stadium:"Gillette Stadium",ciudad:"Boston"},{home:"1ro Grupo F",away:"2do Grupo C",fecha:"lun, 29 jun",time:"22:00 ARG",stadium:"E. Azteca",ciudad:"Cdad. México"},{home:"2do Grupo E",away:"2do Grupo I",fecha:"mar, 30 jun",time:"14:00 ARG",stadium:"AT&T Stadium",ciudad:"Dallas"},{home:"1ro Grupo I",away:"3ro C/D/F/G/H",fecha:"mar, 30 jun",time:"18:00 ARG",stadium:"MetLife Stadium",ciudad:"Nueva York"},{home:"1ro Grupo A",away:"3ro C/E/F/H/I",fecha:"mar, 30 jun",time:"22:00 ARG",stadium:"E. Azteca",ciudad:"Cdad. México"},{home:"1ro Grupo L",away:"3ro E/H/I/J/K",fecha:"mié, 1 jul",time:"13:00 ARG",stadium:"M-Benz Stadium",ciudad:"Atlanta"},{home:"1ro Grupo G",away:"3ro A/E/H/I/J",fecha:"mié, 1 jul",time:"17:00 ARG",stadium:"Lumen Field",ciudad:"Seattle"},{home:"1ro Grupo D",away:"3ro B/E/F/I/J",fecha:"mié, 1 jul",time:"21:00 ARG",stadium:"Levi's Stadium",ciudad:"San Francisco"},{home:"2do Grupo K",away:"2do Grupo L",fecha:"jue, 2 jul",time:"13:00 ARG",stadium:"BMO Field",ciudad:"Toronto"},{home:"1ro Grupo H",away:"2do Grupo J",fecha:"jue, 2 jul",time:"16:00 ARG",stadium:"SoFi Stadium",ciudad:"Los Ángeles"},{home:"1ro Grupo B",away:"3ro E/F/G/I/J",fecha:"jue, 2 jul",time:"21:00 ARG",stadium:"BC Place",ciudad:"Vancouver"},{home:"2do Grupo D",away:"2do Grupo G",fecha:"vie, 3 jul",time:"15:00 ARG",stadium:"AT&T Stadium",ciudad:"Dallas"},{home:"1ro Grupo J",away:"2do Grupo H",fecha:"vie, 3 jul",time:"19:00 ARG",stadium:"Hard Rock Stadium",ciudad:"Miami"},{home:"1ro Grupo K",away:"3ro D/E/I/J/L",fecha:"vie, 3 jul",time:"22:30 ARG",stadium:"Arrowhead",ciudad:"Kansas City"}],"octavos":[{home:"Gan. M74",away:"Gan. M77",fecha:"sáb, 4 jul",time:"18:00 ARG",stadium:"Lincoln Financial Field",ciudad:"Filadelfia"},{home:"Gan. M73",away:"Gan. M75",fecha:"sáb, 4 jul",time:"14:00 ARG",stadium:"NRG Stadium",ciudad:"Houston"},{home:"Gan. M76",away:"Gan. M78",fecha:"dom, 5 jul",time:"17:00 ARG",stadium:"MetLife Stadium",ciudad:"Nueva York"},{home:"Gan. M79",away:"Gan. M80",fecha:"dom, 5 jul",time:"21:00 ARG",stadium:"E. Azteca",ciudad:"Cdad. México"},{home:"Gan. M83",away:"Gan. M84",fecha:"lun, 6 jul",time:"16:00 ARG",stadium:"AT&T Stadium",ciudad:"Dallas"},{home:"Gan. M81",away:"Gan. M82",fecha:"lun, 6 jul",time:"21:00 ARG",stadium:"Lumen Field",ciudad:"Seattle"},{home:"Gan. M86",away:"Gan. M88",fecha:"mar, 7 jul",time:"13:00 ARG",stadium:"M-Benz Stadium",ciudad:"Atlanta"},{home:"Gan. M85",away:"Gan. M87",fecha:"mar, 7 jul",time:"17:00 ARG",stadium:"BC Place",ciudad:"Vancouver"}],"cuartos":[{home:"Gan. M89",away:"Gan. M90",fecha:"jue, 9 jul",time:"21:00 ARG",stadium:"Gillette Stadium",ciudad:"Boston"},{home:"Gan. M93",away:"Gan. M94",fecha:"vie, 10 jul",time:"21:00 ARG",stadium:"SoFi Stadium",ciudad:"Los Ángeles"},{home:"Gan. M91",away:"Gan. M92",fecha:"sáb, 11 jul",time:"17:00 ARG",stadium:"Hard Rock Stadium",ciudad:"Miami"},{home:"Gan. M95",away:"Gan. M96",fecha:"sáb, 11 jul",time:"21:00 ARG",stadium:"Arrowhead",ciudad:"Kansas City"}],"semis":[{home:"Gan. M97",away:"Gan. M98",fecha:"mar, 14 jul",time:"21:00 ARG",stadium:"AT&T Stadium",ciudad:"Dallas"},{home:"Gan. M99",away:"Gan. M100",fecha:"mié, 15 jul",time:"21:00 ARG",stadium:"M-Benz Stadium",ciudad:"Atlanta"}],"3er":[{home:"Perd. SF1",away:"Perd. SF2",fecha:"sáb, 18 jul",time:"16:00 ARG",stadium:"Hard Rock Stadium",ciudad:"Miami"}],"final":[{home:"Gan. SF1",away:"Gan. SF2",fecha:"dom, 19 jul",time:"16:00 ARG",stadium:"MetLife Stadium",ciudad:"Nueva York"}]};
 
+// Mapa match_num → match_id del Bracket (para resolver "Gan. M73" → equipo real)
+const MATCH_NUM_TO_ID = {
+  73:'elim_R32_3', 74:'elim_R32_1', 75:'elim_R32_9', 76:'elim_R32_4',
+  77:'elim_R32_2', 78:'elim_R32_10', 79:'elim_R32_11', 80:'elim_R32_12',
+  81:'elim_R32_7', 82:'elim_R32_8', 83:'elim_R32_5', 84:'elim_R32_6',
+  85:'elim_R32_15', 86:'elim_R32_13', 87:'elim_R32_16', 88:'elim_R32_14',
+  89:'elim_R16_1', 90:'elim_R16_2', 91:'elim_R16_3', 92:'elim_R16_4',
+  93:'elim_R16_5', 94:'elim_R16_6', 95:'elim_R16_7', 96:'elim_R16_8',
+  97:'elim_QF_1', 98:'elim_QF_2', 99:'elim_QF_3', 100:'elim_QF_4',
+  101:'elim_SF_1', 102:'elim_SF_2'
+};
+
+// Resuelve "Gan. M73" → equipo real desde bracketDB
+// Resuelve "Perd. SF1" → perdedor desde bracketDB
+function resolveElimTeamFromBracket(placeholder){
+  // "Gan. M73" → buscar ganador del partido 73
+  const mGan = placeholder.match(/Gan\.\s*M(\d+)/i);
+  if(mGan){
+    const num = parseInt(mGan[1]);
+    const mid = MATCH_NUM_TO_ID[num];
+    if(mid && bracketDB[mid]){
+      const b = bracketDB[mid];
+      if(b.winner) return b.winner;
+      // Si no hay ganador aún pero hay equipo local/visitante, mostrar vs
+      if(b.home && b.away) return b.home + ' / ' + b.away;
+      if(b.home) return b.home;
+      if(b.away) return b.away;
+    }
+    return placeholder; // no resuelto aún
+  }
+  // "Perd. SF1" / "Perd. SF2"
+  const mPerd = placeholder.match(/Perd\.\s*SF(\d+)/i);
+  if(mPerd){
+    const sfMid = 'elim_SF_' + mPerd[1];
+    if(bracketDB[sfMid] && bracketDB[sfMid].winner){
+      const b = bracketDB[sfMid];
+      return b.winner === b.home ? b.away : b.home;
+    }
+    return placeholder;
+  }
+  // Para "Gan. SF1", "Gan. SF2"
+  const mGanSF = placeholder.match(/Gan\.\s*SF(\d+)/i);
+  if(mGanSF){
+    const sfMid = 'elim_SF_' + mGanSF[1];
+    if(bracketDB[sfMid] && bracketDB[sfMid].winner) return bracketDB[sfMid].winner;
+    return placeholder;
+  }
+  // Si no es un placeholder de bracket, usar resolveElimTeam normal
+  return resolveElimTeam(placeholder);
+}
+
 function getElimMatches(){
   const phases=['dieciseis','octavos','cuartos','semis','3er','final'];
   const phaseNames={'dieciseis':'16avos','octavos':'Octavos','cuartos':'Cuartos','semis':'Semifinal','3er':'3er Puesto','final':'Final'};
   const all=[];
   phases.forEach(ph=>{
-    // ✅ FIX: usar BRACKET_DATA_GLOBAL en vez de BRACKET_R32[ph] (que siempre era undefined)
     const matches=BRACKET_DATA_GLOBAL[ph]||[];
     matches.forEach((m,i)=>{
       const mid=`elim_${ph}_${i}`;
       const res=resultadosDB[mid]||null;
-      const homeDisplay=resolveElimTeam(m.home);
-      const awayDisplay=resolveElimTeam(m.away);
-      const fLurl=resolveElimFlag(m.home);
-      const fRurl=resolveElimFlag(m.away);
+      // Para octavos en adelante, resolver desde bracketDB (equipos reales del sheet)
+      // Para 16avos, usar resolveElimTeam normal (resuelve desde tabla de grupos)
+      const usesBracket = ph !== 'dieciseis';
+      const homeDisplay = usesBracket ? resolveElimTeamFromBracket(m.home) : resolveElimTeam(m.home);
+      const awayDisplay = usesBracket ? resolveElimTeamFromBracket(m.away) : resolveElimTeam(m.away);
+      const fLurl=resolveElimFlag(homeDisplay);
+      const fRurl=resolveElimFlag(awayDisplay);
       all.push({
         id:mid, home:homeDisplay, away:awayDisplay,
         homeRaw:m.home, awayRaw:m.away,
