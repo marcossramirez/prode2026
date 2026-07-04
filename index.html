@@ -5480,7 +5480,7 @@ async function renderProximos(){
   const el=document.getElementById("proximosContent");
   if(!el)return;
   // Asegurar que bracketDB esté cargado antes de renderizar
-  if(Object.keys(bracketDB).length===0) await cargarBracketDB();
+  await cargarBracketDB(); // siempre recargar para tener datos frescos
 
   // Recopilar todos los partidos de grupos no jugados
   const pendientes=[];
