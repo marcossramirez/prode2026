@@ -90,6 +90,17 @@ body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min
   box-shadow:0 4px 20px rgba(0,0,0,.5);
   display:block;
 }
+/* ── Variante para el póster de campeón (vertical, sin recorte) ── */
+#memeCard.champion-mode{
+  max-width:min(420px,92vw);
+  padding:8px;
+}
+#memeCard.champion-mode img{
+  width:auto;max-width:100%;
+  max-height:88vh;
+  aspect-ratio:auto;
+  object-fit:contain;
+}
 
 /* ══════════════════════════════
    SCREENS
@@ -1884,14 +1895,17 @@ function mostrarCampeonMundial(){
   const overlay = document.getElementById("memeOverlay");
   const img     = document.getElementById("memeImg");
   const lbl      = document.getElementById("memeLabel");
+  const card     = document.getElementById("memeCard");
   if(!overlay || !img) return;
   _campeonMostrado = true;
   if(lbl) lbl.textContent = "";
+  if(card) card.classList.add("champion-mode");
   img.src = CHAMPION_IMG;
   overlay.classList.add("show");
   const closeMeme = () => {
     overlay.removeEventListener("click", closeMeme);
     overlay.classList.remove("show");
+    if(card) card.classList.remove("champion-mode");
   };
   overlay.addEventListener("click", closeMeme);
   setTimeout(closeMeme, 6000);
